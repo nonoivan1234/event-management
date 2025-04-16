@@ -4,49 +4,38 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-const demoEvents = [
-  {
-    id: '1',
-    title: 'Chess Tournament',
-    date: '2025-03-15',
-    category: 'Sports',
-    organizer: 'Chess Club',
-  },
-  {
-    id: '2',
-    title: 'Coding Competition',
-    date: '2025-04-05',
-    category: 'Academic',
-    organizer: 'Computer Science Society',
-  },
-  {
-    id: '3',
-    title: 'Drama Festival',
-    date: '2025-05-20',
-    category: 'Cultural',
-    organizer: 'Drama Club',
-  },
-]
-
 export default function HomePage() {
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All')
+  const [events, setEvents] = useState<any[]>([])
+  const [userEmail, setUserEmail] = useState<string | null>(null)
 
-  const filteredEvents = demoEvents.filter((event) => {
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const { data, error } = await supabase
+        .from('events')
+        .select(`
+          *,
+          users (
+            name
+          )
+        `)
+      if (!error && data) setEvents(data)
+    }
+    fetchEvents()
+
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email ?? null)
+    })
+  }, [])
+
+  const filteredEvents = events.filter((event) => {
     return (
       (category === 'All' || event.category === category) &&
       event.title.toLowerCase().includes(search.toLowerCase())
     )
   })
-
-  const [userEmail, setUserEmail] = useState<string | null>(null)
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUserEmail(data.user?.email ?? null)
-    })
-  }, [])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -115,16 +104,17 @@ export default function HomePage() {
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {filteredEvents.map((event) => (
             <div
-              key={event.id}
+              key={event.event_id}
               className="border rounded-lg p-4 flex flex-col justify-between shadow-sm"
             >
               <div>
                 <h2 className="text-lg font-semibold">{event.title}</h2>
-                <p className="text-sm text-gray-500 mb-1">{event.date}</p>
-                <p className="text-sm text-gray-600">🧑‍💼 {event.organizer}</p>
+                <p className="text-sm text-gray-500 mb-1">{event.deadline}</p>
+                <p className="text-sm text-gray-700 mb-2">{event.description}</p>
+                <p className="text-sm text-gray-600">🧑‍💼 {event.users?.name || '匿名主辦人'}</p>
               </div>
               <button
-                onClick={() => router.push(`/event/${event.id}/register`)}
+                onClick={() => router.push(`dashboard/event/register?event_id=${event.event_id}`)}
                 className="mt-4 bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
               >
                 Sign Up

@@ -82,7 +82,7 @@ export default function DashboardPage() {
   }, [router]);
 
   const handleCreateEvent = () => {
-    router.push("/create");
+    router.push("/dashboard/event/create");
   };
 
   const handleEditProfile = () => {
@@ -92,13 +92,13 @@ export default function DashboardPage() {
   const renderEventActions = (eventId: string) => (
     <div className="mt-4 flex gap-2">
       <button
-        onClick={() => router.push(`/event/${eventId}/edit-form`)}
+        onClick={() => router.push(`/dashboard/event/edit-form?id=${eventId}`)}
         className="text-blue-600 hover:underline"
       >
         編輯表單
       </button>
       <button
-        onClick={() => router.push(`/event/${eventId}/registrations`)}
+        onClick={() => router.push(`/dashboard/event/view-register?id=${eventId}`)}
         className="text-green-600 hover:underline"
       >
         查看報名者
