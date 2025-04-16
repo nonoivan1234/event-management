@@ -155,7 +155,7 @@ export default function EditFormPage() {
         </button>
       </div>
 
-      <div className="mt-8 flex gap-4">
+      <div className="mt-4 flex gap-4">
         <button
           onClick={handleSave}
           className="bg-blue-600 text-white px-4 py-2 rounded"
@@ -163,6 +163,15 @@ export default function EditFormPage() {
           💾 儲存表單
         </button>
         {message && <p className="text-sm text-green-600 mt-2">{message}</p>}
+      </div>
+
+      <div className="mt-4 flex">
+        <button
+          onClick={() => window.location.href = '/dashboard'}
+          className="bg-gray-600 text-white px-4 py-2 rounded"
+        >
+          返回 Dashboard
+        </button>
       </div>
     </div>
   )
