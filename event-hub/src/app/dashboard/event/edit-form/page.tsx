@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '../../../../lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
 
 const defaultPersonalFields = ['name', 'email', 'phone', 'student_id', 'school', 'id_number']
