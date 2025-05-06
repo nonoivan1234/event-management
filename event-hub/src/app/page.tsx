@@ -30,6 +30,17 @@ export default function HomePage() {
     })
   }, [])
 
+  const toggleDarkMode = () => {
+    const html = document.documentElement
+    if (html.classList.contains('dark')) {
+      html.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    } else {
+      html.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    }
+  }
+
   const filteredEvents = events.filter((event) => {
     return (
       (category === 'All' || event.category === category) &&
@@ -45,7 +56,7 @@ export default function HomePage() {
 
   return (
     <>
-      <nav className="flex items-center justify-between py-4 px-6 bg-gray-100 shadow">
+      <nav className="flex items-center justify-between py-4 px-6 bg-gray-100 dark:bg-gray-800 dark:text-white shadow">
         <h1
           onClick={() => router.push('/')}
           className="text-lg font-bold cursor-pointer"
@@ -53,6 +64,12 @@ export default function HomePage() {
           🎓 Event Hub
         </h1>
         <div className="flex items-center gap-4">
+          <button
+            onClick={toggleDarkMode}
+            className="text-sm hover:underline"
+          >
+            🌙 Toggle Dark
+          </button>
           <button
             onClick={() => router.push('/dashboard')}
             className="text-sm hover:underline"
@@ -77,19 +94,19 @@ export default function HomePage() {
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto py-12 px-4">
+      <main className="max-w-5xl mx-auto py-12 px-4 dark:text-white">
         <header className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">🎓 Student Activities Portal</h1>
           <div className="flex items-center gap-4">
             <input
               type="text"
               placeholder="Search activities..."
-              className="border rounded px-3 py-2"
+              className="border rounded px-3 py-2 dark:bg-gray-700 dark:text-white dark:border-gray-600"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             <select
-              className="border rounded px-3 py-2"
+              className="border rounded px-3 py-2 dark:bg-gray-700 dark:text-white dark:border-gray-600"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             >
@@ -105,17 +122,19 @@ export default function HomePage() {
           {filteredEvents.map((event) => (
             <div
               key={event.event_id}
-              className="border rounded-lg p-4 flex flex-col justify-between shadow-sm"
+              className="border rounded-lg p-4 flex flex-col justify-between shadow-sm dark:bg-gray-900 dark:text-white dark:border-gray-700"
             >
               <div>
                 <h2 className="text-lg font-semibold">{event.title}</h2>
-                <p className="text-sm text-gray-500 mb-1">{event.deadline}</p>
-                <p className="text-sm text-gray-700 mb-2">{event.description}</p>
-                <p className="text-sm text-gray-600">🧑‍💼 {event.users?.name || '匿名主辦人'}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{event.deadline}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{event.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">🧑‍💼 {event.users?.name || '匿名主辦人'}</p>
               </div>
               <button
-                onClick={() => router.push(`dashboard/event/register?event_id=${event.event_id}`)}
-                className="mt-4 bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
+                onClick={() =>
+                  router.push(`dashboard/event/register?event_id=${event.event_id}`)
+                }
+                className="mt-4 bg-black text-white px-4 py-2 rounded hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
               >
                 Sign Up
               </button>
