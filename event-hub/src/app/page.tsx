@@ -30,16 +30,7 @@ export default function HomePage() {
     })
   }, [])
 
-  const toggleDarkMode = () => {
-    const html = document.documentElement
-    if (html.classList.contains('dark')) {
-      html.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    } else {
-      html.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    }
-  }
+  
 
   const filteredEvents = events.filter((event) => {
     return (
@@ -48,52 +39,8 @@ export default function HomePage() {
     )
   })
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    setUserEmail(null)
-    router.push('/')
-  }
-
   return (
     <>
-      <nav className="flex items-center justify-between py-4 px-6 bg-gray-100 dark:bg-gray-800 dark:text-white shadow">
-        <h1
-          onClick={() => router.push('/')}
-          className="text-lg font-bold cursor-pointer"
-        >
-          🎓 Event Hub
-        </h1>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={toggleDarkMode}
-            className="text-sm hover:underline"
-          >
-            🌙 Toggle Dark
-          </button>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="text-sm hover:underline"
-          >
-            Dashboard
-          </button>
-          {userEmail ? (
-            <button
-              onClick={handleLogout}
-              className="text-sm hover:underline"
-            >
-              登出
-            </button>
-          ) : (
-            <button
-              onClick={() => router.push('/login')}
-              className="text-sm hover:underline"
-            >
-              登入
-            </button>
-          )}
-        </div>
-      </nav>
-
       <main className="max-w-5xl mx-auto py-12 px-4 dark:text-white">
         <header className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">🎓 Student Activities Portal</h1>

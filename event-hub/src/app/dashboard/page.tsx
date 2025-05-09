@@ -11,27 +11,6 @@ type Event = {
   created_at: string
 }
 
-const demoEvents: Event[] = [
-  {
-    event_id: '1',
-    title: 'Chess Tournament',
-    description: 'A thrilling chess competition for all skill levels.',
-    created_at: '2025-03-15',
-  },
-  {
-    event_id: '2',
-    title: 'Coding Competition',
-    description: 'Show off your coding skills in this exciting contest.',
-    created_at: '2025-04-05',
-  },
-  {
-    event_id: '3',
-    title: 'Drama Festival',
-    description: 'Experience the magic of theater at our annual festival.',
-    created_at: '2025-05-20',
-  },
-]
-
 export default function DashboardPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [organizedEvents, setOrganizedEvents] = useState<Event[]>([])
@@ -46,7 +25,7 @@ export default function DashboardPage() {
       } = await supabase.auth.getUser()
 
       if (error || !user) {
-        router.push('/login')
+        router.push('/auth/login')
         return
       }
 
@@ -57,49 +36,24 @@ export default function DashboardPage() {
         .select('*')
         .eq('organizer_id', user.id)
 
-      setOrganizedEvents(organizedData?.length ? organizedData : demoEvents)
+      setOrganizedEvents(organizedData ?? [])
 
       const { data: joinedData } = await supabase
         .from('event_participants')
         .select('event_id, events(*)')
         .eq('user_id', user.id)
 
-      const events = joinedData?.map((item: any) => item.events) ?? demoEvents
+      const events = (joinedData?.map((item: any) => item.events)) ?? []
       setJoinedEvents(events)
     }
 
-    // 初始化 dark 模式
-    const prefersDark =
-      localStorage.theme === 'dark' ||
-      (!('theme' in localStorage) &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches)
-    if (prefersDark) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
 
     fetchUserAndEvents()
   }, [router])
 
-  const toggleDarkMode = () => {
-    const html = document.documentElement
-    const isDark = html.classList.contains('dark')
-    if (isDark) {
-      html.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    } else {
-      html.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    }
-  }
 
   const handleCreateEvent = () => {
     router.push('/dashboard/event/create')
-  }
-
-  const handleEditProfile = () => {
-    router.push('/profile')
   }
 
   const renderEventActions = (eventId: string) => (
@@ -142,51 +96,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <nav className="flex items-center justify-between py-4 px-6 bg-gray-100 dark:bg-gray-900 dark:text-white shadow">
-        <h1
-          onClick={() => router.push('/')}
-          className="text-lg font-bold cursor-pointer"
-        >
-          🎓 Event Hub
-        </h1>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={toggleDarkMode}
-            className="text-sm text-yellow-600 dark:text-yellow-300 hover:underline"
-          >
-            🌙 Toggle Dark
-          </button>
-          <button
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-            onClick={handleEditProfile}
-          >
-            編輯個人資料
-          </button>
-          {userEmail ? (
-            <button
-              onClick={() => supabase.auth.signOut().then(() => router.push('/login'))}
-              className="text-sm hover:underline"
-            >
-              登出
-            </button>
-          ) : (
-            <button
-              onClick={() => router.push('/login')}
-              className="text-sm hover:underline"
-            >
-              登入
-            </button>
-          )}
-        </div>
-      </nav>
-
       <main className="max-w-5xl mx-auto px-6 py-8 text-black dark:text-white">
-        {userEmail && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-            登入帳號：{userEmail}
-          </p>
-        )}
-
         <button
           className="mb-8 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
           onClick={handleCreateEvent}

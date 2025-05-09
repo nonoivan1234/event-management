@@ -1,15 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
+import { supabase } from '../../../lib/supabase'
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
   const [isError, setIsError] = useState(false)
+
   const router = useRouter()
+
 
   const handleSignUp = async () => {
     setMessage('')
@@ -33,31 +35,24 @@ export default function SignUpPage() {
       return
     }
 
-    const { error: insertError } = await supabase.from('users').insert([
-      {
-        user_id: user.id,
-        email: user.email,
-        name: '',
-        student_id: '',
-        phone: '',
-        school: '',
-      },
-    ])
+    const { error: insertError } = await supabase.from('users').insert([{
+      user_id: user.id,
+      email: user.email,
+    }])
 
     if (insertError) {
       setMessage(`註冊成功，但同步用戶資料失敗：${insertError.message}`)
       setIsError(true)
     } else {
-      setMessage('✅ 註冊成功！請至信箱確認驗證信，然後登入系統。')
-      setIsError(false)
-      setTimeout(() => router.push('/login'), 2000)
+      setMessage('✅ 註冊成功！請至信箱驗證，等事後跳轉登入。')
+      setTimeout(() => router.push('/auth/login'), 2000)
     }
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen px-4 bg-white text-black dark:bg-gray-900 dark:text-white transition-colors duration-300">
-      <div className="w-full max-w-sm space-y-4">
-        <h1 className="text-2xl font-bold text-center">註冊新帳號</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-white text-black dark:bg-gray-900 dark:text-white">
+      <div className="w-full max-w-md space-y-4 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow bg-white dark:bg-gray-800">
+        <h1 className="text-2xl font-bold text-center">註冊帳號</h1>
 
         <input
           type="email"
@@ -80,7 +75,12 @@ export default function SignUpPage() {
         >
           註冊
         </button>
-
+        <p className="text-sm text-center text-gray-600 dark:text-gray-400">
+          已經有帳號了嗎？{' '}
+          <a href="/auth/login" className="text-blue-600 dark:text-blue-400 hover:underline">
+            登入
+          </a>
+        </p>
         {message && (
           <p className={`text-sm text-center ${isError ? 'text-red-500' : 'text-green-500'}`}>
             {message}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../../lib/supabase'
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
@@ -59,7 +59,7 @@ export default function LoginPage() {
 
         <p className="text-sm text-center text-gray-600 dark:text-gray-400">
           還沒有帳號嗎？{' '}
-          <a href="/signup" className="text-blue-600 dark:text-blue-400 hover:underline">
+          <a href="/auth/signup" className="text-blue-600 dark:text-blue-400 hover:underline">
             註冊
           </a>
         </p>
