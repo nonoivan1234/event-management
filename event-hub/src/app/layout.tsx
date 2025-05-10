@@ -25,7 +25,9 @@ export default function RootLayout({children,}: { children: React.ReactNode}) {
       <body className="antialiased transition-colors duration-300 bg-white text-black dark:bg-gray-900 dark:text-white">
         <ThemeInitializer />
         <Navbar />
-        {children}
+        <main className="pt-14"> {/* 預留空間給固定高度的 Navbar */}
+          {children}
+        </main>
       </body>
     </html>
   )

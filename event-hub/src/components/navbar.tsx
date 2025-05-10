@@ -69,7 +69,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="flex items-center justify-between py-4 px-6 bg-gray-100 dark:bg-gray-800 dark:text-white shadow">
+    <nav className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between py-2 px-6 bg-gray-100 dark:bg-gray-800 dark:text-white shadow">
       <h1
         onClick={() => router.push('/')}
         className="text-lg font-bold cursor-pointer"
@@ -99,8 +99,8 @@ export default function Navbar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               {userEmail ? (
-                <Avatar>
-                  <AvatarImage src={avatarBase64} alt="user avatar" />
+                <Avatar className="w-10 h-10 cursor-pointer">
+                  <AvatarImage src={avatarBase64} alt="user avatar" className="object-cover" />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
               ): (
