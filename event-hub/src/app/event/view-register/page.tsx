@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../../lib/supabase'
+import { supabase } from '../../../lib/supabase'
 
 export default function ViewRegistrationsPage() {
   const searchParams = useSearchParams()
@@ -35,33 +35,37 @@ export default function ViewRegistrationsPage() {
     fetchAll()
   }, [eventId])
 
-  if (loading) return <p className="p-4">Loading...</p>
+  if (loading) return <p className="p-4 text-gray-800 dark:text-white">Loading...</p>
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto p-6 text-gray-900 dark:text-white">
       <h1 className="text-2xl font-bold mb-4">報名者清單</h1>
 
-      <table className="w-full border text-sm">
+      <table className="w-full text-sm border border-gray-300 dark:border-gray-700">
         <thead>
-          <tr className="bg-gray-100">
+          <tr className="bg-gray-100 dark:bg-gray-800">
             {formSchema?.personalFields?.map((field: string) => (
-              <th key={field} className="border px-2 py-1 text-left">{field}</th>
+              <th key={field} className="border border-gray-300 dark:border-gray-700 px-2 py-1 text-left text-gray-700 dark:text-gray-200">
+                {field}
+              </th>
             ))}
             {formSchema?.customQuestions?.map((q: any) => (
-              <th key={q.id} className="border px-2 py-1 text-left">{q.label}</th>
+              <th key={q.id} className="border border-gray-300 dark:border-gray-700 px-2 py-1 text-left text-gray-700 dark:text-gray-200">
+                {q.label}
+              </th>
             ))}
           </tr>
         </thead>
         <tbody>
           {registrations.map((reg, i) => (
-            <tr key={i} className="border-t">
+            <tr key={i} className="border-t border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
               {formSchema.personalFields.map((field: string) => (
-                <td key={field} className="border px-2 py-1">
+                <td key={field} className="border border-gray-300 dark:border-gray-700 px-2 py-1 text-gray-800 dark:text-gray-100">
                   {reg.user_info_snapshot?.[field] ?? '-'}
                 </td>
               ))}
               {formSchema.customQuestions.map((q: any) => (
-                <td key={q.id} className="border px-2 py-1">
+                <td key={q.id} className="border border-gray-300 dark:border-gray-700 px-2 py-1 text-gray-800 dark:text-gray-100">
                   {reg.answers?.[q.id] ?? '-'}
                 </td>
               ))}

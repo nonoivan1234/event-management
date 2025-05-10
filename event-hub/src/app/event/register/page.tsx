@@ -41,7 +41,7 @@ export default function RegisterPage() {
 
     const { error } = await supabase.from('registrations').insert(payload)
     setMessage(error ? `❌ 報名失敗：${error.message}` : '✅ 報名成功！，即將跳轉到報名頁面')
-    if(!error) setTimeout(() => router.push(`/event/attend`), 2000)
+    if(!error) setTimeout(() => router.push(`/event/attend`), 1000)
   }
 
   useEffect(() => {
@@ -83,43 +83,44 @@ export default function RegisterPage() {
           </div>
         ))}
       </div>
-
-      <div className="mb-6">
-        <h2 className="font-semibold mb-2 text-gray-800 dark:text-white">自訂欄位</h2>
-        {formSchema.customQuestions?.map((q: any) => (
-          <div key={q.id} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {q.label} {q.required && '*'}
-            </label>
-            {q.type === 'text' && (
-              <input
-                className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                value={answers[q.id] || ''}
-                onChange={(e) => handleChange(q.id, e.target.value)}
-              />
-            )}
-            {q.type === 'textarea' && (
-              <textarea
-                className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                value={answers[q.id] || ''}
-                onChange={(e) => handleChange(q.id, e.target.value)}
-              />
-            )}
-            {q.type === 'select' && (
-              <select
-                className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                value={answers[q.id] || ''}
-                onChange={(e) => handleChange(q.id, e.target.value)}
-              >
-                <option value="">請選擇</option>
-                {q.options?.map((opt: string, i: number) => (
-                  <option key={i} value={opt}>{opt}</option>
-                ))}
-              </select>
-            )}
-          </div>
-        ))}
-      </div>
+      {formSchema.customQuestions?.length > 0 && (<>
+        <div className="mb-6">
+          <h2 className="font-semibold mb-2 text-gray-800 dark:text-white">自訂欄位</h2>
+          {formSchema.customQuestions?.map((q: any) => (
+            <div key={q.id} className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {q.label} {q.required && '*'}
+              </label>
+              {q.type === 'text' && (
+                <input
+                  className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  value={answers[q.id] || ''}
+                  onChange={(e) => handleChange(q.id, e.target.value)}
+                />
+              )}
+              {q.type === 'textarea' && (
+                <textarea
+                  className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  value={answers[q.id] || ''}
+                  onChange={(e) => handleChange(q.id, e.target.value)}
+                />
+              )}
+              {q.type === 'select' && (
+                <select
+                  className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  value={answers[q.id] || ''}
+                  onChange={(e) => handleChange(q.id, e.target.value)}
+                >
+                  <option value="">請選擇</option>
+                  {q.options?.map((opt: string, i: number) => (
+                    <option key={i} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+          ))}
+        </div>
+      </>)}
 
       <button
         onClick={handleSubmit}

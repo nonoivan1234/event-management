@@ -1,6 +1,6 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 const defaultPersonalFields = ['name', 'email', 'phone', 'student_id', 'school']
 
 export default function EditFormPage() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const eventId = searchParams.get('id')
 
@@ -55,10 +56,26 @@ export default function EditFormPage() {
 
   const handleSave = async () => {
     if (!eventId) return
+
+    // ✅ 驗證至少有一種欄位
+    if (personalFields.length === 0 && customQuestions.length === 0) {
+      setMessage('❗請至少選擇一項個人欄位或新增一題自訂問題')
+      return
+    }
+
+    // ✅ 驗證每一題都有非空 label
+    const hasEmptyLabel = customQuestions.some(q => !q.label?.trim())
+    if (hasEmptyLabel) {
+      setMessage('❗所有自訂問題都必須填寫標題')
+      return
+    }
+
     const { error } = await supabase.from('events')
       .update({ form_schema: { personalFields, customQuestions } })
       .eq('event_id', eventId)
-    setMessage(error ? `❌ 儲存失敗：${error.message}` : '✅ 表單已儲存！')
+
+    setMessage(error ? `❌ 儲存失敗：${error.message}` : '✅ 表單已儲存！即將返回')
+    if (!error) setTimeout(() => router.push('/event/hold'), 1000)
   }
 
   return (
@@ -91,7 +108,7 @@ export default function EditFormPage() {
                 <p className="font-semibold">{q.label} {q.required ? '*' : ''}</p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">Type: {q.type}</p>
                 {q.type === 'select' && (
-                  <ul className="list-disc ml-5 text-sm">
+                  <ul className="list-disc ml-5 text-sm text-gray-700 dark:text-gray-300">
                     {q.options?.map((opt: string, i: number) => <li key={i}>{opt}</li>)}
                   </ul>
                 )}
@@ -154,7 +171,7 @@ export default function EditFormPage() {
           ➕ 新增問題
         </button>
       </div>
-
+      <hr className="my-6 dark:border-gray-600" />
       <div className="mt-4 flex gap-4">
         <button
           onClick={handleSave}
@@ -162,7 +179,15 @@ export default function EditFormPage() {
         >
           💾 儲存表單
         </button>
-        {message && <p className="text-sm text-green-600 dark:text-green-400 mt-2">{message}</p>}
+        {message && (
+          <p className={`text-sm mt-2 ${
+            message.startsWith('✅')
+              ? 'text-green-600 dark:text-green-400'
+              : 'text-red-600 dark:text-red-400'
+          }`}>
+            {message}
+          </p>
+        )}
       </div>
 
       <div className="mt-4 flex">
@@ -170,7 +195,7 @@ export default function EditFormPage() {
           onClick={() => window.location.href = '/event/hold'}
           className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
         >
-          返回 Dashboard
+          返回
         </button>
       </div>
     </div>
