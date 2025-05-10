@@ -16,7 +16,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 const defaultAvatar = "data:image/png;base64,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"
-const notLogAvatar = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIxMiIgY3k9IjgiIHI9IjQiIGZpbGw9IiNjY2MiIC8+CiAgPHBhdGggZD0iTTIgMjBjMC0yLjggNC01IDEwLTVzMTAgMi4yIDEwIDV2MUgyMnYtMXoiIGZpbGw9IiNjY2MiIC8+CiAgPHRleHQgeD0iMTIiIHk9IjEzIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjEwIiBmaWxsPSIjNjY2IiBkeT0iLjNlbSI+PzwvdGV4dD4KPC9zdmc+"
 
 export default function Navbar() {
   const router = useRouter()
@@ -24,7 +23,7 @@ export default function Navbar() {
   const AuthNavbar = pathname.startsWith('/auth')
 
   const [userEmail, setUserEmail] = useState<string | null>(null)
-  const [avatarBase64, setAvatarBase64] = useState<string | null>(notLogAvatar)
+  const [avatarBase64, setAvatarBase64] = useState<string | null>(null)
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
 
   useEffect(() => {
@@ -32,7 +31,7 @@ export default function Navbar() {
       const { data, error } = await supabase.auth.getUser()
       if (error || !data.user) {
         setUserEmail(null)
-        setAvatarBase64(notLogAvatar)
+        setAvatarBase64(null)
       } else {
         setUserEmail(data.user.email ?? null)
         const { data: avatar, error } = await supabase
@@ -77,7 +76,6 @@ export default function Navbar() {
       >
         🎓 Event Hub
       </h1>
-
       {AuthNavbar ? (<>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -97,10 +95,7 @@ export default function Navbar() {
         </DropdownMenu>
       </>) : (<>
         <div className="flex items-center gap-5">
-          {userEmail && <>
-            <button onClick={() => router.push('/dashboard')} className="text-sm fw-bold hover:underline">您舉辦的活動</button>
-            <button onClick={() => router.push('/dashboard')} className="text-sm fw-bold hover:underline">您參加的活動</button>
-          </>}
+          {userEmail && <button className="text-sm fw-bold hover:underline" onClick={() => router.push('/event/create')}>創建活動</button>}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               {userEmail ? (
@@ -124,7 +119,9 @@ export default function Navbar() {
                   <DropdownMenuItem onClick={() => router.push('/profile')}>
                     編輯個人資料
                   </DropdownMenuItem>
-
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => router.push('/event/hold')}>您舉辦的活動</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/event/attend')}>您參加的活動</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel>🎨 Theme</DropdownMenuLabel>
                   <DropdownMenuRadioGroup value={theme} onValueChange={applyTheme}>
@@ -138,14 +135,13 @@ export default function Navbar() {
               ) : (
                 <>
                   <DropdownMenuLabel className="text-center">尚未登入</DropdownMenuLabel>
-                  <DropdownMenuLabel>Theme</DropdownMenuLabel>
+                  <DropdownMenuLabel>🎨 Theme</DropdownMenuLabel>
                   <DropdownMenuRadioGroup value={theme} onValueChange={applyTheme}>
-                    <DropdownMenuRadioItem value="light">Light</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="system">System</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="light">☀️ Light</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="dark">🌙 Dark</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="system">🖥️ System</DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
                   <DropdownMenuSeparator />
-
                   <DropdownMenuItem onClick={() => router.push('/auth/login')}>
                     登入
                   </DropdownMenuItem>

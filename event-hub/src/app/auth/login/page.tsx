@@ -21,7 +21,7 @@ export default function LoginPage() {
     if (error) {
       setErrorMsg('❌ 登入失敗：' + error.message)
     } else {
-      router.push('/dashboard')
+      router.push('/')
     }
   }
 

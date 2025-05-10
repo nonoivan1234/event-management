@@ -2,10 +2,10 @@
 
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../../lib/supabase'
+import { supabase } from '../../../lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
 
-const defaultPersonalFields = ['name', 'email', 'phone', 'student_id', 'school', 'id_number']
+const defaultPersonalFields = ['name', 'email', 'phone', 'student_id', 'school']
 
 export default function EditFormPage() {
   const searchParams = useSearchParams()
@@ -62,13 +62,13 @@ export default function EditFormPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto p-6 text-gray-900 dark:text-white">
       <h1 className="text-2xl font-bold mb-6">Create Registration Form</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <h2 className="font-semibold mb-2">Select Personal Information Fields</h2>
           {defaultPersonalFields.map((field) => (
-            <label key={field} className="block">
+            <label key={field} className="block text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={personalFields.includes(field)}
@@ -80,16 +80,16 @@ export default function EditFormPage() {
         </div>
         <div>
           <h2 className="font-semibold mb-2">Form Preview</h2>
-          <div className="border rounded p-4 bg-white">
+          <div className="border rounded p-4 bg-white dark:bg-gray-800 dark:border-gray-600">
             <p className="font-medium mb-2">Personal Information</p>
             {personalFields.map((field) => (
-              <p key={field} className="text-sm text-gray-700">{field}: [Auto-filled]</p>
+              <p key={field} className="text-sm text-gray-700 dark:text-gray-300">{field}: [Auto-filled]</p>
             ))}
-            <hr className="my-2" />
+            <hr className="my-2 dark:border-gray-600" />
             {customQuestions.map((q) => (
               <div key={q.id} className="mb-4">
                 <p className="font-semibold">{q.label} {q.required ? '*' : ''}</p>
-                <p className="text-xs text-gray-600">Type: {q.type}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Type: {q.type}</p>
                 {q.type === 'select' && (
                   <ul className="list-disc ml-5 text-sm">
                     {q.options?.map((opt: string, i: number) => <li key={i}>{opt}</li>)}
@@ -101,19 +101,19 @@ export default function EditFormPage() {
         </div>
       </div>
 
-      <hr className="my-6" />
+      <hr className="my-6 dark:border-gray-600" />
 
       <div>
         <h2 className="font-semibold mb-2">Custom Questions</h2>
         {customQuestions.map((q) => (
-          <div key={q.id} className="border p-4 rounded mb-4">
+          <div key={q.id} className="border p-4 rounded mb-4 dark:border-gray-600">
             <input
-              className="w-full mb-2 border px-3 py-1 rounded"
+              className="w-full mb-2 border px-3 py-1 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               value={q.label}
               onChange={(e) => updateQuestion(q.id, { label: e.target.value })}
             />
             <select
-              className="w-full mb-2 border px-3 py-1 rounded"
+              className="w-full mb-2 border px-3 py-1 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               value={q.type}
               onChange={(e) => updateQuestion(q.id, { type: e.target.value })}
             >
@@ -123,7 +123,7 @@ export default function EditFormPage() {
             </select>
             {q.type === 'select' && (
               <textarea
-                className="w-full mb-2 border px-3 py-1 rounded"
+                className="w-full mb-2 border px-3 py-1 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 placeholder="選項（每行一個）"
                 value={q.options?.join('\n') || ''}
                 onChange={(e) => updateQuestion(q.id, {
@@ -131,7 +131,7 @@ export default function EditFormPage() {
                 })}
               />
             )}
-            <label className="text-sm flex items-center gap-2">
+            <label className="text-sm flex items-center gap-2 text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={q.required}
@@ -141,7 +141,7 @@ export default function EditFormPage() {
             </label>
             <button
               onClick={() => deleteQuestion(q.id)}
-              className="text-red-500 text-sm mt-2"
+              className="bg-red-100 text-red-700 text-sm mt-2 px-2 py-1 rounded hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800"
             >
               刪除此題
             </button>
@@ -149,7 +149,7 @@ export default function EditFormPage() {
         ))}
         <button
           onClick={addQuestion}
-          className="bg-gray-700 text-white px-4 py-2 rounded"
+          className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800"
         >
           ➕ 新增問題
         </button>
@@ -158,17 +158,17 @@ export default function EditFormPage() {
       <div className="mt-4 flex gap-4">
         <button
           onClick={handleSave}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           💾 儲存表單
         </button>
-        {message && <p className="text-sm text-green-600 mt-2">{message}</p>}
+        {message && <p className="text-sm text-green-600 dark:text-green-400 mt-2">{message}</p>}
       </div>
 
       <div className="mt-4 flex">
         <button
-          onClick={() => window.location.href = '/dashboard'}
-          className="bg-gray-600 text-white px-4 py-2 rounded"
+          onClick={() => window.location.href = '/event/hold'}
+          className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
         >
           返回 Dashboard
         </button>

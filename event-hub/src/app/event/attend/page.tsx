@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../../lib/supabase'
 import { useRouter } from 'next/navigation'
 
 type Event = {
@@ -13,7 +13,6 @@ type Event = {
 
 export default function DashboardPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
-  const [organizedEvents, setOrganizedEvents] = useState<Event[]>([])
   const [joinedEvents, setJoinedEvents] = useState<Event[]>([])
   const router = useRouter()
 
@@ -31,15 +30,8 @@ export default function DashboardPage() {
 
       setUserEmail(user.email ?? '')
 
-      const { data: organizedData } = await supabase
-        .from('events')
-        .select('*')
-        .eq('organizer_id', user.id)
-
-      setOrganizedEvents(organizedData ?? [])
-
       const { data: joinedData } = await supabase
-        .from('event_participants')
+        .from('registrations')
         .select('event_id, events(*)')
         .eq('user_id', user.id)
 
@@ -50,28 +42,6 @@ export default function DashboardPage() {
 
     fetchUserAndEvents()
   }, [router])
-
-
-  const handleCreateEvent = () => {
-    router.push('/dashboard/event/create')
-  }
-
-  const renderEventActions = (eventId: string) => (
-    <div className="mt-4 flex gap-3">
-      <button
-        onClick={() => router.push(`/dashboard/event/edit-form?id=${eventId}`)}
-        className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-      >
-        編輯表單
-      </button>
-      <button
-        onClick={() => router.push(`/dashboard/event/view-register?id=${eventId}`)}
-        className="text-sm text-green-600 dark:text-green-400 hover:underline"
-      >
-        查看報名者
-      </button>
-    </div>
-  )
 
   const renderEvents = (events: Event[], isOrganized: boolean) => {
     if (events.length === 0) {
@@ -89,7 +59,6 @@ export default function DashboardPage() {
       >
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{event.title}</h2>
         <p className="text-sm text-gray-700 dark:text-gray-300">{event.description}</p>
-        {isOrganized && renderEventActions(event.event_id)}
       </div>
     ))
   }
@@ -97,20 +66,6 @@ export default function DashboardPage() {
   return (
     <>
       <main className="max-w-5xl mx-auto px-6 py-8 text-black dark:text-white">
-        <button
-          className="mb-8 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-          onClick={handleCreateEvent}
-        >
-          ➕ 建立新活動
-        </button>
-
-        <section className="mb-12">
-          <h2 className="text-xl font-bold mb-4">你舉辦的活動</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {renderEvents(organizedEvents, true)}
-          </div>
-        </section>
-
         <section>
           <h2 className="text-xl font-bold mb-4">你參加的活動</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
