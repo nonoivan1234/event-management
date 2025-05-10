@@ -29,6 +29,12 @@ export default function CreateEventPage() {
       return
     }
 
+    if(form.deadline <= new Date().toISOString().split('T')[0]) {
+      setMessage('❗ 截止日期必須在今天之後')
+      setLoading(false)
+      return
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -44,6 +50,7 @@ export default function CreateEventPage() {
       .insert({
         ...form,
         organizer_id: user.id,
+        form_schema: {"personalFields": ["name"], "customQuestions": []}
       })
       .select()
       .single()
@@ -67,6 +74,7 @@ export default function CreateEventPage() {
         <label className="block mb-2 text-gray-700 dark:text-gray-200">
           活動名稱
           <input
+            required
             className="w-full border px-3 py-2 rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             value={form.title}
             onChange={(e) => handleChange('title', e.target.value)}
@@ -85,6 +93,8 @@ export default function CreateEventPage() {
         <label className="block mb-2 text-gray-700 dark:text-gray-200">
           表單截止日期
           <input
+            required
+            min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
             type="date"
             className="w-full border px-3 py-2 rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             value={form.deadline}

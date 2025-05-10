@@ -12,25 +12,19 @@ export default function HomePage() {
   const [user, setUser] = useState<any>(null)
   const [registrations, setRegistrations] = useState<any[]>([])
 
-  // 🚀 抓 events 與使用者登入狀態
+  // 🚀 抓 events 與使用者登入狀態（SQL 排序 by deadline ASC）
   useEffect(() => {
     const fetchData = async () => {
       const [{ data: userData }, { data: eventsData, error }] = await Promise.all([
         supabase.auth.getUser(),
-        supabase
-          .from('events')
-          .select(`
-            *,
-            users:organizer_id (
-              name
-            )
-          `),
+        supabase.from('events')
+          .select(`*, users:organizer_id ( name )`)
+          .order('deadline', { ascending: true })
       ])
 
       if (userData?.user) {
         setUser(userData.user)
 
-        // 🔍 查詢該使用者的報名紀錄
         const { data: regData } = await supabase
           .from('registrations')
           .select('event_id')
@@ -87,11 +81,14 @@ export default function HomePage() {
         {filteredEvents.map((event) => {
           const registered = isRegistered(event.event_id)
           const loggedIn = !!user
-          const disabled = !loggedIn || registered
+          const expired = new Date(event.deadline) < new Date()
+          const disabled = !loggedIn || registered || expired
           const title = !loggedIn
             ? '請先登入才能報名'
             : registered
             ? '你已報名此活動'
+            : expired
+            ? '活動已結束'
             : ''
 
           return (
@@ -101,7 +98,10 @@ export default function HomePage() {
             >
               <div>
                 <h2 className="text-lg font-semibold">{event.title}</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{event.deadline}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                  {event.deadline}
+                  {expired && <span className="text-red-500 ml-2">(已結束)</span>}
+                </p>
                 <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{event.description}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   🧑‍💼 {event.users?.name || '匿名主辦人'}
@@ -115,14 +115,13 @@ export default function HomePage() {
                 }}
                 disabled={disabled}
                 title={title}
-                className={`mt-4 px-4 py-2 rounded
-                  ${
-                    disabled
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400'
-                      : 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200'
-                  }`}
+                className={`mt-4 px-4 py-2 rounded ${
+                  disabled
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400'
+                    : 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200'
+                }`}
               >
-                {registered ? '已報名' : 'Sign Up'}
+                {expired ? '活動已結束' : registered ? '已報名' : 'Sign Up'}
               </button>
             </div>
           )
