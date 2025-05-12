@@ -148,7 +148,7 @@ export default function HomePage() {
                     <div>
                       <h2 className="text-lg font-semibold truncate">{event.title}</h2>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
-                        {event.deadline}
+                        截止日期：{event.deadline}
                       </p>
                       <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">{event.description}</p>
                       <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
@@ -204,7 +204,7 @@ export default function HomePage() {
                     <div>
                       <h2 className="text-lg font-semibold truncate">{event.title}</h2>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
-                        {event.deadline} <span className="text-red-500 ml-2">(已結束)</span>
+                        截止日期：{event.deadline} <span className="text-red-500 ml-2">(已結束)</span>
                       </p>
                       <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">{event.description}</p>
                       <p className="text-sm text-gray-600 dark:text-gray-400 truncate">

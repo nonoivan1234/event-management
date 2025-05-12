@@ -7,15 +7,17 @@ import { useRouter } from 'next/navigation'
 
 type Event = {
   event_id: string
+  organizer_id: string
   title: string
   description: string
   created_at: string
   visible: boolean
   deadline?: string
+  events?: [string]
 }
 
 export default function DashboardPage() {
-  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [userID, setUserID] = useState<string | null>(null)
   const [organizedEvents, setOrganizedEvents] = useState<Event[]>([])
   const [NormalEvents, setNormalEvents] = useState<Event[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -30,31 +32,26 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchUserAndEvents = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser()
+      const { data: { user }, error} = await supabase.auth.getUser()
 
-      if (error || !user) {
-        router.push('/auth/login')
-        return
-      }
+      if (error || !user) return router.push('/auth/login')
 
-      setUserEmail(user.email ?? '')
+      setUserID(user.id)
 
       const { data: organizedData } = await supabase
         .from('event_organizers')
-        .select('events(event_id, title, description, created_at, visible, deadline)')
+        .select('events(event_id, organizer_id, title, description, created_at, visible, deadline)')
         .eq('role_id', user.id)
         .eq('role', 'organizer')
       setOrganizedEvents(organizedData?.map((item) => item.events) || [])
 
       const { data: normalData } = await supabase
         .from('event_organizers')
-        .select('events(event_id, title, description, created_at, visible, deadline)')
+        .select('events(event_id, organizer_id, title, description, created_at, visible, deadline)')
         .eq('role_id', user.id)
         .eq('role', 'normal')
       setNormalEvents(normalData?.map((item) => item.events) || [])
+
 
       const { data: users } = await supabase.from('users').select('user_id, email')
       const map: Record<string, string> = {}
@@ -88,6 +85,8 @@ export default function DashboardPage() {
   }
 
   const openEditorModal = async (eventId: string) => {
+    setOrganizers([])
+    setNormals([])
     setEditingEventId(eventId)
     setShowEditorModal(true)
 
@@ -157,13 +156,13 @@ export default function DashboardPage() {
     setNormalEvents((prev) => prev.filter((event) => event.event_id !== eventID))
   }
 
-  const renderEventActions = (eventId: string, visible: boolean, hold: boolean) => (
+  const renderEventActions = (eventId: string, visible: boolean, hold: boolean, org: boolean) => (
     <div className="mt-4 flex gap-3 flex-wrap">
       {hold && (
         <>
           <button onClick={() => openEditorModal(eventId)} className="text-sm text-indigo-600 dark:text-indigo-300 hover:underline">編輯人員</button>
           <button onClick={() => router.push(`/event/modify?id=${eventId}`)} className="text-sm text-indigo-600 dark:text-indigo-300 hover:underline">編輯活動</button>
-          <button onClick={() => delete_event(eventId)} className="text-sm text-red-600 dark:text-red-300 hover:underline">刪除活動</button>
+          {org && <button onClick={() => delete_event(eventId)} className="text-sm text-red-600 dark:text-red-300 hover:underline">刪除活動</button>}
           <button onClick={() => handleToggleVisibility(eventId, visible)} className={`text-sm ${visible ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'} hover:underline`}>
             {visible ? '🔒 隱藏活動' : '🔓 顯示活動'}
           </button>
@@ -273,14 +272,14 @@ export default function DashboardPage() {
             <section className="mb-12">
               <h2 className="text-xl font-bold mb-4">主辦的活動</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredEvents(organizedEvents).map(event => (
+                { filteredEvents(organizedEvents).map(event => (
                   <div key={event.event_id} className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 transition hover:shadow-md">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {event.title}{!event.visible && (<span className="ml-2 text-sm text-red-500">(已隱藏)</span>)}
                     </h2>
                     <p className="text-sm text-gray-700 dark:text-gray-300">{event.description}</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">截止日期：{new Date(event.deadline).toLocaleDateString()}{new Date(event.deadline) <= new Date() && (<span className="text-red-500 ml-2">(已結束)</span>)}</p>
-                    {renderEventActions(event.event_id, event.visible, true)}
+                    {renderEventActions(event.event_id, event.visible, true, event.organizer_id === userID)}
                   </div>
                 ))}
               </div>
@@ -295,7 +294,7 @@ export default function DashboardPage() {
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{event.title}</h2>
                     <p className="text-sm text-gray-700 dark:text-gray-300">{event.description}</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">截止日期：{new Date(event.deadline).toLocaleDateString()}</p>
-                    {renderEventActions(event.event_id, event.visible, false)}
+                    {renderEventActions(event.event_id, event.visible, false, false)}
                   </div>
                 ))}
               </div>
