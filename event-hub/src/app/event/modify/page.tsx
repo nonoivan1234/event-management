@@ -27,8 +27,10 @@ export default function EventFormPage() {
   const [notAuthorized, setNotAuthorized] = useState(false)
 
   useEffect(() => {
-    if (!eventId) return
-
+    if (!eventId) {
+      setLoading(false)
+      return
+    }
     const fetchEventData = async () => {
       const { data: userData } = await supabase.auth.getUser()
       const currentUser = userData?.user
@@ -186,7 +188,7 @@ export default function EventFormPage() {
         {isEdit ? '編輯活動' : '建立新活動'}
       </h1>
 
-      <label className="block mb-2">活動名稱
+      <label className="block mb-2">活動名稱（必填）
         <input className="w-full border px-3 py-2 rounded mt-1 dark:bg-gray-700 dark:text-white"
           value={form.title} onChange={(e) => handleChange('title', e.target.value)} />
       </label>
@@ -196,7 +198,7 @@ export default function EventFormPage() {
           value={form.description} onChange={(e) => handleChange('description', e.target.value)} />
       </label>
 
-      <label className="block mb-2">截止日期
+      <label className="block mb-2">截止日期（必填）
         <input type="date"
           className="w-full border px-3 py-2 rounded mt-1 dark:bg-gray-700 dark:text-white"
           min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
