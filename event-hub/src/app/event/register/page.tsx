@@ -83,12 +83,17 @@ export default function RegisterPage() {
     if (!userInfo || !formSchema) return
 
     // 驗證必填欄位
-    const missingFields = formSchema.customQuestions?.filter((q: any) => q.required && !answers[q.id])
+    const Cust_missingFields = formSchema.customQuestions?.filter((q: any) => q.required && !answers[q.id]?.trim()) || []
+    const Person_missingFields = formSchema.personalFields?.filter((field: string) => !userInfo[field]?.trim()) || []
 
-    if (missingFields.length > 0) {
-      setMessage(`❌ 請填寫所有必填欄位：${missingFields.map((q: any) => q.label).join('、')}`)
+    if (Cust_missingFields.length + Person_missingFields.length > 0) {
+      let msg = '請填寫所有必填欄位：'
+      if (Person_missingFields.length > 0) msg += Person_missingFields.join('、')
+      if (Cust_missingFields.length > 0) msg += Cust_missingFields.map((q: any) => q.label).join('、')
+      setMessage(`⚠️ ${msg}`)
       return
     }
+
 
     const payload = {
       event_id: eventId,
@@ -139,7 +144,7 @@ export default function RegisterPage() {
       )}
 
       <div className="mb-6">
-        <h2 className="font-semibold mb-2 text-gray-800 dark:text-white">個人資料（自動帶入）</h2>
+        <h2 className="font-semibold mb-2 text-gray-800 dark:text-white">個人資料（自動帶入，請至編輯個人資料修改）</h2>
         {formSchema.personalFields?.map((field: string) => (
           <div key={field} className="mb-2">
             <label className="block text-sm text-gray-700 dark:text-gray-300">

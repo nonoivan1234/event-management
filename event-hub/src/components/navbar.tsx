@@ -94,8 +94,11 @@ export default function Navbar() {
           </DropdownMenuContent>
         </DropdownMenu>
       </>) : (<>
-        <div className="flex items-center gap-5">
-          {userEmail && <button className="bg-green-500 text-white rounded-full border-none px-4 py-2 text-sm font-bold hover:bg-green-600 dark:bg-green-400 dark:text-black dark:hover:bg-green-300 transition" onClick={() => router.push('/event/modify')}>創建活動</button>}
+        <div className="flex items-center gap-3">
+          {userEmail && <>
+          <button className="bg-blue-500 text-white rounded-full border-none px-4 py-2 text-sm font-bold hover:bg-blue-600 dark:bg-blue-400 dark:text-black dark:hover:bg-blue-300 transition" onClick={() => router.push('/')}>參加活動</button>
+          <button className="bg-green-500 text-white rounded-full border-none px-4 py-2 text-sm font-bold hover:bg-green-600 dark:bg-green-400 dark:text-black dark:hover:bg-green-300 transition" onClick={() => router.push('/event/modify')}>創建活動</button>
+          </>}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               {userEmail ? (
