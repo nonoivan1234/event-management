@@ -35,12 +35,12 @@ export default function Navbar() {
         setAvatarBase64(null)
       } else {
         setUserEmail(data.user.email ?? null)
-        const { data: avatar, error } = await supabase
+        const { data: avatar, error: avatarError } = await supabase
           .from('users')
           .select('avatar')
           .eq('user_id', data.user.id)
           .single()
-        if (error) setAvatarBase64(defaultAvatar)
+        if (avatarError) setAvatarBase64(defaultAvatar)
         else setAvatarBase64(avatar.avatar ?? defaultAvatar)
       }
     }
@@ -57,7 +57,6 @@ export default function Navbar() {
     if (mode === 'dark') html.classList.add('dark')
     else if (mode === 'light') html.classList.remove('dark')
     else {
-      // System
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       html.classList.toggle('dark', prefersDark)
     }
@@ -77,7 +76,7 @@ export default function Navbar() {
       >
         🎓 Event Hub
       </h1>
-      {AuthNavbar ? (<>
+      {AuthNavbar ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="text-sm fw-bold hover:underline">🎨 Theme</button>
@@ -94,22 +93,39 @@ export default function Navbar() {
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
-      </>) : (<>
+      ) : (
         <div className="flex items-center gap-3">
-          {userEmail && <>
-          <button className="bg-blue-500 text-white rounded-full border-none px-4 py-2 text-sm font-bold hover:bg-blue-600 dark:bg-blue-400 dark:text-black dark:hover:bg-blue-300 transition" onClick={() => router.push('/')}>參加活動</button>
-          <button className="bg-green-500 text-white rounded-full border-none px-4 py-2 text-sm font-bold hover:bg-green-600 dark:bg-green-400 dark:text-black dark:hover:bg-green-300 transition" onClick={() => router.push('/event/modify')}>創建活動</button>
-          <NotificationBell />
-          </>}
+          {userEmail && (
+            <>
+              <button
+                className="bg-blue-500 text-white rounded-full px-4 py-2 text-sm font-bold hover:bg-blue-600 dark:bg-blue-400 dark:text-black dark:hover:bg-blue-300 transition"
+                onClick={() => router.push('/')}
+              >
+                參加活動
+              </button>
+              <button
+                className="bg-green-500 text-white rounded-full px-4 py-2 text-sm font-bold hover:bg-green-600 dark:bg-green-400 dark:text-black dark:hover:bg-green-300 transition"
+                onClick={() => router.push('/event/modify')}
+              >
+                創建活動
+              </button>
+              <NotificationBell />
+            </>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               {userEmail ? (
                 <Avatar className="w-10 h-10 cursor-pointer">
-                  <AvatarImage src={avatarBase64} alt="user avatar" className="object-cover" />
+                  <AvatarImage src={avatarBase64!} alt="user avatar" className="object-cover" />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
-              ): (
-                <button className="bg-blue-500 text-white rounded-full border-none px-4 py-2 text-sm font-bold hover:bg-blue-600 dark:bg-blue-400 dark:text-black dark:hover:bg-blue-300 transition">請先登入</button>
+              ) : (
+                <button
+                  className="bg-blue-500 text-white rounded-full px-4 py-2 text-sm font-bold hover:bg-blue-600 dark:bg-blue-400 dark:text-black dark:hover:bg-blue-300 transition"
+                  onClick={() => router.push('/auth/login')}
+                >
+                  請先登入
+                </button>
               )}
             </DropdownMenuTrigger>
 
@@ -119,14 +135,20 @@ export default function Navbar() {
             >
               {userEmail ? (
                 <>
-                  <DropdownMenuLabel className="truncate">Email: {userEmail}</DropdownMenuLabel>
+                  <DropdownMenuLabel className="truncate">
+                    Email: {userEmail}
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => router.push('/profile')}>
                     編輯個人資料
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push('/event/hold')}>您舉辦的活動</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/event/attend')}>您參加的活動</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/event/hold')}>
+                    您舉辦的活動
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/event/attend')}>
+                    您參加的活動
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel>🎨 Theme</DropdownMenuLabel>
                   <DropdownMenuRadioGroup value={theme} onValueChange={applyTheme}>
@@ -135,11 +157,15 @@ export default function Navbar() {
                     <DropdownMenuRadioItem value="system">🖥️ System</DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>登出</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    登出
+                  </DropdownMenuItem>
                 </>
               ) : (
                 <>
-                  <DropdownMenuLabel className="text-center">尚未登入</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-center">
+                    尚未登入
+                  </DropdownMenuLabel>
                   <DropdownMenuLabel>🎨 Theme</DropdownMenuLabel>
                   <DropdownMenuRadioGroup value={theme} onValueChange={applyTheme}>
                     <DropdownMenuRadioItem value="light">☀️ Light</DropdownMenuRadioItem>
@@ -158,8 +184,7 @@ export default function Navbar() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </>
-    )}
+      )}
     </nav>
   )
 }

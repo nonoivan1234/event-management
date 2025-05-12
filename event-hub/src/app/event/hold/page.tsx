@@ -1,4 +1,3 @@
-/* page.tsx */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,58 +5,59 @@ import { supabase } from "../../../lib/supabase";
 import { useRouter } from "next/navigation";
 
 type Event = {
-  event_id: string
-  organizer_id: string
-  title: string
-  description: string
-  created_at: string
-  visible: boolean
-  deadline?: string
-}
+  event_id: string;
+  organizer_id: string;
+  title: string;
+  description: string;
+  created_at: string;
+  visible: boolean;
+  deadline?: string;
+};
 
 export default function DashboardPage() {
-  const [userID, setUserID] = useState<string | null>(null)
-  const [organizedEvents, setOrganizedEvents] = useState<Event[]>([])
-  const [NormalEvents, setNormalEvents] = useState<Event[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filterOption, setFilterOption] = useState('all')
-  const [showEditorModal, setShowEditorModal] = useState(false)
-  const [editingEventId, setEditingEventId] = useState<string | null>(null)
-  const [organizers, setOrganizers] = useState<string[]>([])
-  const [normals, setNormals] = useState<string[]>([])
-  const [userMap, setUserMap] = useState<Record<string, string>>({}) // user_id -> email
+  const [userID, setUserID] = useState<string | null>(null);
+  const [organizedEvents, setOrganizedEvents] = useState<Event[]>([]);
+  const [NormalEvents, setNormalEvents] = useState<Event[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterOption, setFilterOption] = useState("all");
+  const [showEditorModal, setShowEditorModal] = useState(false);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [organizers, setOrganizers] = useState<string[]>([]);
+  const [normals, setNormals] = useState<string[]>([]);
+  const [userMap, setUserMap] = useState<Record<string, string>>({}); // user_id -> name
 
   const router = useRouter();
 
   useEffect(() => {
     const fetchUserAndEvents = async () => {
-      const { data: { user }, error} = await supabase.auth.getUser()
-
-      if (error || !user) return router.push('/auth/login')
-
-      setUserID(user.id)
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) return router.push('/auth/login');
+      setUserID(user.id);
 
       const { data: organizedData } = await supabase
         .from('event_organizers')
         .select('events(event_id, organizer_id, title, description, created_at, visible, deadline)')
         .eq('role_id', user.id)
-        .eq('role', 'organizer')
-      setOrganizedEvents(organizedData?.map((item) => item.events) || [])
+        .eq('role', 'organizer');
+      setOrganizedEvents(organizedData?.map(item => item.events) || []);
 
       const { data: normalData } = await supabase
         .from('event_organizers')
         .select('events(event_id, organizer_id, title, description, created_at, visible, deadline)')
         .eq('role_id', user.id)
-        .eq('role', 'normal')
-      setNormalEvents(normalData?.map((item) => item.events) || [])
+        .eq('role', 'normal');
+      setNormalEvents(normalData?.map(item => item.events) || []);
 
-
-      const { data: users } = await supabase.from('users').select('user_id, email')
-      const map: Record<string, string> = {}
-      users?.forEach((u) => map[u.user_id] = u.email)
-      setUserMap(map)
-    }
-
+      // 改為抓取 users.name
+      const { data: users } = await supabase
+        .from('users')
+        .select('user_id, name');
+      const map: Record<string, string> = {};
+      users?.forEach((u) => {
+        map[u.user_id] = u.name ?? '（未填姓名）';
+      });
+      setUserMap(map);
+    };
     fetchUserAndEvents();
   }, [router]);
 
@@ -73,45 +73,37 @@ export default function DashboardPage() {
       .from("events")
       .update({ visible: !currentVisible })
       .eq("event_id", eventId);
-
     if (error) {
       alert("更新可見狀態失敗");
       return;
     }
-
-    setOrganizedEvents((prev) =>
-      prev.map((event) =>
-        event.event_id === eventId
-          ? { ...event, visible: !currentVisible }
-          : event
+    setOrganizedEvents(prev =>
+      prev.map(event =>
+        event.event_id === eventId ? { ...event, visible: !currentVisible } : event
       )
     );
   };
 
   const openEditorModal = async (eventId: string) => {
-    setOrganizers([])
-    setNormals([])
-    setEditingEventId(eventId)
-    setShowEditorModal(true)
+    setOrganizers([]);
+    setNormals([]);
+    setEditingEventId(eventId);
+    setShowEditorModal(true);
 
     const { data, error } = await supabase
       .from("event_organizers")
       .select("role_id, role")
       .eq("event_id", eventId);
-
     if (error) {
       alert("讀取人員失敗");
       return;
     }
-
     const org: string[] = [];
     const nor: string[] = [];
-
     for (const item of data || []) {
       if (item.role === "organizer") org.push(item.role_id);
       else if (item.role === "normal") nor.push(item.role_id);
     }
-
     setOrganizers(org);
     setNormals(nor);
   };
@@ -125,7 +117,6 @@ export default function DashboardPage() {
     if (fetch_error) return alert("找不到活動");
 
     event_data.title += "_複製";
-
     const user_id = (await supabase.auth.getUser()).data.user?.id;
 
     const { error: error_create_event, data: data_create_event } =
@@ -135,7 +126,7 @@ export default function DashboardPage() {
         .select()
         .single();
     if (error_create_event) return alert(`❌ 複製失敗：${error_create_event}`);
-    const { error: error_role, data: data_role } = await supabase
+    const { error: error_role } = await supabase
       .from("event_organizers")
       .insert({
         event_id: data_create_event.event_id,
@@ -149,8 +140,7 @@ export default function DashboardPage() {
   };
 
   const delete_event = async (eventID: string) => {
-    confirm("確定要刪除此活動嗎？");
-    if (!confirm) return;
+    if (!confirm("確定要刪除此活動嗎？")) return;
     const { data, error } = await supabase
       .from("events")
       .select("organizer_id")
@@ -164,15 +154,16 @@ export default function DashboardPage() {
       .eq("event_id", eventID);
     if (err_delete) return alert("刪除失敗");
     alert("刪除成功");
-    setOrganizedEvents((prev) =>
-      prev.filter((event) => event.event_id !== eventID)
-    );
-    setNormalEvents((prev) =>
-      prev.filter((event) => event.event_id !== eventID)
-    );
+    setOrganizedEvents(prev => prev.filter(e => e.event_id !== eventID));
+    setNormalEvents(prev => prev.filter(e => e.event_id !== eventID));
   };
 
-  const renderEventActions = (eventId: string, visible: boolean, hold: boolean, org: boolean) => (
+  const renderEventActions = (
+    eventId: string,
+    visible: boolean,
+    hold: boolean,
+    org: boolean
+  ) => (
     <div className="mt-4 flex gap-3 flex-wrap">
       {hold && (
         <>
@@ -201,13 +192,12 @@ export default function DashboardPage() {
 
   const filteredEvents = (events: Event[]) => {
     const now = new Date();
-    return events.filter((event) => {
+    return events.filter(event => {
       const matchesSearch =
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.description.toLowerCase().includes(searchTerm.toLowerCase());
       const deadline = event.deadline ? new Date(event.deadline) : null;
       const isEnded = deadline ? deadline < now : false;
-
       switch (filterOption) {
         case "ended":
           return matchesSearch && isEnded;
@@ -227,10 +217,7 @@ export default function DashboardPage() {
     <div className="flex-1">
       <div className="flex flex-wrap gap-2 mb-2">
         {state.map((id, index) => (
-          <div
-            key={id}
-            className="flex items-center bg-blue-600 text-white px-2 py-1 rounded"
-          >
+          <div key={id} className="flex items-center bg-blue-600 text-white px-2 py-1 rounded">
             <span className="mr-1 text-sm">{userMap[id] ?? id}</span>
             <button
               className="text-red-300 hover:text-red-500"
@@ -249,7 +236,7 @@ export default function DashboardPage() {
                   .eq("role_id", id)
                   .eq("role", role);
                 if (!error)
-                  setState((prev) => prev.filter((_, i) => i !== index));
+                  setState(prev => prev.filter((_, i) => i !== index));
                 else alert("移除失敗");
               }}
             >
@@ -261,9 +248,9 @@ export default function DashboardPage() {
           type="email"
           placeholder="輸入後按 Enter"
           className="bg-gray-700 text-white px-2 py-1 rounded"
-          onKeyDown={async (e) => {
+          onKeyDown={async e => {
             if (e.key !== "Enter") return;
-            const input = e.currentTarget;
+            const input = e.currentTarget as HTMLInputElement;
             const email = input.value.trim();
             const { data, error } = await supabase
               .from("users")
@@ -283,7 +270,7 @@ export default function DashboardPage() {
             const { error: insertError } = await supabase
               .from("event_organizers")
               .insert({ event_id: editingEventId, role_id: userId, role });
-            if (!insertError) setState((prev) => [...prev, userId]);
+            if (!insertError) setState(prev => [...prev, userId]);
             else alert(insertError.message);
             input.value = "";
           }}
@@ -295,18 +282,17 @@ export default function DashboardPage() {
   return (
     <main className="w-full max-w-6xl mx-auto py-12 px-4 dark:text-white">
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        {/* 左側：搜尋欄位 + 篩選 */}
         <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
           <input
             type="text"
             placeholder="Search activities..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             className="border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:text-white dark:border-gray-600 w-full md:w-64"
           />
           <select
             value={filterOption}
-            onChange={(e) => setFilterOption(e.target.value)}
+            onChange={e => setFilterOption(e.target.value)}
             className="border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:text-white dark:border-gray-600"
           >
             <option value="all">所有活動</option>
@@ -314,8 +300,6 @@ export default function DashboardPage() {
             <option value="not_ended">僅顯示未結束</option>
           </select>
         </div>
-
-        {/* 右側：建立新活動按鈕 */}
         <button
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 whitespace-nowrap"
           onClick={handleCreateEvent}
@@ -323,6 +307,7 @@ export default function DashboardPage() {
           ➕ 建立新活動
         </button>
       </header>
+
       {organizedEvents.length === 0 && NormalEvents.length === 0 ? (
         <div className="text-center mt-10 text-gray-500 dark:text-gray-400">
           <p className="text-xl font-semibold mb-2">尚無活動</p>
@@ -337,24 +322,31 @@ export default function DashboardPage() {
           </button>
         </div>
       ) : (
-        <>
+        <>  
           {organizedEvents.length > 0 && (
             <section className="mb-12">
               <h2 className="text-xl font-bold mb-4">主辦的活動</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                { filteredEvents(organizedEvents).map(event => (
+                {filteredEvents(organizedEvents).map(event => (
                   <div key={event.event_id} className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 transition hover:shadow-md">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {event.title}{!event.visible && (<span className="ml-2 text-sm text-red-500">(已隱藏)</span>)}
                     </h2>
                     <p className="text-sm text-gray-700 dark:text-gray-300">{event.description}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">截止日期：{new Date(event.deadline).toLocaleDateString()}{new Date(event.deadline) <= new Date() && (<span className="text-red-500 ml-2">(已結束)</span>)}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      截止日期：{new Date(event.deadline).toLocaleDateString()}
+                      {new Date(event.deadline) <= new Date() && (<span className="text-red-500 ml-2">(已結束)</span>)}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      🧑‍💼主辦者：{userMap[event.organizer_id] != "" ? userMap[event.organizer_id] :"Anonymous"}{event.organizer_id == userID && "（您是創辦人）"}
+                    </p>
                     {renderEventActions(event.event_id, event.visible, true, event.organizer_id === userID)}
                   </div>
                 ))}
               </div>
             </section>
           )}
+
           {NormalEvents.length > 0 && (
             <section className="mb-12">
               <h2 className="text-xl font-bold mb-4">協辦的活動</h2>
@@ -363,7 +355,12 @@ export default function DashboardPage() {
                   <div key={event.event_id} className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 transition hover:shadow-md">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{event.title}</h2>
                     <p className="text-sm text-gray-700 dark:text-gray-300">{event.description}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">截止日期：{new Date(event.deadline).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      截止日期：{new Date(event.deadline).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      🧑‍💼主辦者：{userMap[event.organizer_id] ?? event.organizer_id}
+                    </p>
                     {renderEventActions(event.event_id, event.visible, false, false)}
                   </div>
                 ))}
@@ -377,12 +374,12 @@ export default function DashboardPage() {
         <div
           className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
           onClick={() => setShowEditorModal(false)}
-          onKeyDown={(e) => e.key === "Escape" && setShowEditorModal(false)}
+          onKeyDown={e => e.key === "Escape" && setShowEditorModal(false)}
           tabIndex={0}
         >
           <div
             className="bg-gray-800 p-6 rounded-lg w-[700px] max-w-full shadow-lg"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <h2 className="text-lg font-bold mb-4 text-white">編輯舉辦人員</h2>
             <div className="flex gap-6">

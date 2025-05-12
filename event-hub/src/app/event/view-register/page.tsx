@@ -211,6 +211,7 @@ export default function ViewRegistrationsPage() {
         <tbody>
           {(isEditing ? editedRegs : registrations).map((reg, i) => (
             <tr key={i} className="border-t hover:bg-gray-50 dark:hover:bg-gray-800">
+              {/* 个人信息部分保持不变 */}
               {formSchema.personalFields.map((field: string) => (
                 <td key={field} className="border px-2 py-1 text-gray-800 dark:text-gray-100">
                   {isEditing ? (
@@ -225,21 +226,41 @@ export default function ViewRegistrationsPage() {
                   )}
                 </td>
               ))}
+
+              {/* customQuestions 部分：根据 q.type 渲染不同控件 */}
               {formSchema.customQuestions.map((q: any) => (
                 <td key={q.id} className="border px-2 py-1 text-gray-800 dark:text-gray-100">
                   {isEditing ? (
-                    <select
-                      value={reg.answers[q.id] || ''}
-                      onChange={e => onAnswerChange(i, q.id, e.target.value)}
-                      className="w-full border rounded px-1 py-0.5 text-sm"
-                    >
-                      <option value="">請選擇</option>
-                      {q.options?.map((opt: string) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
+                    q.type === 'text' ? (
+                      <input
+                        type="text"
+                        value={reg.answers[q.id] || ''}
+                        onChange={e => onAnswerChange(i, q.id, e.target.value)}
+                        required={q.required}
+                        className="w-full border rounded px-1 py-0.5 text-sm"
+                      />
+                    ) : q.type === 'textarea' ? (
+                      <textarea
+                        value={reg.answers[q.id] || ''}
+                        onChange={e => onAnswerChange(i, q.id, e.target.value)}
+                        required={q.required}
+                        className="w-full border rounded px-1 py-0.5 text-sm"
+                      />
+                    ) : q.type === 'select' ? (
+                      <select
+                        value={reg.answers[q.id] || ''}
+                        onChange={e => onAnswerChange(i, q.id, e.target.value)}
+                        required={q.required}
+                        className="w-full border rounded px-1 py-0.5 text-sm"
+                      >
+                        <option value="">請選擇</option>
+                        {q.options?.map((opt: string) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    ) : null
                   ) : (
                     reg.answers?.[q.id] ?? '-'
                   )}
