@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import {
   DropdownMenu,
@@ -109,7 +109,7 @@ export default function Navbar() {
               >
                 創建活動
               </button>
-              <NotificationBell />
+              <NotificationBell key={pathname} />
             </>
           )}
           <DropdownMenu>

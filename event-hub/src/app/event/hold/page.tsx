@@ -24,7 +24,8 @@ export default function DashboardPage() {
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [organizers, setOrganizers] = useState<string[]>([]);
   const [normals, setNormals] = useState<string[]>([]);
-  const [userMap, setUserMap] = useState<Record<string, string>>({}); // user_id -> name
+  const [userMap, setUserMap] = useState<Record<string, string>>({}); // user_id -> email
+  const [userNameMap, setUserNameMap] = useState<Record<string, string>>({}); // user_id -> name
 
   const router = useRouter();
 
@@ -51,12 +52,15 @@ export default function DashboardPage() {
       // 改為抓取 users.name
       const { data: users } = await supabase
         .from('users')
-        .select('user_id, name');
-      const map: Record<string, string> = {};
+        .select('user_id, name, email');
+      const nmap: Record<string, string> = {};
+      const emap: Record<string, string> = {};
       users?.forEach((u) => {
-        map[u.user_id] = u.name ?? '（未填姓名）';
+        nmap[u.user_id] = u.name ?? '（未填姓名）';
+        emap[u.user_id] = u.email;
       });
-      setUserMap(map);
+      setUserMap(emap);
+      setUserNameMap(nmap);
     };
     fetchUserAndEvents();
   }, [router]);
@@ -216,38 +220,10 @@ export default function DashboardPage() {
   ) => (
     <div className="flex-1">
       <div className="flex flex-wrap gap-2 mb-2">
-        {state.map((id, index) => (
-          <div key={id} className="flex items-center bg-blue-600 text-white px-2 py-1 rounded">
-            <span className="mr-1 text-sm">{userMap[id] ?? id}</span>
-            <button
-              className="text-red-300 hover:text-red-500"
-              onClick={async () => {
-                const { data } = await supabase
-                  .from("events")
-                  .select("organizer_id")
-                  .eq("event_id", editingEventId);
-                if (!data) return alert("找不到活動");
-                if (data[0].organizer_id === id)
-                  return alert("無法移除原主辦人");
-                const { error } = await supabase
-                  .from("event_organizers")
-                  .delete()
-                  .eq("event_id", editingEventId)
-                  .eq("role_id", id)
-                  .eq("role", role);
-                if (!error)
-                  setState(prev => prev.filter((_, i) => i !== index));
-                else alert("移除失敗");
-              }}
-            >
-              ✕
-            </button>
-          </div>
-        ))}
         <input
           type="email"
-          placeholder="輸入後按 Enter"
-          className="bg-gray-700 text-white px-2 py-1 rounded"
+          placeholder="輸入Email後按 Enter"
+          className="w-full bg-gray-100 text-black dark:bg-gray-700 dark:text-white px-2 py-1 rounded border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500"
           onKeyDown={async e => {
             if (e.key !== "Enter") return;
             const input = e.currentTarget as HTMLInputElement;
@@ -275,9 +251,41 @@ export default function DashboardPage() {
             input.value = "";
           }}
         />
+        {state.map((id, index) => (
+          <div
+            key={id}
+            className="flex items-center bg-blue-600 text-white px-2 py-1 rounded dark:bg-blue-500"
+          >
+            <span className="mr-1 text-sm">{userMap[id] ?? id}</span>
+            <button
+              className="text-red-300 hover:text-red-500 dark:text-red-200 dark:hover:text-red-400"
+              onClick={async () => {
+                const { data } = await supabase
+                  .from("events")
+                  .select("organizer_id")
+                  .eq("event_id", editingEventId);
+                if (!data) return alert("找不到活動");
+                if (data[0].organizer_id === id)
+                  return alert("無法移除原主辦人");
+                const { error } = await supabase
+                  .from("event_organizers")
+                  .delete()
+                  .eq("event_id", editingEventId)
+                  .eq("role_id", id)
+                  .eq("role", role);
+                if (!error)
+                  setState(prev => prev.filter((_, i) => i !== index));
+                else alert("移除失敗");
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );
+
 
   return (
     <main className="w-full max-w-6xl mx-auto py-12 px-4 dark:text-white">
@@ -338,7 +346,7 @@ export default function DashboardPage() {
                       {new Date(event.deadline) <= new Date() && (<span className="text-red-500 ml-2">(已結束)</span>)}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      🧑‍💼主辦者：{userMap[event.organizer_id] != "" ? userMap[event.organizer_id] :"Anonymous"}{event.organizer_id == userID && "（您是創辦人）"}
+                      🧑‍💼主辦者：{userNameMap[event.organizer_id] != "" ? userNameMap[event.organizer_id] :"Anonymous"}{event.organizer_id == userID && "（您是創辦人）"}
                     </p>
                     {renderEventActions(event.event_id, event.visible, true, event.organizer_id === userID)}
                   </div>
@@ -359,7 +367,7 @@ export default function DashboardPage() {
                       截止日期：{new Date(event.deadline).toLocaleDateString()}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      🧑‍💼主辦者：{userMap[event.organizer_id] ?? event.organizer_id}
+                      🧑‍💼主辦者：{userNameMap[event.organizer_id] != "" ? userNameMap[event.organizer_id] :"Anonymous"}
                     </p>
                     {renderEventActions(event.event_id, event.visible, false, false)}
                   </div>
@@ -372,29 +380,38 @@ export default function DashboardPage() {
 
       {showEditorModal && (
         <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/50 dark:bg-black/70 flex items-center justify-center"
           onClick={() => setShowEditorModal(false)}
           onKeyDown={e => e.key === "Escape" && setShowEditorModal(false)}
           tabIndex={0}
         >
           <div
-            className="bg-gray-800 p-6 rounded-lg w-[700px] max-w-full shadow-lg"
+            className="bg-white dark:bg-gray-800 w-[80vw] max-w-[1200px] h-[50vh] max-h-[70vh] p-6 rounded-lg shadow-lg overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
-            <h2 className="text-lg font-bold mb-4 text-white">編輯舉辦人員</h2>
-            <div className="flex gap-6">
+            <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">
+              編輯舉辦人員
+            </h2>
+
+            <div className="flex flex-col md:flex-row gap-6">
               <div className="flex-1">
-                <h3 className="font-semibold text-white mb-1">主辦人員Email</h3>
+                <h3 className="font-semibold text-gray-700 dark:text-white mb-1">
+                  主辦人員
+                </h3>
                 {renderEditorChipInput(organizers, setOrganizers, "organizer")}
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-white mb-1">協辦人員Email</h3>
+                <h3 className="font-semibold text-gray-700 dark:text-white mb-1">
+                  協辦人員
+                </h3>
                 {renderEditorChipInput(normals, setNormals, "normal")}
               </div>
             </div>
           </div>
         </div>
       )}
+
+
     </main>
   );
 }

@@ -27,6 +27,8 @@ export default function NotificationBell() {
         .select('event_id, event:events(deadline, title)')
         .eq('user_id', user.id)
 
+      data?.sort((a, b) => getDaysLeft(a.event.deadline) - getDaysLeft(b.event.deadline))
+
       setRegistrations(data || [])
     }
 
