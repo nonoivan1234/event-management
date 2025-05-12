@@ -1,9 +1,9 @@
 /* page.tsx */
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from "react";
+import { supabase } from "../../../lib/supabase";
+import { useRouter } from "next/navigation";
 
 type Event = {
   event_id: string
@@ -13,7 +13,6 @@ type Event = {
   created_at: string
   visible: boolean
   deadline?: string
-  events?: [string]
 }
 
 export default function DashboardPage() {
@@ -28,7 +27,7 @@ export default function DashboardPage() {
   const [normals, setNormals] = useState<string[]>([])
   const [userMap, setUserMap] = useState<Record<string, string>>({}) // user_id -> email
 
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUserAndEvents = async () => {
@@ -59,30 +58,35 @@ export default function DashboardPage() {
       setUserMap(map)
     }
 
-    fetchUserAndEvents()
-  }, [router])
+    fetchUserAndEvents();
+  }, [router]);
 
   const handleCreateEvent = () => {
-    router.push('/event/modify')
-  }
+    router.push("/event/modify");
+  };
 
-  const handleToggleVisibility = async (eventId: string, currentVisible: boolean) => {
+  const handleToggleVisibility = async (
+    eventId: string,
+    currentVisible: boolean
+  ) => {
     const { error } = await supabase
-      .from('events')
+      .from("events")
       .update({ visible: !currentVisible })
-      .eq('event_id', eventId)
+      .eq("event_id", eventId);
 
     if (error) {
-      alert('更新可見狀態失敗')
-      return
+      alert("更新可見狀態失敗");
+      return;
     }
 
     setOrganizedEvents((prev) =>
       prev.map((event) =>
-        event.event_id === eventId ? { ...event, visible: !currentVisible } : event
+        event.event_id === eventId
+          ? { ...event, visible: !currentVisible }
+          : event
       )
-    )
-  }
+    );
+  };
 
   const openEditorModal = async (eventId: string) => {
     setOrganizers([])
@@ -91,70 +95,82 @@ export default function DashboardPage() {
     setShowEditorModal(true)
 
     const { data, error } = await supabase
-      .from('event_organizers')
-      .select('role_id, role')
-      .eq('event_id', eventId)
+      .from("event_organizers")
+      .select("role_id, role")
+      .eq("event_id", eventId);
 
     if (error) {
-      alert('讀取人員失敗')
-      return
+      alert("讀取人員失敗");
+      return;
     }
 
-    const org: string[] = []
-    const nor: string[] = []
+    const org: string[] = [];
+    const nor: string[] = [];
 
     for (const item of data || []) {
-      if (item.role === 'organizer') org.push(item.role_id)
-      else if (item.role === 'normal') nor.push(item.role_id)
+      if (item.role === "organizer") org.push(item.role_id);
+      else if (item.role === "normal") nor.push(item.role_id);
     }
 
-    setOrganizers(org)
-    setNormals(nor)
-  }
+    setOrganizers(org);
+    setNormals(nor);
+  };
 
   const duplicate_event = async (eventID: string) => {
     const { data: event_data, error: fetch_error } = await supabase
-      .from('events')
-      .select('title, description, deadline, form_schema, category')
-      .eq('event_id', eventID)
-      .single()
-    if (fetch_error) 
-      return alert('找不到活動')
+      .from("events")
+      .select("title, description, deadline, form_schema, category")
+      .eq("event_id", eventID)
+      .single();
+    if (fetch_error) return alert("找不到活動");
 
-    event_data.title += '_複製'
+    event_data.title += "_複製";
 
-    const user_id = (await supabase.auth.getUser()).data.user?.id
+    const user_id = (await supabase.auth.getUser()).data.user?.id;
 
-    const { error: error_create_event, data: data_create_event } = await supabase.from('events')
+    const { error: error_create_event, data: data_create_event } =
+      await supabase
+        .from("events")
         .insert({ ...event_data, organizer_id: user_id })
         .select()
-        .single()
-      if (error_create_event) return alert(`❌ 複製失敗：${error_create_event}`)
-      const { error:error_role, data:data_role } = await supabase.from('event_organizers')
-        .insert({ event_id: data_create_event.event_id, role_id: user_id, role: 'organizer' })
+        .single();
+    if (error_create_event) return alert(`❌ 複製失敗：${error_create_event}`);
+    const { error: error_role, data: data_role } = await supabase
+      .from("event_organizers")
+      .insert({
+        event_id: data_create_event.event_id,
+        role_id: user_id,
+        role: "organizer",
+      });
 
-      alert(error_role ? `❌ 複製失敗：${error_role.message}` : '✅ 活動已複製')
-      if (!error_role) router.push(`/event/modify?id=${data_create_event.event_id}`)
-  }
+    alert(error_role ? `❌ 複製失敗：${error_role.message}` : "✅ 活動已複製");
+    if (!error_role)
+      router.push(`/event/modify?id=${data_create_event.event_id}`);
+  };
 
   const delete_event = async (eventID: string) => {
-    confirm('確定要刪除此活動嗎？')
-    if (!confirm) return
+    confirm("確定要刪除此活動嗎？");
+    if (!confirm) return;
     const { data, error } = await supabase
-      .from('events')
-      .select('organizer_id')
-      .eq('event_id', eventID)
-    if (error || !data) return alert('找不到活動')
-    if (data[0].organizer_id !== (await supabase.auth.getUser()).data.user?.id) return alert('只有這個活動的原主辦人，無法刪除！')
-    const { error:err_delete } = await supabase
-      .from('events')
+      .from("events")
+      .select("organizer_id")
+      .eq("event_id", eventID);
+    if (error || !data) return alert("找不到活動");
+    if (data[0].organizer_id !== (await supabase.auth.getUser()).data.user?.id)
+      return alert("只有這個活動的原主辦人，無法刪除！");
+    const { error: err_delete } = await supabase
+      .from("events")
       .delete()
-      .eq('event_id', eventID)
-    if (err_delete) return alert('刪除失敗')
-    alert('刪除成功')
-    setOrganizedEvents((prev) => prev.filter((event) => event.event_id !== eventID))
-    setNormalEvents((prev) => prev.filter((event) => event.event_id !== eventID))
-  }
+      .eq("event_id", eventID);
+    if (err_delete) return alert("刪除失敗");
+    alert("刪除成功");
+    setOrganizedEvents((prev) =>
+      prev.filter((event) => event.event_id !== eventID)
+    );
+    setNormalEvents((prev) =>
+      prev.filter((event) => event.event_id !== eventID)
+    );
+  };
 
   const renderEventActions = (eventId: string, visible: boolean, hold: boolean, org: boolean) => (
     <div className="mt-4 flex gap-3 flex-wrap">
@@ -168,58 +184,77 @@ export default function DashboardPage() {
           </button>
         </>
       )}
-      <button onClick={() => router.push(`/event/view-register?id=${eventId}`)} className="text-sm text-teal-600 dark:text-teal-300 hover:underline">查看報名者</button>
-      <button onClick={() => duplicate_event(eventId)} className="text-sm text-gray-600 dark:text-gray-300 hover:underline">複製活動</button>
+      <button
+        onClick={() => router.push(`/event/view-register?id=${eventId}`)}
+        className="text-sm text-teal-600 dark:text-teal-300 hover:underline"
+      >
+        查看報名者
+      </button>
+      <button
+        onClick={() => duplicate_event(eventId)}
+        className="text-sm text-gray-600 dark:text-gray-300 hover:underline"
+      >
+        複製活動
+      </button>
     </div>
-  )
+  );
 
   const filteredEvents = (events: Event[]) => {
-    const now = new Date()
+    const now = new Date();
     return events.filter((event) => {
-      const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchTerm.toLowerCase())
-      const deadline = event.deadline ? new Date(event.deadline) : null
-      const isEnded = deadline ? deadline < now : false
+      const matchesSearch =
+        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const deadline = event.deadline ? new Date(event.deadline) : null;
+      const isEnded = deadline ? deadline < now : false;
 
       switch (filterOption) {
-        case 'ended': return matchesSearch && isEnded
-        case 'not_ended': return matchesSearch && !isEnded
-        default: return matchesSearch
+        case "ended":
+          return matchesSearch && isEnded;
+        case "not_ended":
+          return matchesSearch && !isEnded;
+        default:
+          return matchesSearch;
       }
-    })
-  }
+    });
+  };
 
   const renderEditorChipInput = (
     state: string[],
     setState: React.Dispatch<React.SetStateAction<string[]>>,
-    role: 'organizer' | 'normal'
+    role: "organizer" | "normal"
   ) => (
     <div className="flex-1">
       <div className="flex flex-wrap gap-2 mb-2">
         {state.map((id, index) => (
-          <div key={id} className="flex items-center bg-blue-600 text-white px-2 py-1 rounded">
+          <div
+            key={id}
+            className="flex items-center bg-blue-600 text-white px-2 py-1 rounded"
+          >
             <span className="mr-1 text-sm">{userMap[id] ?? id}</span>
             <button
               className="text-red-300 hover:text-red-500"
               onClick={async () => {
                 const { data } = await supabase
-                  .from('events')
-                  .select('organizer_id')
-                  .eq('event_id', editingEventId)
-                if (!data)
-                  return alert('找不到活動')
+                  .from("events")
+                  .select("organizer_id")
+                  .eq("event_id", editingEventId);
+                if (!data) return alert("找不到活動");
                 if (data[0].organizer_id === id)
-                  return alert('無法移除原主辦人')
+                  return alert("無法移除原主辦人");
                 const { error } = await supabase
-                  .from('event_organizers')
+                  .from("event_organizers")
                   .delete()
-                  .eq('event_id', editingEventId)
-                  .eq('role_id', id)
-                  .eq('role', role)
-                if (!error) setState((prev) => prev.filter((_, i) => i !== index))
-                else alert('移除失敗')
+                  .eq("event_id", editingEventId)
+                  .eq("role_id", id)
+                  .eq("role", role);
+                if (!error)
+                  setState((prev) => prev.filter((_, i) => i !== index));
+                else alert("移除失敗");
               }}
-            >✕</button>
+            >
+              ✕
+            </button>
           </div>
         ))}
         <input
@@ -227,45 +262,80 @@ export default function DashboardPage() {
           placeholder="輸入後按 Enter"
           className="bg-gray-700 text-white px-2 py-1 rounded"
           onKeyDown={async (e) => {
-            if (e.key !== 'Enter') return
-            const input = e.currentTarget
-            const email = input.value.trim()
-            const { data, error } = await supabase.from('users').select('user_id').eq('email', email).single()
+            if (e.key !== "Enter") return;
+            const input = e.currentTarget;
+            const email = input.value.trim();
+            const { data, error } = await supabase
+              .from("users")
+              .select("user_id")
+              .eq("email", email)
+              .single();
             if (error || !data) {
-              alert('找不到此 Email')
-              input.value = ''
-              return
+              alert("找不到此 Email");
+              input.value = "";
+              return;
             }
-            const userId = data.user_id
+            const userId = data.user_id;
             if (organizers.includes(userId) || normals.includes(userId)) {
-              alert('此人員已經存在')
-              return
+              alert("此人員已經存在");
+              return;
             }
-            const { error: insertError } = await supabase.from('event_organizers').insert({ event_id: editingEventId, role_id: userId, role })
-            if (!insertError) setState((prev) => [...prev, userId])
-            else alert(insertError.message)
-            input.value = ''
+            const { error: insertError } = await supabase
+              .from("event_organizers")
+              .insert({ event_id: editingEventId, role_id: userId, role });
+            if (!insertError) setState((prev) => [...prev, userId]);
+            else alert(insertError.message);
+            input.value = "";
           }}
         />
       </div>
     </div>
-  )
+  );
 
   return (
-    <main className="max-w-screen-2xl mx-auto px-6 py-8 text-black dark:text-white">
+    <main className="w-full max-w-6xl mx-auto py-12 px-4 dark:text-white">
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <button className="mb-8 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" onClick={handleCreateEvent}>➕ 建立新活動</button>
-        <div className="flex flex-wrap items-center gap-4">
-          <input type="text" placeholder="Search activities..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="border rounded px-3 py-2 dark:bg-gray-700 dark:text-white dark:border-gray-600" />
-          <select value={filterOption} onChange={(e) => setFilterOption(e.target.value)} className="border rounded px-3 py-2 dark:bg-gray-700 dark:text-white dark:border-gray-600">
+        {/* 左側：搜尋欄位 + 篩選 */}
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+          <input
+            type="text"
+            placeholder="Search activities..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:text-white dark:border-gray-600 w-full md:w-64"
+          />
+          <select
+            value={filterOption}
+            onChange={(e) => setFilterOption(e.target.value)}
+            className="border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+          >
             <option value="all">所有活動</option>
             <option value="ended">僅顯示已結束</option>
             <option value="not_ended">僅顯示未結束</option>
           </select>
         </div>
+
+        {/* 右側：建立新活動按鈕 */}
+        <button
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 whitespace-nowrap"
+          onClick={handleCreateEvent}
+        >
+          ➕ 建立新活動
+        </button>
       </header>
       {organizedEvents.length === 0 && NormalEvents.length === 0 ? (
-        <h2 className="text-xl font-bold mb-4">你目前尚未主辦或參加任何活動。</h2>
+        <div className="text-center mt-10 text-gray-500 dark:text-gray-400">
+          <p className="text-xl font-semibold mb-2">尚無活動</p>
+          <p className="mb-4">
+            您目前尚未主辦或協辦任何活動，趕快來建立一個吧！
+          </p>
+          <button
+            onClick={handleCreateEvent}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition"
+          >
+            ➕ 建立活動
+          </button>
+        </div>
       ) : (
         <>
           {organizedEvents.length > 0 && (
@@ -307,7 +377,7 @@ export default function DashboardPage() {
         <div
           className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
           onClick={() => setShowEditorModal(false)}
-          onKeyDown={(e) => e.key === 'Escape' && setShowEditorModal(false)}
+          onKeyDown={(e) => e.key === "Escape" && setShowEditorModal(false)}
           tabIndex={0}
         >
           <div
@@ -318,16 +388,16 @@ export default function DashboardPage() {
             <div className="flex gap-6">
               <div className="flex-1">
                 <h3 className="font-semibold text-white mb-1">主辦人員Email</h3>
-                {renderEditorChipInput(organizers, setOrganizers, 'organizer')}
+                {renderEditorChipInput(organizers, setOrganizers, "organizer")}
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-white mb-1">協辦人員Email</h3>
-                {renderEditorChipInput(normals, setNormals, 'normal')}
+                {renderEditorChipInput(normals, setNormals, "normal")}
               </div>
             </div>
           </div>
         </div>
       )}
     </main>
-  )
+  );
 }
