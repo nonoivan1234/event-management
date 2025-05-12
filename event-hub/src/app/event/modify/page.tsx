@@ -22,37 +22,58 @@ export default function EventFormPage() {
   const [categoryInput, setCategoryInput] = useState('')
   const [personalFields, setPersonalFields] = useState<string[]>([])
   const [customQuestions, setCustomQuestions] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const [notAuthorized, setNotAuthorized] = useState(false)
 
   useEffect(() => {
     if (!eventId) return
-    supabase.from('events')
-      .select('title, description, deadline, category, form_schema')
-      .eq('event_id', eventId)
-      .single()
-      .then(({ data, error }) => {
-        if (error || !data) router.replace('/404')
-        let categories: string[] = []
-        try {
-          categories = typeof data.category === 'string' ? JSON.parse(data.category) : []
-        } catch {
-          categories = []
-        }
-        setForm({
-          title: data.title,
-          description: data.description,
-          deadline: data.deadline,
-          categories,
-        })
-        setPersonalFields(data.form_schema?.personalFields ?? [])
-        setCustomQuestions(data.form_schema?.customQuestions ?? [])
+
+    const fetchEventData = async () => {
+      const { data: userData } = await supabase.auth.getUser()
+      const currentUser = userData?.user
+
+      const { data, error } = await supabase
+        .from('events')
+        .select('title, description, deadline, category, form_schema, organizer_id')
+        .eq('event_id', eventId)
+        .single()
+
+      if (error || !data) {
+        router.replace('/404')
+        return
+      }
+
+      // ✅ 檢查是否為活動舉辦人
+      if (!currentUser || data.organizer_id !== currentUser.id) {
+        setNotAuthorized(true)
+        setLoading(false)
+        return
+      }
+
+      let categories: string[] = []
+      try {
+        categories = typeof data.category === 'string' ? JSON.parse(data.category) : []
+      } catch {
+        categories = []
+      }
+
+      setForm({
+        title: data.title,
+        description: data.description,
+        deadline: data.deadline,
+        categories,
       })
+      setPersonalFields(data.form_schema?.personalFields ?? [])
+      setCustomQuestions(data.form_schema?.customQuestions ?? [])
+      setLoading(false)
+    }
+
+    fetchEventData()
   }, [eventId])
 
-  const handleChange = (field: string, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }))
-  }
+
+  const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
 
   const handleCategoryKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -155,6 +176,9 @@ export default function EventFormPage() {
 
     setLoading(false)
   }
+
+  if (loading) return <p className="p-4 text-gray-800 dark:text-white">Loading...</p>
+  if (notAuthorized) return <p className="p-4 text-red-600 dark:text-red-400">您沒有權限查看此報名資料。</p>
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 text-gray-900 dark:text-white">

@@ -80,13 +80,8 @@ export default function ViewRegistrationsPage() {
     document.body.removeChild(link)
   }
 
-  if (loading) {
-    return <p className="p-4 text-gray-800 dark:text-white">Loading...</p>
-  }
-
-  if (notAuthorized) {
-    return <p className="p-4 text-red-600 dark:text-red-400">您沒有權限查看此報名資料。</p>
-  }
+  if (loading) return <p className="p-4 text-gray-800 dark:text-white">Loading...</p>
+  if (notAuthorized) return <p className="p-4 text-red-600 dark:text-red-400">您沒有權限查看此報名資料。</p>
 
   return (
     <div className="max-w-screen-2xl mx-auto p-6 text-gray-900 dark:text-white">
