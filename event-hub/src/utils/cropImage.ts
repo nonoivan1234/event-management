@@ -1,7 +1,7 @@
 export default function getCroppedImg(
   imageSrc: string,
   pixelCrop: any,
-  targetSize: number = 512 // ✅ 預設輸出壓縮尺寸 128x128
+  targetSize: number = 128 // ✅ 預設輸出壓縮尺寸 
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const image = new Image()
