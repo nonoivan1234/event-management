@@ -10,18 +10,37 @@ export default function ViewRegistrationsPage() {
   const [formSchema, setFormSchema] = useState<any>(null)
   const [registrations, setRegistrations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [notAuthorized, setNotAuthorized] = useState(false)
 
   useEffect(() => {
-    if (!eventId) return
-
     const fetchAll = async () => {
-      const { data: eventData } = await supabase
+      if (!eventId) return
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        setNotAuthorized(true)
+        setLoading(false)
+        return
+      }
+
+      // 檢查是否為主辦人
+      const { data: eventData, error: eventError } = await supabase
         .from('events')
-        .select('form_schema')
+        .select('form_schema, organizer_id')
         .eq('event_id', eventId)
         .single()
 
-      setFormSchema(eventData?.form_schema || null)
+      if (eventError || !eventData || eventData.organizer_id !== user.id) {
+        setNotAuthorized(true)
+        setLoading(false)
+        return
+      }
+
+      setFormSchema(eventData.form_schema)
 
       const { data: regData } = await supabase
         .from('registrations')
@@ -61,7 +80,13 @@ export default function ViewRegistrationsPage() {
     document.body.removeChild(link)
   }
 
-  if (loading) return <p className="p-4 text-gray-800 dark:text-white">Loading...</p>
+  if (loading) {
+    return <p className="p-4 text-gray-800 dark:text-white">Loading...</p>
+  }
+
+  if (notAuthorized) {
+    return <p className="p-4 text-red-600 dark:text-red-400">您沒有權限查看此報名資料。</p>
+  }
 
   return (
     <div className="max-w-5xl mx-auto p-6 text-gray-900 dark:text-white">

@@ -45,13 +45,13 @@ export default function DashboardPage() {
 
 
   const handleCreateEvent = () => {
-    router.push('/event/create')
+    router.push('/event/modify')
   }
 
   const renderEventActions = (eventId: string) => (
     <div className="mt-4 flex gap-3">
       <button
-        onClick={() => router.push(`/event/edit-form?id=${eventId}`)}
+        onClick={() => router.push(`/event/modify?id=${eventId}`)}
         className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
       >
         編輯表單

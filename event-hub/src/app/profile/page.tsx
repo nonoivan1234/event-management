@@ -170,10 +170,10 @@ export default function ProfilePage() {
       </button>
 
       <button
-        onClick={() => router.push('/dashboard')}
+        onClick={() => router.back()}
         className="w-full bg-gray-600 text-white py-2 rounded hover:bg-gray-700 mt-4 transition-colors"
       >
-        🔙 返回 Dashboard
+        🔙 返回
       </button>
 
       {message && (
