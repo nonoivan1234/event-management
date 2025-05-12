@@ -99,6 +99,7 @@ export default function ProfilePage() {
     } else {
       setMessage('✅ 資料已成功更新！')
       setIsError(false)
+      setTimeout(() => router.back(), 1000)
     }
   }
 

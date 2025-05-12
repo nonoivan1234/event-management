@@ -44,7 +44,7 @@ export default function RegisterPage() {
       }
 
       setFormSchema(eventData.form_schema)
-      setDeadline(eventDeadline?.toLocaleString() || null)
+      setDeadline(eventDeadline?.toLocaleDateString() || null)
 
       const { data: authData } = await supabase.auth.getUser()
       const user_id = authData.user?.id
@@ -82,6 +82,14 @@ export default function RegisterPage() {
   const handleSubmit = async () => {
     if (!userInfo || !formSchema) return
 
+    // 驗證必填欄位
+    const missingFields = formSchema.customQuestions?.filter((q: any) => q.required && !answers[q.id])
+
+    if (missingFields.length > 0) {
+      setMessage(`❌ 請填寫所有必填欄位：${missingFields.map((q: any) => q.label).join('、')}`)
+      return
+    }
+
     const payload = {
       event_id: eventId,
       user_id: userInfo.user_id,
@@ -91,18 +99,19 @@ export default function RegisterPage() {
 
     let error
     if (isEditMode) {
-      ;({ error } = await supabase
+      ({ error } = await supabase
         .from('registrations')
         .update(payload)
         .eq('event_id', eventId)
         .eq('user_id', userInfo.user_id))
     } else {
-      ;({ error } = await supabase.from('registrations').insert(payload))
+      ({ error } = await supabase.from('registrations').insert(payload))
     }
 
     setMessage(error ? `❌ ${isEditMode ? '更新' : '報名'}失敗：${error.message}` : `✅ ${isEditMode ? '更新成功！' : '報名成功！'} 即將跳轉到報名頁面`)
     if (!error) setTimeout(() => router.push(`/event/attend`), 1000)
   }
+
 
   if (isClosed) {
     return (
@@ -123,7 +132,7 @@ export default function RegisterPage() {
   if (!formSchema || !userInfo) return <p className="p-4 text-gray-800 dark:text-white">Loading...</p>
 
   return (
-    <div className="max-w-xl mx-auto p-6 text-gray-900 dark:text-white">
+    <div className="max-w-screen-2xl mx-auto p-6 text-gray-900 dark:text-white">
       <h1 className="text-2xl font-bold mb-1">{isEditMode ? '修改報名表單' : '報名表單'}</h1>
       {deadline && (
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">報名截止時間：{deadline}</p>
@@ -189,13 +198,13 @@ export default function RegisterPage() {
           onClick={handleSubmit}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          {isEditMode ? '更新報名' : '送出報名'}
+          {isEditMode ? '更新報名資料' : '送出報名資料'}
         </button>
         <button
           onClick={() => router.back()}
           className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
         >
-          返回活動列表
+          返回
         </button>
       </div>
 

@@ -54,7 +54,7 @@ export default function DashboardPage() {
         onClick={() => router.push(`/event/modify?id=${eventId}`)}
         className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
       >
-        編輯表單
+        編輯活動
       </button>
       <button
         onClick={() => router.push(`/event/view-register?id=${eventId}`)}
@@ -88,7 +88,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <main className="max-w-5xl mx-auto px-6 py-8 text-black dark:text-white">
+      <main className="max-w-screen-2xl mx-auto px-6 py-8 text-black dark:text-white">
         <button
           className="mb-8 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
           onClick={handleCreateEvent}

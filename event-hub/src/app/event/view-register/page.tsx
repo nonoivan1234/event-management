@@ -89,7 +89,7 @@ export default function ViewRegistrationsPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 text-gray-900 dark:text-white">
+    <div className="max-w-screen-2xl mx-auto p-6 text-gray-900 dark:text-white">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">報名者清單</h1>
         <button

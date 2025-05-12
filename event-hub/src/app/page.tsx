@@ -161,7 +161,7 @@ export default function HomePage() {
                               key={cat}
                               className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
                             >
-                              📁 {cat}
+                              {cat}
                             </span>
                           ))}
                         </div>
@@ -217,7 +217,7 @@ export default function HomePage() {
                               key={cat}
                               className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
                             >
-                              📁 {cat}
+                              {cat}
                             </span>
                           ))}
                         </div>

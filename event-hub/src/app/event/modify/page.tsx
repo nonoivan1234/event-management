@@ -55,7 +55,7 @@ export default function EventFormPage() {
   }
 
   const handleCategoryKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
+    if (e.key === 'Enter') {
       e.preventDefault()
       const value = categoryInput.trim()
       if (value && !form.categories.includes(value)) {
@@ -192,13 +192,14 @@ export default function EventFormPage() {
           value={categoryInput}
           onChange={(e) => setCategoryInput(e.target.value)}
           onKeyDown={handleCategoryKeyDown}
-          placeholder="輸入後按 Enter 或 ,"
+          placeholder="輸入後按 Enter"
           className="flex-grow bg-transparent text-sm focus:outline-none"
         />
       </div>
 
       <hr className="my-6" />
 
+      <h1 className="text-2xl font-bold mb-6 text-center">報名表單設定</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <h2 className="font-semibold mb-2">Select Personal Information Fields</h2>
@@ -270,12 +271,41 @@ export default function EventFormPage() {
             <option value="select">Dropdown</option>
           </select>
           {q.type === 'select' && (
-            <textarea
-              className="w-full mb-2 border px-3 py-1 rounded dark:bg-gray-700 dark:text-white"
-              placeholder="選項每行一個"
-              value={q.options?.join('\n') || ''}
-              onChange={(e) => updateQuestion(q.id, { options: e.target.value.split('\n') })}
-            />
+            <div className="border px-3 py-2 rounded bg-white dark:bg-gray-700 dark:text-white">
+              <div className="mb-2 flex flex-wrap gap-2">
+                {q.options?.map((opt: string, i: number) => (
+                  <span key={i} className="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded text-sm flex items-center">
+                    {opt}
+                    <button
+                      className="ml-1 text-red-500"
+                      onClick={() =>
+                        updateQuestion(q.id, {
+                          options: q.options.filter((_, index) => index !== i),
+                        })
+                      }
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <input
+                className="w-full border px-2 py-1 rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                placeholder="輸入選項後按 Enter"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    const value = (e.target as HTMLInputElement).value.trim()
+                    if (value && !q.options?.includes(value)) {
+                      updateQuestion(q.id, {
+                        options: [...(q.options || []), value],
+                      })
+                    }
+                    ;(e.target as HTMLInputElement).value = ''
+                  }
+                }}
+              />
+            </div>
           )}
           <label className="text-sm flex items-center gap-2">
             <input

@@ -87,7 +87,7 @@ export default function DashboardPage() {
           </div>
 
           <button
-            onClick={() => router.push(`/event/edit?event_id=${event.event_id}`)}
+            onClick={() => router.push(`/event/register?event_id=${event.event_id}`)}
             disabled={expired}
             title={expired ? '活動已結束，無法編輯報名資料' : ''}
             className={`mt-4 self-end text-sm px-4 py-2 rounded ${
@@ -104,7 +104,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="max-w-5xl mx-auto px-6 py-8 text-black dark:text-white">
+    <main className="max-w-screen-2xl mx-auto px-6 py-8 text-black dark:text-white">
       <section>
         <h2 className="text-xl font-bold mb-4">你參加的活動</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
