@@ -122,6 +122,8 @@ export default function DashboardPage() {
     if (fetch_error) 
       return alert('找不到活動')
 
+    event_data.title += '_複製'
+
     const user_id = (await supabase.auth.getUser()).data.user?.id
 
     const { error: error_create_event, data: data_create_event } = await supabase.from('events')
@@ -136,12 +138,32 @@ export default function DashboardPage() {
       if (!error_role) router.push(`/event/modify?id=${data_create_event.event_id}`)
   }
 
+  const delete_event = async (eventID: string) => {
+    confirm('確定要刪除此活動嗎？')
+    if (!confirm) return
+    const { data, error } = await supabase
+      .from('events')
+      .select('organizer_id')
+      .eq('event_id', eventID)
+    if (error || !data) return alert('找不到活動')
+    if (data[0].organizer_id !== (await supabase.auth.getUser()).data.user?.id) return alert('只有這個活動的原主辦人，無法刪除！')
+    const { error:err_delete } = await supabase
+      .from('events')
+      .delete()
+      .eq('event_id', eventID)
+    if (err_delete) return alert('刪除失敗')
+    alert('刪除成功')
+    setOrganizedEvents((prev) => prev.filter((event) => event.event_id !== eventID))
+    setNormalEvents((prev) => prev.filter((event) => event.event_id !== eventID))
+  }
+
   const renderEventActions = (eventId: string, visible: boolean, hold: boolean) => (
     <div className="mt-4 flex gap-3 flex-wrap">
       {hold && (
         <>
           <button onClick={() => openEditorModal(eventId)} className="text-sm text-indigo-600 dark:text-indigo-300 hover:underline">編輯人員</button>
           <button onClick={() => router.push(`/event/modify?id=${eventId}`)} className="text-sm text-indigo-600 dark:text-indigo-300 hover:underline">編輯活動</button>
+          <button onClick={() => delete_event(eventId)} className="text-sm text-red-600 dark:text-red-300 hover:underline">刪除活動</button>
           <button onClick={() => handleToggleVisibility(eventId, visible)} className={`text-sm ${visible ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'} hover:underline`}>
             {visible ? '🔒 隱藏活動' : '🔓 顯示活動'}
           </button>
@@ -293,14 +315,14 @@ export default function DashboardPage() {
             className="bg-gray-800 p-6 rounded-lg w-[700px] max-w-full shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-bold mb-4 text-white">編輯人員</h2>
+            <h2 className="text-lg font-bold mb-4 text-white">編輯舉辦人員</h2>
             <div className="flex gap-6">
               <div className="flex-1">
-                <h3 className="font-semibold text-white mb-1">主辦人員</h3>
+                <h3 className="font-semibold text-white mb-1">主辦人員Email</h3>
                 {renderEditorChipInput(organizers, setOrganizers, 'organizer')}
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-white mb-1">協辦人員</h3>
+                <h3 className="font-semibold text-white mb-1">協辦人員Email</h3>
                 {renderEditorChipInput(normals, setNormals, 'normal')}
               </div>
             </div>

@@ -35,7 +35,12 @@ export default function EventFormPage() {
       const fetchEventData = async () => {
         const { data: userData } = await supabase.auth.getUser()
         const currentUser = userData?.user
-
+        if (!currentUser) {
+          setLoading(false)
+          setNotAuthorized(true)
+          return
+        }
+        
         const { data, error } = await supabase
           .from('events')
           .select('title, description, deadline, category, form_schema, organizer_id')
@@ -46,10 +51,18 @@ export default function EventFormPage() {
           router.replace('/404')
           return
         }
+        
+        const { data: organizerData, error:org_err } = await supabase
+          .from('event_organizers')
+          .select('role')
+          .eq('event_id', id)
+          .eq('role_id', currentUser.id)
+          .eq('role', 'organizer')
+          .single()
 
-        if (!currentUser || data.organizer_id !== currentUser.id) {
-          setNotAuthorized(true)
+        if (org_err || !organizerData) {
           setLoading(false)
+          setNotAuthorized(true)
           return
         }
 
