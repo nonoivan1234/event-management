@@ -27,52 +27,54 @@ export default function EventFormPage() {
   const [notAuthorized, setNotAuthorized] = useState(false)
 
   useEffect(() => {
-    if (!eventId) {
+    const id = searchParams.get('id')
+    if (id === null) 
       setLoading(false)
-      return
-    }
-    const fetchEventData = async () => {
-      const { data: userData } = await supabase.auth.getUser()
-      const currentUser = userData?.user
+    else {
+      // 編輯活動
+      const fetchEventData = async () => {
+        const { data: userData } = await supabase.auth.getUser()
+        const currentUser = userData?.user
 
-      const { data, error } = await supabase
-        .from('events')
-        .select('title, description, deadline, category, form_schema, organizer_id')
-        .eq('event_id', eventId)
-        .single()
+        const { data, error } = await supabase
+          .from('events')
+          .select('title, description, deadline, category, form_schema, organizer_id')
+          .eq('event_id', id)
+          .single()
 
-      if (error || !data) {
-        router.replace('/404')
-        return
-      }
+        if (error || !data) {
+          router.replace('/404')
+          return
+        }
 
-      // ✅ 檢查是否為活動舉辦人
-      if (!currentUser || data.organizer_id !== currentUser.id) {
-        setNotAuthorized(true)
+        if (!currentUser || data.organizer_id !== currentUser.id) {
+          setNotAuthorized(true)
+          setLoading(false)
+          return
+        }
+
+        let categories: string[] = []
+        try {
+          categories = typeof data.category === 'string' ? JSON.parse(data.category) : []
+        } catch {
+          categories = []
+        }
+
+        setForm({
+          title: data.title,
+          description: data.description,
+          deadline: data.deadline,
+          categories,
+        })
+        setPersonalFields(data.form_schema?.personalFields ?? [])
+        setCustomQuestions(data.form_schema?.customQuestions ?? [])
         setLoading(false)
-        return
       }
 
-      let categories: string[] = []
-      try {
-        categories = typeof data.category === 'string' ? JSON.parse(data.category) : []
-      } catch {
-        categories = []
-      }
-
-      setForm({
-        title: data.title,
-        description: data.description,
-        deadline: data.deadline,
-        categories,
-      })
-      setPersonalFields(data.form_schema?.personalFields ?? [])
-      setCustomQuestions(data.form_schema?.customQuestions ?? [])
-      setLoading(false)
+      fetchEventData()
     }
+  }, [searchParams])
 
-    fetchEventData()
-  }, [eventId])
 
 
   const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
