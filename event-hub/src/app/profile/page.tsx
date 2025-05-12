@@ -14,7 +14,8 @@ export default function ProfilePage() {
   const [email, setEmail] = useState<string | null>(null)
   const [avatar, setAvatar] = useState<string | null>(null)
   const [imageSrc, setImageSrc] = useState<string | null>(null)
-  const [form, setForm] = useState({ name: '', student_id: '', phone: '', school: '' })
+  const [form, setForm] = useState({ name: '', student_id: '', phone: '', school: ''})
+  const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
   const [isError, setIsError] = useState(false)
 
@@ -94,12 +95,25 @@ export default function ProfilePage() {
       .eq('email', email)
 
     if (error) {
-      setMessage(`❌ 更新失敗：${error.message}`)
+      setMessage(`❌ 資料更新失敗：${error.message}`)
       setIsError(true)
     } else {
-      setMessage('✅ 資料已成功更新！')
-      setIsError(false)
-      setTimeout(() => router.back(), 1000)
+      if (password != ""){
+        const {error:chpswd} = await supabase.auth.updateUser({ password: password })
+        if (chpswd) {
+          setMessage(`❌ 密碼更新失敗：${chpswd.message}`)
+          setIsError(true)
+        } else {
+          setMessage('✅ 資料及密碼已成功更新！')
+          setIsError(false)
+          setTimeout(() => router.back(), 1000)
+        }
+      } else {
+        setMessage('✅ 資料已成功更新！')
+        setIsError(false)
+        setTimeout(() => router.back(), 1000)
+      }
+      
     }
   }
 
@@ -146,23 +160,33 @@ export default function ProfilePage() {
 
       {/* 表單欄位 */}
       {['name', 'student_id', 'phone', 'school'].map((field) => (
-        <label key={field} className="block mb-4">
-          {field === 'name'
-            ? '姓名'
-            : field === 'student_id'
-            ? '學號'
-            : field === 'phone'
-            ? '電話'
-            : '就讀學校'}
-          <input
-            type="text"
-            className="w-full border px-3 py-2 rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-            value={(form as any)[field]}
-            onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-          />
-        </label>
+      <label key={field} className="block mb-4">
+        {field === 'name'
+          ? '姓名'
+          : field === 'student_id'
+          ? '學號'
+          : field === 'phone'
+          ? '電話'
+          : '就讀學校'}
+        <input
+          type="text"
+          className="w-full border px-3 py-2 rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+          value={(form as any)[field]}
+          onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+        />
+      </label>
       ))}
+      <hr className="my-4 border-gray-300 dark:border-gray-600" />
 
+      <h2 className="text-lg font-bold mb-4">修改密碼</h2>
+      <input
+        type="password"
+        placeholder="新密碼"
+        className="w-full border px-3 py-2 rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white mb-4"
+        onChange={(e) => setPassword(e.target.value)}
+      />
+
+      <hr className="my-4 border-gray-300 dark:border-gray-600" />
       <button
         onClick={handleSave}
         className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors"
