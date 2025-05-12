@@ -28,19 +28,27 @@ export default function ViewRegistrationsPage() {
       }
 
       // 檢查是否為主辦人
-      const { data: eventData, error: eventError } = await supabase
-        .from('events')
-        .select('form_schema, organizer_id')
+      const { data: organizerMatch } = await supabase
+        .from('event_organizers')
+        .select('event_id')
         .eq('event_id', eventId)
-        .single()
+        .eq('role_id', user.id)
+        .maybeSingle()  // 或 .single() 根據情況
+      console.log('Organizer Match:', organizerMatch)
 
-      if (eventError || !eventData || eventData.organizer_id !== user.id) {
+      if (!organizerMatch) {
         setNotAuthorized(true)
         setLoading(false)
         return
       }
 
-      setFormSchema(eventData.form_schema)
+      // Step 2: 查事件資料
+      const { data: eventData } = await supabase
+        .from('events')
+        .select('form_schema')
+        .eq('event_id', eventId)
+        .single()
+      if(eventData) setFormSchema(eventData.form_schema)
 
       const { data: regData } = await supabase
         .from('registrations')

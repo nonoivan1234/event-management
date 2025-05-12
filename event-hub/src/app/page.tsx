@@ -19,10 +19,10 @@ export default function HomePage() {
       const [{ data: userData }, { data: eventsData, error }] = await Promise.all([
         supabase.auth.getUser(),
         supabase.from('events')
-          .select(`*, users:organizer_id ( name ), category`)
+          .select(`*, users:organizer_id(name)`)
+          .eq('visible', true)
           .order('deadline', { ascending: true })
       ])
-
       if (userData?.user) {
         setUser(userData.user)
 
@@ -152,7 +152,7 @@ export default function HomePage() {
                       </p>
                       <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">{event.description}</p>
                       <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                        🧑‍💼 {event.users?.name || '匿名主辦人'}
+                        🧑‍💼 {event.users.name}
                       </p>
                       {Array.isArray(event.category) && (
                         <div className="flex flex-wrap gap-1 mt-2">

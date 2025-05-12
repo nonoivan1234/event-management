@@ -175,7 +175,11 @@ export default function EventFormPage() {
         .select()
         .single()
       setMessage(error ? `❌ 建立失敗：${error.message}` : '✅ 活動已建立')
-      if (!error) router.push(`/event/hold`)
+      const { error:error_role, data:data_role } = await supabase.from('event_organizers')
+        .insert({ event_id: data.event_id, role_id: user.id, role: 'organizer' })
+
+      setMessage(error_role ? `❌ 建立失敗：${error_role.message}` : '✅ 活動已建立')
+      if (!(error || error_role)) router.push(`/event/hold`)
     }
 
     setLoading(false)
