@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
+import dynamic from 'next/dynamic'
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
-export const dynamic = 'force-dynamic'
 
 
 export default function RegisterPage() {

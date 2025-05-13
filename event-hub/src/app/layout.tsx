@@ -1,16 +1,11 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import ThemeInitializer from './theme-initializer'
 import Navbar from '../components/navbar'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
 })
 
@@ -19,15 +14,13 @@ export const metadata: Metadata = {
   description: '一個活動報名平台',
 }
 
-export default function RootLayout({children,}: { children: React.ReactNode}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en" className={inter.variable}>
       <body className="antialiased transition-colors duration-300 bg-white text-black dark:bg-gray-900 dark:text-white">
         <ThemeInitializer />
         <Navbar />
-        <main className="pt-14"> {/* 預留空間給固定高度的 Navbar */}
-          {children}
-        </main>
+        <main className="pt-14">{children}</main>
       </body>
     </html>
   )

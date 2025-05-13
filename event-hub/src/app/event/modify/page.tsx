@@ -1,10 +1,10 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useEffect, useState, KeyboardEvent } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
-export const dynamic = 'force-dynamic'
 
 const defaultPersonalFields = ['name', 'email', 'phone', 'student_id', 'school']
 
