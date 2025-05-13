@@ -3,16 +3,24 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 
-function getDaysLeft(deadline: string): number {
+function getDaysLeft(deadline: string | null | undefined): number {
+  if (!deadline) return 0
   const now = new Date()
   const end = new Date(deadline)
-  const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-  return diff >= 0 ? diff : 0
+  return Math.max(Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)), 0)
+}
+
+type Registration = {
+  event_id: string
+  event: {
+    title: string
+    deadline: string
+  }
 }
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false)
-  const [registrations, setRegistrations] = useState<any[]>([])
+  const [registrations, setRegistrations] = useState<Registration[]>([])
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -24,18 +32,19 @@ export default function NotificationBell() {
 
       const { data } = await supabase
         .from('registrations')
-        .select('event_id, event:events(deadline, title)')
+        .select('event_id, event:events!inner(deadline, title)')
         .eq('user_id', user.id)
 
-      data?.sort((a, b) => getDaysLeft(a.event.deadline) - getDaysLeft(b.event.deadline))
+      const sorted = (data as unknown as Registration[] | null)?.sort(
+        (a, b) => getDaysLeft(a.event.deadline) - getDaysLeft(b.event.deadline)
+      )
 
-      setRegistrations(data || [])
+      setRegistrations(sorted || [])
     }
 
     fetchReminders()
   }, [])
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -55,11 +64,11 @@ export default function NotificationBell() {
         🔔
       </button>
 
-      {/* Dropdown with transition */}
+      {/* Dropdown with responsive width */}
       <div
-        className={`absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 shadow-lg rounded-lg z-50 p-4 text-sm transform transition-all duration-200 origin-top-right ${
-          open 
-            ? 'opacity-100 scale-100' 
+        className={`absolute right-0 mt-2 w-80 max-w-[90vw] sm:max-w-sm bg-white dark:bg-gray-800 shadow-lg rounded-lg z-50 p-4 text-sm transform transition-all duration-200 origin-top-right ${
+          open
+            ? 'opacity-100 scale-100'
             : 'opacity-0 scale-95 pointer-events-none'
         }`}
       >
@@ -73,7 +82,7 @@ export default function NotificationBell() {
               return (
                 <li
                   key={r.event_id}
-                  className="border-b pb-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition"
+                  className="border-b pb-2 ursor-pointer transition rounded px-2"
                   onClick={() => setOpen(false)}
                 >
                   <p className="font-medium text-gray-800 dark:text-white">
