@@ -40,14 +40,14 @@ export default function DashboardPage() {
         .select('events(event_id, organizer_id, title, description, created_at, visible, deadline)')
         .eq('role_id', user.id)
         .eq('role', 'organizer');
-      setOrganizedEvents(organizedData?.map(item => item.events) || []);
+      setOrganizedEvents(organizedData?.map(item => item.events).flat() || []);
 
       const { data: normalData } = await supabase
         .from('event_organizers')
         .select('events(event_id, organizer_id, title, description, created_at, visible, deadline)')
         .eq('role_id', user.id)
         .eq('role', 'normal');
-      setNormalEvents(normalData?.map(item => item.events) || []);
+      setNormalEvents(normalData?.map(item => item.events).flat() || []);
 
       // 改為抓取 users.name
       const { data: users } = await supabase
