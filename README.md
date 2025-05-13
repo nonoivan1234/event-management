@@ -16,9 +16,9 @@ Event Hub is a full-stack event management platform built with **Next.js** and *
 
 ## 🧱 Tech Stack
 
-* **Frontend**: [Next.js 15](https://nextjs.org/), Tailwind CSS, App Router
+* **Frontend**: [Next.js 13](https://nextjs.org/), Tailwind CSS, App Router
 * **Backend**: [Supabase](https://supabase.io/) (Auth, Database)
-* **CI/CD**: GitHub Actions + Render
+* **CI/CD**: GitHub Actions + Vercel
 
 ## 🧑‍💻 Local Development
 
@@ -59,7 +59,7 @@ event-hub/
 ## 🧪 CI/CD
 
 * Lint and build checks on pull requests via GitHub Actions
-* Automatic deployment to [Render](https://render.com/) on `main` branch pushes
+* Automatic deployment to [Vercel](https://vercel.com/) on `main` branch pushes
 
 ## 🙌 Acknowledgements
 
