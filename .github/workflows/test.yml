@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Lint & Build
+    name: Test Build
     runs-on: ubuntu-latest
     defaults:
       run:
