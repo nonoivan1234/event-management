@@ -16,8 +16,12 @@ export default function ProfilePage() {
   const [imageSrc, setImageSrc] = useState<string | null>(null)
   const [form, setForm] = useState({ name: '', student_id: '', phone: '', school: ''})
   const [password, setPassword] = useState('')
-  const [message, setMessage] = useState('')
-  const [isError, setIsError] = useState(false)
+
+  const [mainMessage, setMainMessage] = useState('')
+  const [mainIsError, setMainIsError] = useState(false)
+
+  const [passwordMessage, setPasswordMessage] = useState('')
+  const [passwordIsError, setPasswordIsError] = useState(false)
 
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -27,7 +31,7 @@ export default function ProfilePage() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const router = useRouter()
-  
+
   const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels)
   }, [])
@@ -85,13 +89,17 @@ export default function ProfilePage() {
   }, [router])
 
   useEffect(() => {
-    if (!showPasswordModal) setPassword('')
+    if (!showPasswordModal) {
+      setPassword('')
+      setPasswordMessage('')
+      setPasswordIsError(false)
+    }
   }, [showPasswordModal])
 
   const handleSave = async () => {
     if (!userId) {
-      setMessage('⚠️ 尚未取得使用者 ID')
-      setIsError(true)
+      setMainMessage('⚠️ 尚未取得使用者 ID')
+      setMainIsError(true)
       return
     }
 
@@ -101,11 +109,11 @@ export default function ProfilePage() {
       .eq('email', email)
 
     if (error) {
-      setMessage(`❌ 資料更新失敗：${error.message}`)
-      setIsError(true)
+      setMainMessage(`❌ 資料更新失敗：${error.message}`)
+      setMainIsError(true)
     } else {
-      setMessage('✅ 資料已成功更新！')
-      setIsError(false)
+      setMainMessage('✅ 資料已成功更新！')
+      setMainIsError(false)
       setTimeout(() => router.back(), 1000)
     }
   }
@@ -191,9 +199,9 @@ export default function ProfilePage() {
         🔙 返回
       </button>
 
-      {message && (
-        <p className={`text-sm text-center mt-4 ${isError ? 'text-red-500' : 'text-green-500'}`}>
-          {message}
+      {mainMessage && (
+        <p className={`text-sm text-center mt-4 ${mainIsError ? 'text-red-500' : 'text-green-500'}`}>
+          {mainMessage}
         </p>
       )}
 
@@ -224,16 +232,21 @@ export default function ProfilePage() {
 
       {/* Password Modal */}
       <Dialog open={showPasswordModal} onClose={() => setShowPasswordModal(false)} maxWidth="xs" fullWidth>
-        <div className="p-4">
+        <div className="p-4 bg-white text-black dark:bg-gray-900 dark:text-white rounded">
           <h2 className="text-lg font-bold mb-4">更改密碼</h2>
+
           <input
             type="password"
             autoComplete="new-password"
             placeholder="輸入新密碼"
-            className="w-full border px-3 py-2 rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white mb-4"
+            className="w-full border border-gray-300 px-3 py-2 rounded 
+                      focus:outline-none focus:ring-2 focus:ring-blue-500 
+                      dark:bg-gray-800 dark:border-gray-600 dark:text-white 
+                      dark:placeholder-gray-400 dark:focus:ring-blue-400 mb-4"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setShowPasswordModal(false)}
@@ -248,18 +261,17 @@ export default function ProfilePage() {
             <button
               onClick={async () => {
                 if (!password) {
-                  setMessage("⚠️ 請輸入新密碼")
-                  setIsError(true)
+                  setPasswordMessage("⚠️ 請輸入新密碼")
+                  setPasswordIsError(true)
                   return
                 }
                 const { error: chpswd } = await supabase.auth.updateUser({ password })
                 if (chpswd) {
-                  setMessage(`❌ 密碼更新失敗：${chpswd.message}`)
-                  setIsError(true)
+                  setPasswordMessage(`❌ 密碼更新失敗：${chpswd.message.includes('New password should be different from the old password.')? '新密碼不能與舊密碼相同' : chpswd.message}`)
+                  setPasswordIsError(true)
                 } else {
-                  setMessage('✅ 密碼更新成功！')
-                  setIsError(false)
-                  setShowPasswordModal(false)
+                  setPasswordMessage('✅ 密碼更新成功！')
+                  setPasswordIsError(false)
                 }
               }}
               className="px-3 py-1 rounded text-sm 
@@ -270,6 +282,12 @@ export default function ProfilePage() {
               確認修改
             </button>
           </div>
+
+          {passwordMessage && (
+            <p className={`mt-4 text-sm text-center ${passwordIsError ? 'text-red-500' : 'text-green-500'}`}>
+              {passwordMessage}
+            </p>
+          )}
         </div>
       </Dialog>
     </div>
