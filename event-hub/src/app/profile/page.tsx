@@ -23,11 +23,14 @@ export default function ProfilePage() {
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
   const [showCropper, setShowCropper] = useState(false)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const router = useRouter()
   
-  const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {setCroppedAreaPixels(croppedAreaPixels)}, [])
+  const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels)
+  }, [])
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -39,7 +42,7 @@ export default function ProfilePage() {
     }
     reader.readAsDataURL(file)
   }
-  
+
   const showCroppedImage = async () => {
     try {
       const base64 = await getCroppedImg(imageSrc!, croppedAreaPixels)
@@ -81,6 +84,9 @@ export default function ProfilePage() {
     fetchProfile()
   }, [router])
 
+  useEffect(() => {
+    if (!showPasswordModal) setPassword('')
+  }, [showPasswordModal])
 
   const handleSave = async () => {
     if (!userId) {
@@ -98,22 +104,9 @@ export default function ProfilePage() {
       setMessage(`❌ 資料更新失敗：${error.message}`)
       setIsError(true)
     } else {
-      if (password != ""){
-        const {error:chpswd} = await supabase.auth.updateUser({ password: password })
-        if (chpswd) {
-          setMessage(`❌ 密碼更新失敗：${chpswd.message}`)
-          setIsError(true)
-        } else {
-          setMessage('✅ 資料及密碼已成功更新！')
-          setIsError(false)
-          setTimeout(() => router.back(), 1000)
-        }
-      } else {
-        setMessage('✅ 資料已成功更新！')
-        setIsError(false)
-        setTimeout(() => router.back(), 1000)
-      }
-      
+      setMessage('✅ 資料已成功更新！')
+      setIsError(false)
+      setTimeout(() => router.back(), 1000)
     }
   }
 
@@ -126,7 +119,6 @@ export default function ProfilePage() {
         </p>
       )}
 
-      {/* 頭像預覽 + 上傳 */}
       <div
         onClick={() => fileInputRef.current?.click()}
         className="w-24 h-24 rounded-full mx-auto border cursor-pointer overflow-hidden group relative"
@@ -158,35 +150,33 @@ export default function ProfilePage() {
         className="hidden"
       />
 
-      {/* 表單欄位 */}
       {['name', 'student_id', 'phone', 'school'].map((field) => (
-      <label key={field} className="block mb-4">
-        {field === 'name'
-          ? '姓名'
-          : field === 'student_id'
-          ? '學號'
-          : field === 'phone'
-          ? '電話'
-          : '就讀學校'}
-        <input
-          type="text"
-          className="w-full border px-3 py-2 rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-          value={(form as any)[field]}
-          onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-        />
-      </label>
+        <label key={field} className="block mb-4">
+          {field === 'name'
+            ? '姓名'
+            : field === 'student_id'
+            ? '學號'
+            : field === 'phone'
+            ? '電話'
+            : '就讀學校'}
+          <input
+            type="text"
+            className="w-full border px-3 py-2 rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            value={(form as any)[field]}
+            onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+          />
+        </label>
       ))}
-      <hr className="my-4 border-gray-300 dark:border-gray-600" />
 
-      <h2 className="text-lg font-bold mb-4">修改密碼</h2>
-      <input
-        type="password"
-        placeholder="新密碼"
-        className="w-full border px-3 py-2 rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white mb-4"
-        onChange={(e) => setPassword(e.target.value)}
-      />
+      <button
+        onClick={() => setShowPasswordModal(true)}
+        className="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 mt-4 transition-colors"
+      >
+        🔐 更改密碼
+      </button>
 
       <hr className="my-4 border-gray-300 dark:border-gray-600" />
+
       <button
         onClick={handleSave}
         className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors"
@@ -207,6 +197,7 @@ export default function ProfilePage() {
         </p>
       )}
 
+      {/* Cropper Modal */}
       <Dialog open={showCropper} onClose={() => setShowCropper(false)} maxWidth="sm" fullWidth>
         <div className="p-4">
           <div className="relative w-full h-80 bg-gray-100 dark:bg-gray-700 rounded">
@@ -227,6 +218,57 @@ export default function ProfilePage() {
           <div className="flex justify-end gap-2">
             <button onClick={() => setShowCropper(false)} className="text-sm text-gray-500">取消</button>
             <button onClick={showCroppedImage} className="bg-blue-600 text-white px-3 py-1 rounded">確定裁切</button>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* Password Modal */}
+      <Dialog open={showPasswordModal} onClose={() => setShowPasswordModal(false)} maxWidth="xs" fullWidth>
+        <div className="p-4">
+          <h2 className="text-lg font-bold mb-4">更改密碼</h2>
+          <input
+            type="password"
+            autoComplete="new-password"
+            placeholder="輸入新密碼"
+            className="w-full border px-3 py-2 rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white mb-4"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setShowPasswordModal(false)}
+              className="text-sm px-3 py-1 rounded 
+                        bg-gray-300 text-gray-700 
+                        hover:bg-gray-400 hover:text-black 
+                        dark:bg-gray-700 dark:text-gray-200 
+                        dark:hover:bg-gray-600 dark:hover:text-white"
+            >
+              取消
+            </button>
+            <button
+              onClick={async () => {
+                if (!password) {
+                  setMessage("⚠️ 請輸入新密碼")
+                  setIsError(true)
+                  return
+                }
+                const { error: chpswd } = await supabase.auth.updateUser({ password })
+                if (chpswd) {
+                  setMessage(`❌ 密碼更新失敗：${chpswd.message}`)
+                  setIsError(true)
+                } else {
+                  setMessage('✅ 密碼更新成功！')
+                  setIsError(false)
+                  setShowPasswordModal(false)
+                }
+              }}
+              className="px-3 py-1 rounded text-sm 
+                        bg-blue-600 text-white 
+                        hover:bg-blue-700 
+                        dark:bg-blue-500 dark:hover:bg-blue-400"
+            >
+              確認修改
+            </button>
           </div>
         </div>
       </Dialog>
