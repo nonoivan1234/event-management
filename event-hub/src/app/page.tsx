@@ -13,9 +13,11 @@ export default function HomePage() {
   const [categories, setCategories] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
   const [registrations, setRegistrations] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // ✅ 加入 loading 狀態
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true); // ✅ 開始載入
       const [{ data: userData }, { data: eventsData, error }] =
         await Promise.all([
           supabase.auth.getUser(),
@@ -25,6 +27,7 @@ export default function HomePage() {
             .eq("visible", true)
             .order("deadline", { ascending: true }),
         ]);
+
       if (userData?.user) {
         setUser(userData.user);
 
@@ -37,7 +40,6 @@ export default function HomePage() {
       }
 
       if (!error && eventsData) {
-        // 解析 category 為陣列
         const parsedEvents = eventsData.map((e) => ({
           ...e,
           category:
@@ -50,6 +52,7 @@ export default function HomePage() {
         );
         setCategories(uniqueCategories);
       }
+      setIsLoading(false); // ✅ 結束載入
     };
 
     fetchData();
@@ -101,7 +104,6 @@ export default function HomePage() {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-            {/* 搜尋欄 */}
             <div className="relative w-full">
               <input
                 type="text"
@@ -113,7 +115,6 @@ export default function HomePage() {
               <span className="absolute left-3 top-1.5 text-gray-400">🔍</span>
             </div>
 
-            {/* 類別篩選 */}
             <select
               className="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white dark:border-gray-600"
               value={category}
@@ -127,7 +128,6 @@ export default function HomePage() {
               ))}
             </select>
 
-            {/* 狀態篩選 */}
             <select
               className="w-full border rounded px-3 py-2 dark:bg-gray-700 dark:text-white dark:border-gray-600"
               value={statusFilter}
@@ -143,137 +143,148 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section className="space-y-12">
-        {upcomingEvents.length > 0 && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">⏳ 即將舉辦的活動</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-              {upcomingEvents.map((event) => {
-                const registered = isRegistered(event.event_id);
-                const disabled =
-                  !user || registered || new Date(event.deadline) < now;
-                const expired = new Date(event.deadline) < now;
-                const title = !user
-                  ? "請先登入才能報名"
-                  : registered
-                  ? "你已報名此活動"
-                  : expired
-                  ? "活動已結束"
-                  : "";
+      {/* ✅ 顯示 loading 或無資料提示 */}
+      {isLoading ? (
+        <div className="text-center py-16 text-gray-600 dark:text-gray-300">
+          ⏳ 正在載入活動資料…
+        </div>
+      ) : filteredEvents.length === 0 ? (
+        <div className="text-center py-16 text-gray-600 dark:text-gray-300">
+          ❗ 目前沒有符合條件的活動
+        </div>
+      ) : (
+        <section className="space-y-12">
+          {upcomingEvents.length > 0 && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">⏳ 即將舉辦的活動</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                {upcomingEvents.map((event) => {
+                  const registered = isRegistered(event.event_id);
+                  const disabled =
+                    !user || registered || new Date(event.deadline) < now;
+                  const expired = new Date(event.deadline) < now;
+                  const title = !user
+                    ? "請先登入才能報名"
+                    : registered
+                    ? "你已報名此活動"
+                    : expired
+                    ? "活動已結束"
+                    : "";
 
-                return (
-                  <div
-                    key={event.event_id}
-                    className="w-full border rounded-lg p-4 flex flex-col justify-between shadow-sm dark:bg-gray-900 dark:text-white dark:border-gray-700"
-                  >
-                    <div>
-                      <h2 className="text-lg font-semibold truncate">
-                        {event.title}
-                      </h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
-                        截止日期：{event.deadline}
-                      </p>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
-                        {event.description}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                        🧑‍💼 {event.users.name}
-                      </p>
-                      {Array.isArray(event.category) && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {event.category.map((cat: string) => (
-                            <span
-                              key={cat}
-                              className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
-                            >
-                              {cat}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                  return (
+                    <div
+                      key={event.event_id}
+                      className="w-full border rounded-lg p-4 flex flex-col justify-between shadow-sm dark:bg-gray-900 dark:text-white dark:border-gray-700"
+                    >
+                      <div>
+                        <h2 className="text-lg font-semibold truncate">
+                          {event.title}
+                        </h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
+                          截止日期：{event.deadline}
+                        </p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
+                          {event.description}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                          🧑‍💼 {event.users.name}
+                        </p>
+                        {Array.isArray(event.category) && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {event.category.map((cat: string) => (
+                              <span
+                                key={cat}
+                                className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
+                              >
+                                {cat}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (!disabled) {
+                            router.push(
+                              `/event/register?event_id=${event.event_id}`
+                            );
+                          }
+                        }}
+                        disabled={disabled}
+                        title={title}
+                        className={`mt-4 px-4 py-2 rounded ${
+                          disabled
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
+                            : "bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                        }`}
+                      >
+                        {expired
+                          ? "活動已結束"
+                          : registered
+                          ? "已報名"
+                          : "Sign Up"}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => {
-                        if (!disabled) {
-                          router.push(
-                            `/event/register?event_id=${event.event_id}`
-                          );
-                        }
-                      }}
-                      disabled={disabled}
-                      title={title}
-                      className={`mt-4 px-4 py-2 rounded ${
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {expiredEvents.length > 0 && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">📌 已結束的活動</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                {expiredEvents.map((event) => {
+                  const registered = isRegistered(event.event_id);
+                  return (
+                    <div
+                      key={event.event_id}
+                      className="w-full border rounded-lg p-4 flex flex-col justify-between shadow-sm dark:bg-gray-900 dark:text-white dark:border-gray-700"
+                    >
+                      <div>
+                        <h2 className="text-lg font-semibold truncate">
+                          {event.title}
+                        </h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
+                          截止日期：
+                          {event.deadline}{" "}
+                          <span className="text-red-500 ml-2">(已結束)</span>
+                        </p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
+                          {event.description}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                          🧑‍💼 {event.users?.name || "匿名主辦人"}
+                        </p>
+                        {Array.isArray(event.category) && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {event.category.map((cat: string) => (
+                              <span
+                                key={cat}
+                                className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
+                              >
+                                {cat}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <button
                         disabled
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
-                          : "bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
-                      }`}
-                    >
-                      {expired
-                        ? "活動已結束"
-                        : registered
-                        ? "已報名"
-                        : "Sign Up"}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {expiredEvents.length > 0 && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">📌 已結束的活動</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-              {expiredEvents.map((event) => {
-                const registered = isRegistered(event.event_id);
-                return (
-                  <div
-                    key={event.event_id}
-                    className="w-full border rounded-lg p-4 flex flex-col justify-between shadow-sm dark:bg-gray-900 dark:text-white dark:border-gray-700"
-                  >
-                    <div>
-                      <h2 className="text-lg font-semibold truncate">
-                        {event.title}
-                      </h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
-                        截止日期：
-                        {event.deadline}{" "}
-                        <span className="text-red-500 ml-2">(已結束)</span>
-                      </p>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
-                        {event.description}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                        🧑‍💼 {event.users?.name || "匿名主辦人"}
-                      </p>
-                      {Array.isArray(event.category) && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {event.category.map((cat: string) => (
-                            <span
-                              key={cat}
-                              className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
-                            >
-                              {cat}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                        title="活動已結束"
+                        className="mt-4 px-4 py-2 rounded bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
+                      >
+                        {registered ? "已報名 (活動已結束)" : "活動已結束"}
+                      </button>
                     </div>
-                    <button
-                      disabled
-                      title="活動已結束"
-                      className="mt-4 px-4 py-2 rounded bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
-                    >
-                      {registered ? "已報名 (活動已結束)" : "活動已結束"}
-                    </button>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
+      )}
     </main>
   );
 }
