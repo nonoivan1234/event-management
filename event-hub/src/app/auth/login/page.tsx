@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
+  const [attempted, setAttempted] = useState(false) // 登入嘗試過的 flag
 
   const handleLogin = async () => {
     setErrorMsg('')
@@ -18,7 +19,10 @@ export default function LoginPage() {
       password,
     })
 
-    if (error) {
+    if (error && error.message == 'Invalid login credentials') {
+      setErrorMsg('❌ 登入失敗：請檢查您的電子郵件和密碼')
+      setAttempted(true)
+    } else if (error) {
       setErrorMsg('❌ 登入失敗：' + error.message)
     } else {
       router.push('/')
@@ -53,9 +57,21 @@ export default function LoginPage() {
           登入
         </button>
 
+         {/* 錯誤訊息只有在嘗試過登入後才顯示 */}
         {errorMsg && (
           <p className="text-sm text-center text-red-500">{errorMsg}</p>
         )}
+
+        {/* 忘記密碼連結 */}
+        {attempted && <p className="text-sm text-center text-gray-600 dark:text-gray-400">
+            忘記密碼了嗎？{' '}
+          <a
+            href="/auth/forgot-password"
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            忘記密碼？
+          </a>
+        </p>}
 
         <p className="text-sm text-center text-gray-600 dark:text-gray-400">
           還沒有帳號嗎？{' '}
