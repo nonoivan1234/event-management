@@ -28,6 +28,7 @@ export default function ProfilePage() {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
   const [showCropper, setShowCropper] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [isLoading, setIsLoading] = useState(true) // ✅ 加入 loading 狀態
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const router = useRouter()
@@ -83,6 +84,8 @@ export default function ProfilePage() {
         })
         setAvatar(data.avatar ?? null)
       }
+
+      setIsLoading(false) // ✅ 結束載入
     }
 
     fetchProfile()
@@ -116,6 +119,15 @@ export default function ProfilePage() {
       setMainIsError(false)
       setTimeout(() => router.back(), 1000)
     }
+  }
+
+  // ✅ Loading UI
+  if (isLoading) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center text-gray-600 dark:text-gray-300">
+        ⏳ 載入個人資料中…
+      </div>
+    )
   }
 
   return (
