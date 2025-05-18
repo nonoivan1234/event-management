@@ -4,6 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
+function LoadingScreen() {
+  return (
+    <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 dark:border-blue-400"></div>
+      <p className="ml-4 text-lg text-gray-700 dark:text-gray-300">載入中...</p>
+    </div>
+  );
+}
+
 type Event = {
   event_id: string;
   title: string;
@@ -18,7 +27,7 @@ type Event = {
 export default function DashboardPage() {
   const router = useRouter();
   const [joinedEvents, setJoinedEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   // 篩選相關狀態
   const [search, setSearch] = useState("");
@@ -80,7 +89,7 @@ export default function DashboardPage() {
       );
 
       setJoinedEvents(events);
-      setIsLoading(false);
+      setLoading(false);
     };
 
     fetchUserAndEvents();
@@ -160,25 +169,38 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+          <div className="flex gap-5 flex-wrap">
+            <button
+              onClick={() =>
+                router.push(`/event/view-data?event_id=${event.event_id}`)
+              }
+              title="查看報名資料"
+              className="mt-4 self-end text-sm px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+            >
+              查看報名資料
+            </button>
 
-          <button
-            onClick={() =>
-              router.push(`/event/register?event_id=${event.event_id}`)
-            }
-            disabled={expired}
-            title={expired ? "活動已結束，無法編輯報名資料" : ""}
-            className={`mt-4 self-end text-sm px-4 py-2 rounded ${
-              expired
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
-                : "bg-blue-600 text-white hover:bg-blue-700"
-            }`}
-          >
-            {expired ? "已結束" : "編輯報名資料"}
-          </button>
+            <button
+              onClick={() =>
+                router.push(`/event/register?event_id=${event.event_id}`)
+              }
+              disabled={expired}
+              title={expired ? "活動已結束，無法編輯報名資料" : ""}
+              className={`mt-4 self-end text-sm px-4 py-2 rounded ${
+                expired
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
+            >
+              {expired ? "已結束" : "編輯報名資料"}
+            </button>
+          </div>
         </div>
       );
     });
   };
+
+  if (loading) return <LoadingScreen />;
 
   return (
     <main className="w-full max-w-6xl mx-auto py-12 px-4 dark:text-white">
@@ -226,18 +248,12 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* 活動清單區塊 */}
-      {isLoading ? (
-        <div className="text-center py-16 text-gray-600 dark:text-gray-300">
-          ⏳ 正在載入你參加的活動…
-        </div>
-      ) : (
       <section>
         <h2 className="text-xl font-bold mb-4">你參加的活動</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {renderEvents()}
         </div>
-      </section>)}
+      </section>
     </main>
   );
 }

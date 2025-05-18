@@ -5,6 +5,15 @@ import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 
+function LoadingScreen() {
+  return (
+    <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 dark:border-blue-400"></div>
+      <p className="ml-4 text-lg text-gray-700 dark:text-gray-300">載入中...</p>
+    </div>
+  );
+}
+
 
 export default function ViewRegistrationsPage() {
   const searchParams = useSearchParams()
@@ -147,7 +156,7 @@ export default function ViewRegistrationsPage() {
     document.body.removeChild(link)
   }
 
-  if (loading) return <p className="p-4 text-gray-800 dark:text-white">Loading...</p>
+  if (loading) return <LoadingScreen />
   if (notAuthorized) return <p className="p-4 text-red-600 dark:text-red-400">您沒有權限查看此報名資料。</p>
 
   return (
