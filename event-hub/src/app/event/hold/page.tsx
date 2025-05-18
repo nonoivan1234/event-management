@@ -4,6 +4,15 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useRouter } from "next/navigation";
 
+function LoadingScreen() {
+  return (
+    <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 dark:border-blue-400"></div>
+      <p className="ml-4 text-lg text-gray-700 dark:text-gray-300">載入中...</p>
+    </div>
+  );
+}
+
 type Event = {
   event_id: string;
   organizer_id: string;
@@ -15,6 +24,7 @@ type Event = {
 };
 
 export default function DashboardPage() {
+  const [loading, setLoading] = useState(true);
   const [userID, setUserID] = useState<string | null>(null);
   const [organizedEvents, setOrganizedEvents] = useState<Event[]>([]);
   const [NormalEvents, setNormalEvents] = useState<Event[]>([]);
@@ -24,43 +34,51 @@ export default function DashboardPage() {
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [organizers, setOrganizers] = useState<string[]>([]);
   const [normals, setNormals] = useState<string[]>([]);
-  const [userMap, setUserMap] = useState<Record<string, string>>({}); // user_id -> email
-  const [userNameMap, setUserNameMap] = useState<Record<string, string>>({}); // user_id -> name
+  const [userMap, setUserMap] = useState<Record<string, string>>({});
+  const [userNameMap, setUserNameMap] = useState<Record<string, string>>({});
 
   const router = useRouter();
 
   useEffect(() => {
     const fetchUserAndEvents = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error || !user) return router.push('/auth/login');
-      setUserID(user.id);
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) {
+          router.push('/auth/login');
+          return;
+        }
+        setUserID(user.id);
 
-      const { data: organizedData } = await supabase
-        .from('event_organizers')
-        .select('events(event_id, organizer_id, title, description, created_at, visible, deadline)')
-        .eq('role_id', user.id)
-        .eq('role', 'organizer');
-      setOrganizedEvents(organizedData?.map(item => item.events).flat() || []);
+        const { data: organizedData } = await supabase
+          .from('event_organizers')
+          .select('events(event_id, organizer_id, title, description, created_at, visible, deadline)')
+          .eq('role_id', user.id)
+          .eq('role', 'organizer');
+        setOrganizedEvents(organizedData?.map(item => item.events).flat() || []);
 
-      const { data: normalData } = await supabase
-        .from('event_organizers')
-        .select('events(event_id, organizer_id, title, description, created_at, visible, deadline)')
-        .eq('role_id', user.id)
-        .eq('role', 'normal');
-      setNormalEvents(normalData?.map(item => item.events).flat() || []);
+        const { data: normalData } = await supabase
+          .from('event_organizers')
+          .select('events(event_id, organizer_id, title, description, created_at, visible, deadline)')
+          .eq('role_id', user.id)
+          .eq('role', 'normal');
+        setNormalEvents(normalData?.map(item => item.events).flat() || []);
 
-      // 改為抓取 users.name
-      const { data: users } = await supabase
-        .from('users')
-        .select('user_id, name, email');
-      const nmap: Record<string, string> = {};
-      const emap: Record<string, string> = {};
-      users?.forEach((u) => {
-        nmap[u.user_id] = u.name ?? '（未填姓名）';
-        emap[u.user_id] = u.email;
-      });
-      setUserMap(emap);
-      setUserNameMap(nmap);
+        const { data: users } = await supabase
+          .from('users')
+          .select('user_id, name, email');
+        const nmap: Record<string, string> = {};
+        const emap: Record<string, string> = {};
+        users?.forEach((u) => {
+          nmap[u.user_id] = u.name ?? '（未填姓名）';
+          emap[u.user_id] = u.email;
+        });
+        setUserMap(emap);
+        setUserNameMap(nmap);
+      } catch (err) {
+        console.error('fetch error', err);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchUserAndEvents();
   }, [router]);
@@ -286,6 +304,7 @@ export default function DashboardPage() {
     </div>
   );
 
+  if (loading) return <LoadingScreen />;
 
   return (
     <main className="w-full max-w-6xl mx-auto py-12 px-4 dark:text-white">
@@ -330,7 +349,7 @@ export default function DashboardPage() {
           </button>
         </div>
       ) : (
-        <>  
+        <>
           {organizedEvents.length > 0 && (
             <section className="mb-12">
               <h2 className="text-xl font-bold mb-4">主辦的活動</h2>
@@ -410,8 +429,6 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-
-
     </main>
   );
 }

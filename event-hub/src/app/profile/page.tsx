@@ -9,6 +9,15 @@ import Slider from '@mui/material/Slider'
 import Dialog from '@mui/material/Dialog'
 import getCroppedImg from '../../utils/cropImage'
 
+function LoadingScreen() {
+  return (
+    <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 dark:border-blue-400"></div>
+      <p className="ml-4 text-lg text-gray-700 dark:text-gray-300">載入中...</p>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [email, setEmail] = useState<string | null>(null)
@@ -28,7 +37,7 @@ export default function ProfilePage() {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
   const [showCropper, setShowCropper] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [isLoading, setIsLoading] = useState(true) // ✅ 加入 loading 狀態
+  const [loading, setLoading] = useState(true) // ✅ 加入 loading 狀態
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const router = useRouter()
@@ -85,7 +94,7 @@ export default function ProfilePage() {
         setAvatar(data.avatar ?? null)
       }
 
-      setIsLoading(false) // ✅ 結束載入
+      setLoading(false) // ✅ 結束載入
     }
 
     fetchProfile()
@@ -122,13 +131,7 @@ export default function ProfilePage() {
   }
 
   // ✅ Loading UI
-  if (isLoading) {
-    return (
-      <div className="w-full min-h-screen flex items-center justify-center text-gray-600 dark:text-gray-300">
-        ⏳ 載入個人資料中…
-      </div>
-    )
-  }
+  if (loading) return <LoadingScreen />
 
   return (
     <div className="max-w-md mx-auto py-10 px-4 text-black dark:text-white">

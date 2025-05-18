@@ -4,6 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 
+function LoadingScreen() {
+  return (
+    <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 dark:border-blue-400"></div>
+      <p className="ml-4 text-lg text-gray-700 dark:text-gray-300">載入中...</p>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -13,11 +22,11 @@ export default function HomePage() {
   const [categories, setCategories] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
   const [registrations, setRegistrations] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // ✅ 加入 loading 狀態
+  const [loading, setLoading] = useState(true); // ✅ 加入 loading 狀態
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true); // ✅ 開始載入
+      setLoading(true); // ✅ 開始載入
       const [{ data: userData }, { data: eventsData, error }] =
         await Promise.all([
           supabase.auth.getUser(),
@@ -52,7 +61,7 @@ export default function HomePage() {
         );
         setCategories(uniqueCategories);
       }
-      setIsLoading(false); // ✅ 結束載入
+      setLoading(false); // ✅ 結束載入
     };
 
     fetchData();
@@ -95,6 +104,8 @@ export default function HomePage() {
     (e) => new Date(e.deadline) < now
   );
 
+  if(loading) return <LoadingScreen />; // ✅ 顯示 loading 畫面
+  
   return (
     <main className="w-full max-w-6xl mx-auto py-8 px-4 dark:text-white">
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -144,11 +155,7 @@ export default function HomePage() {
       </header>
 
       {/* ✅ 顯示 loading 或無資料提示 */}
-      {isLoading ? (
-        <div className="text-center py-16 text-gray-600 dark:text-gray-300">
-          ⏳ 正在載入活動資料…
-        </div>
-      ) : filteredEvents.length === 0 ? (
+      {filteredEvents.length === 0 ? (
         <div className="text-center py-16 text-gray-600 dark:text-gray-300">
           ❗ 目前沒有符合條件的活動
         </div>

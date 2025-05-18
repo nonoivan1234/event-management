@@ -5,6 +5,15 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 
+function LoadingScreen() {
+  return (
+    <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 dark:border-blue-400"></div>
+      <p className="ml-4 text-lg text-gray-700 dark:text-gray-300">載入中...</p>
+    </div>
+  );
+}
+
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -151,8 +160,7 @@ export default function RegisterPage() {
     );
   }
 
-  if (!formSchema || !userInfo)
-    return <p className="p-4 text-gray-800 dark:text-white">Loading...</p>;
+  if (!formSchema || !userInfo) return <LoadingScreen />;
 
   return (
     <div className="w-full max-w-2xl lg:max-w-3xl mx-auto p-6 text-gray-900 dark:text-white">
