@@ -82,7 +82,7 @@ export default function NotificationBell() {
               return (
                 <li
                   key={r.event_id}
-                  className="border-b pb-2 ursor-pointer transition rounded px-2"
+                  className="border-b pb-2 cursor-pointer transition rounded px-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={() => setOpen(false)}
                 >
                   <p className="font-medium text-gray-800 dark:text-white">
