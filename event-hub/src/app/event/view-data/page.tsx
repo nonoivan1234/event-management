@@ -15,6 +15,7 @@ export default function RegistrationViewPage() {
   const [answers, setAnswers] = useState(null);
   const [createdAt, setCreatedAt] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isClosed, setIsClosed] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,7 +26,7 @@ export default function RegistrationViewPage() {
       // 取得活動設定
       const { data: eventData, error: eventError } = await supabase
         .from("events")
-        .select("form_schema")
+        .select("form_schema, deadline")
         .eq("event_id", eventId)
         .single();
 
@@ -33,6 +34,12 @@ export default function RegistrationViewPage() {
         return router.replace("/404");
 
       setFormSchema(eventData.form_schema);
+      const now = new Date();
+      const eventDeadline = eventData.deadline
+        ? new Date(eventData.deadline)
+        : null;
+      if (eventDeadline && eventDeadline < now)
+        setIsClosed(true);
 
       // 取得目前登入使用者 ID
       const { data: authData } = await supabase.auth.getUser();
@@ -112,12 +119,21 @@ export default function RegistrationViewPage() {
           ))}
         </div>
       )}
-      <button
-        onClick={() => router.back()}
-        className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
-      >
-        返回上一頁
-      </button>
+      <div>
+        <button
+          onClick={() => router.back()}
+          className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+        >
+          返回上一頁
+        </button>
+        {!isClosed &&
+        <button
+          onClick={() => router.push("/event/register?event_id=" + eventId)}
+          className="ml-2 px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+        >
+          修改報名資料
+        </button>}
+      </div>
     </div>
   );
 }

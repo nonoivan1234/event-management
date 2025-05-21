@@ -212,66 +212,73 @@ export default function ViewRegistrationsPage() {
           </tr>
         </thead>
         <tbody>
-          {(isEditing ? editedRegs : registrations).map((reg, i) => (
-            <tr key={i} className="border-t hover:bg-gray-50 dark:hover:bg-gray-800">
-              {/* 个人信息部分保持不变 */}
-              {formSchema.personalFields.map((field: string) => (
-                <td key={field} className="border px-2 py-1 text-gray-800 dark:text-gray-100">
-                  {isEditing ? (
+        {(isEditing ? editedRegs : registrations).map((reg, i) => (
+          <tr
+            key={i}
+            className="border-t bg-white dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+          >
+            {formSchema.personalFields.map((field) => (
+              <td
+                key={field}
+                className="border px-2 py-1 text-gray-800 dark:text-gray-100"
+              >
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={reg.user_info_snapshot[field] || ''}
+                    onChange={(e) => onPersonalChange(i, field, e.target.value)}
+                    className="w-full border rounded px-1 py-0.5 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+                  />
+                ) : (
+                  reg.user_info_snapshot?.[field] ?? '-'
+                )}
+              </td>
+            ))}
+
+            {formSchema.customQuestions.map((q) => (
+              <td
+                key={q.id}
+                className="border px-2 py-1 text-gray-800 dark:text-gray-100"
+              >
+                {isEditing ? (
+                  q.type === 'text' ? (
                     <input
                       type="text"
-                      value={reg.user_info_snapshot[field] || ''}
-                      onChange={e => onPersonalChange(i, field, e.target.value)}
-                      className="w-full border rounded px-1 py-0.5 text-sm"
+                      value={reg.answers[q.id] || ''}
+                      onChange={(e) => onAnswerChange(i, q.id, e.target.value)}
+                      required={q.required}
+                      className="w-full border rounded px-1 py-0.5 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
                     />
-                  ) : (
-                    reg.user_info_snapshot?.[field] ?? '-'
-                  )}
-                </td>
-              ))}
-
-              {/* customQuestions 部分：根据 q.type 渲染不同控件 */}
-              {formSchema.customQuestions.map((q: any) => (
-                <td key={q.id} className="border px-2 py-1 text-gray-800 dark:text-gray-100">
-                  {isEditing ? (
-                    q.type === 'text' ? (
-                      <input
-                        type="text"
-                        value={reg.answers[q.id] || ''}
-                        onChange={e => onAnswerChange(i, q.id, e.target.value)}
-                        required={q.required}
-                        className="w-full border rounded px-1 py-0.5 text-sm"
-                      />
-                    ) : q.type === 'textarea' ? (
-                      <textarea
-                        value={reg.answers[q.id] || ''}
-                        onChange={e => onAnswerChange(i, q.id, e.target.value)}
-                        required={q.required}
-                        className="w-full border rounded px-1 py-0.5 text-sm"
-                      />
-                    ) : q.type === 'select' ? (
-                      <select
-                        value={reg.answers[q.id] || ''}
-                        onChange={e => onAnswerChange(i, q.id, e.target.value)}
-                        required={q.required}
-                        className="w-full border rounded px-1 py-0.5 text-sm"
-                      >
-                        <option value="">請選擇</option>
-                        {q.options?.map((opt: string) => (
-                          <option key={opt} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </select>
-                    ) : null
-                  ) : (
-                    reg.answers?.[q.id] ?? '-'
-                  )}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
+                  ) : q.type === 'textarea' ? (
+                    <textarea
+                      value={reg.answers[q.id] || ''}
+                      onChange={(e) => onAnswerChange(i, q.id, e.target.value)}
+                      required={q.required}
+                      className="w-full border rounded px-1 py-0.5 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+                    />
+                  ) : q.type === 'select' ? (
+                    <select
+                      value={reg.answers[q.id] || ''}
+                      onChange={(e) => onAnswerChange(i, q.id, e.target.value)}
+                      required={q.required}
+                      className="w-full border rounded px-1 py-0.5 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+                    >
+                      <option value="">請選擇</option>
+                      {q.options?.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null
+                ) : (
+                  reg.answers?.[q.id] ?? '-'
+                )}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
       </table>
     </div>
   )
