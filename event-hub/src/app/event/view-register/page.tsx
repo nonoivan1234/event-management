@@ -9,7 +9,7 @@ import LoadingScreen from '@/components/loading'
 
 export default function ViewRegistrationsPage() {
   const searchParams = useSearchParams()
-  const eventId = searchParams.get('id')
+  const eventId = searchParams.get('event_id')
   const [IsOrganizer, setIsOrganizer] = useState(false)
   const [formSchema, setFormSchema] = useState<any>(null)
   const [registrations, setRegistrations] = useState<any[]>([])

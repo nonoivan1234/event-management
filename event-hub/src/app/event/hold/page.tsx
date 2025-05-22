@@ -218,7 +218,7 @@ export default function DashboardPage() {
             編輯人員
           </button>
           <button
-            onClick={() => router.push(`/event/modify?id=${eventId}`)}
+            onClick={() => router.push(`/event/modify?event_id=${eventId}`)}
             className="text-sm text-indigo-600 dark:text-indigo-300 hover:underline"
           >
             編輯活動
@@ -245,7 +245,7 @@ export default function DashboardPage() {
       )}
       <button
         onClick={() =>
-          router.push(`/event/view-register?id=${eventId}`)
+          router.push(`/event/view-register?event_id=${eventId}`)
         }
         className="text-sm text-teal-600 dark:text-teal-300 hover:underline"
       >

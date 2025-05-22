@@ -11,7 +11,7 @@ const defaultPersonalFields = ['name', 'email', 'phone', 'student_id', 'school']
 
 export default function EventFormPage() {
   const searchParams = useSearchParams()
-  const eventId = searchParams.get('id')
+  const eventId = searchParams.get('event_id')
   const isEdit = !!eventId
   const router = useRouter()
 
@@ -29,7 +29,7 @@ export default function EventFormPage() {
   const [notAuthorized, setNotAuthorized] = useState(false)
 
   useEffect(() => {
-    const id = searchParams.get('id')
+    const id = searchParams.get('event_id')
     if (id === null) 
       setLoading(false)
     else {
