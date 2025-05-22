@@ -11,6 +11,7 @@ type Event = {
   description: string;
   deadline: string;
   category?: string[];
+  visible: boolean;
   users?: {
     name: string;
   };
@@ -50,6 +51,7 @@ export default function DashboardPage() {
             description,
             deadline,
             category,
+            visible,
             users:organizer_id (
               name
             )
@@ -58,7 +60,8 @@ export default function DashboardPage() {
         )
         .eq("user_id", user.id);
 
-      const events = joinedData?.map((item: any) => {
+      const FilterJoinedData = joinedData?.filter((item: any) => item.events.visible)
+      const events = FilterJoinedData?.map((item: any) => {
         // 解析 category 欄位為陣列
         const catField = item.events.category;
         const parsed = Array.isArray(catField)
