@@ -170,8 +170,8 @@ export default function EventFormPage() {
     if (!files) return
     setImageError('')
     Array.from(files).forEach(file => {
-      if (!file.type.startsWith('image/')) { setImageError('❗ 只能上傳圖片檔案'); return }
-      if (file.size > 3 * 1024 * 1024) { setImageError('❗ 圖片超過 3MB，請重新選擇'); return }
+      if (!file.type.startsWith('image/')) { setImageError('❗ 只能上傳圖片檔案（jpg/png/gif檔）'); return }
+      if (file.size > 5 * 1024 * 1024) { setImageError('❗ 圖片超過 5MB，請重新選擇'); return }
       const reader = new FileReader()
       reader.onloadend = () => setForm(prev => ({ ...prev, images: [...prev.images, reader.result as string] }))
       reader.readAsDataURL(file)
@@ -431,7 +431,7 @@ export default function EventFormPage() {
                 ))}
             </div>
           </div>
-          <div className="mb-4"><label className="block mb-1">上傳圖片（最多3MB/張，可多張）</label><input type="file" accept="image/*" multiple onChange={handleImageUpload} /></div>
+          <div className="mb-4"><label className="block mb-1">上傳圖片（最多5MB/張，可多張）</label><input type="file" accept="image/*" multiple onChange={handleImageUpload} /></div>
           {imageError && <p className="text-red-600 text-sm mb-2">{imageError}</p>}
           <div className="flex flex-wrap gap-3 mb-4">{form.images.map((src,i)=><div key={i} className="relative"><img src={src} className="w-24 h-24 object-cover rounded border"/><button type="button" onClick={()=>removeImage(i)} className="absolute top-0 right-0 text-red-600 bg-white rounded-full px-1 text-xs">✕</button></div>)}</div>
           
