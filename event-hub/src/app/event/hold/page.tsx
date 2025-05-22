@@ -171,7 +171,7 @@ export default function DashboardPage() {
 
     alert(error_role ? `❌ 複製失敗：${error_role.message}` : "✅ 活動已複製");
     if (!error_role)
-      router.push(`/event/modify?id=${data_create_event.event_id}`);
+      router.push(`/event/modify?event_id=${data_create_event.event_id}`);
   };
 
   const delete_event = async (eventID: string) => {

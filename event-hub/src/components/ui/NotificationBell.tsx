@@ -37,10 +37,8 @@ export default function NotificationBell() {
         .from('registrations')
         .select('event_id, event:events!inner(deadline, title, visible)')
         .eq('user_id', user.id)
-
       const visibleRegistrations = data?.filter((registration) => registration.event.visible)
       const sorted = (visibleRegistrations as unknown as Registration[] | null)?.sort((a, b) => getDaysLeft(a.event.deadline) - getDaysLeft(b.event.deadline))
-
       setRegistrations(sorted || [])
     }
 

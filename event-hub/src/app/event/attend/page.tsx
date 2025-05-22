@@ -59,7 +59,6 @@ export default function DashboardPage() {
         `
         )
         .eq("user_id", user.id);
-
       const FilterJoinedData = joinedData?.filter((item: any) => item.events.visible)
       const events = FilterJoinedData?.map((item: any) => {
         // 解析 category 欄位為陣列
@@ -162,7 +161,9 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-          <div className="flex gap-5 flex-wrap">
+          <div className="flex gap-5 flex-wrap"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() =>
                 router.push(`/event/view-data?event_id=${event.event_id}`)
