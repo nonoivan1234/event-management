@@ -173,7 +173,8 @@ export default function HomePage() {
                   return (
                     <div
                       key={event.event_id}
-                      className="w-full border rounded-lg p-4 flex flex-col justify-between shadow-sm dark:bg-gray-900 dark:text-white dark:border-gray-700"
+                      className="w-full border rounded-lg p-4 flex flex-col justify-between shadow-sm dark:bg-gray-900 dark:text-white dark:border-gray-700 hover:shadow-md duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
+                      onClick={() => router.push(`/event?event_id=${event.event_id}`)}
                     >
                       <div>
                         <h2 className="text-lg font-semibold truncate">
