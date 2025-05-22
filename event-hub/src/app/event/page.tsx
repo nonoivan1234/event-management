@@ -27,6 +27,7 @@ interface EventDetail {
 }
 
 function toDatetimeLocal(isoString: string): string {
+  if (!isoString) return "";
   const d = new Date(isoString)                                 // 轉成 Date 物件 (UTC)
   const offsetMs = d.getTimezoneOffset() * 60 * 1000            // 取得時區差(分鐘) -> 毫秒
   const local = new Date(d.getTime() - offsetMs)               // 把 UTC 換成本地時間
@@ -168,7 +169,7 @@ export default function EventDetailPage() {
           </div>
         {(event.start || event.end) && (
           <p className="text-md text-gray-600 dark:text-gray-400 mb-1">
-            {event.start ? toDatetimeLocal(event.start):"未設定開始時間"} - {event.end ? toDatetimeLocal(event.end):"未設定結束時間"}
+            {toDatetimeLocal(event.start)} ~ {toDatetimeLocal(event.end)}
           </p>
         )}
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
