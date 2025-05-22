@@ -136,13 +136,19 @@ export default function EventDetailPage() {
 
   const prevSlide = () => {
     if (!event.images) return;
-    setCurrentIndex(
-      (prev) => (prev - 1 + event.images!.length) % event.images!.length
-    );
+    setCurrentIndex((prev) => (prev - 1 + event.images!.length) % event.images!.length);
+    clearInterval(slideInterval.current!);
+    slideInterval.current = window.setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % event.images!.length);
+    }, 5000);
   };
   const nextSlide = () => {
     if (!event.images) return;
     setCurrentIndex((prev) => (prev + 1) % event.images!.length);
+    clearInterval(slideInterval.current!);
+    slideInterval.current = window.setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % event.images!.length);
+    }, 5000);
   };
 
   return (
