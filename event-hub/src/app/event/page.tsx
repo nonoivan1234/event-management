@@ -341,13 +341,7 @@ export default function EventDetailPage() {
                     window.open(url, "_blank", "noopener,noreferrer")
                 }
                 className="
-                    px-4 py-2
-                    bg-blue-600 text-white border border-blue-300
-                    rounded
-                    hover:bg-blue-100
-                    dark:bg-blue-700 dark:text-gray-200 dark:border-blue-600 dark:hover:bg-blue-600
-                    transition-colors
-                    focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500
+                    px-4 py-2 bg-blue-600 text-white border rounded hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500
                 "
                 >
                 {platform}

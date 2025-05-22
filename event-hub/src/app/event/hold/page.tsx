@@ -144,9 +144,10 @@ export default function DashboardPage() {
   };
 
   const duplicate_event = async (eventID: string) => {
+    if (!confirm("確定要複製此活動嗎？")) return;
     const { data: event_data, error: fetch_error } = await supabase
       .from("events")
-      .select("title, description, deadline, form_schema, category")
+      .select("title, description, deadline, form_schema, category, start, end, venue_name, venue_address, share_link, images")
       .eq("event_id", eventID)
       .single();
     if (fetch_error) return alert("找不到活動");
