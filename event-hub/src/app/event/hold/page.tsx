@@ -75,9 +75,7 @@ export default function DashboardPage() {
     fetchUserAndEvents();
   }, [router]);
 
-  const handleCreateEvent = () => {
-    router.push("/event/modify");
-  };
+  const handleCreateEvent = () => router.push("/event/modify");
 
   const handleToggleVisibility = async (
     eventId: string,
