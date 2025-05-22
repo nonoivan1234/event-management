@@ -206,7 +206,9 @@ export default function DashboardPage() {
     hold: boolean,
     org: boolean
   ) => (
-    <div className="mt-4 flex gap-3 flex-wrap">
+    <div className="mt-4 flex gap-3 flex-wrap"
+      onClick={(e) => e.stopPropagation()}
+    >
       {hold && (
         <>
           <button
