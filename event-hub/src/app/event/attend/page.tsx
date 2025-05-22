@@ -59,8 +59,8 @@ export default function DashboardPage() {
         `
         )
         .eq("user_id", user.id);
-      const visibleEvents = joinedData?.filter((registration) => registration.events.visible)
-      const events = visibleEvents?.map((item: any) => {
+      const FilterJoinedData = joinedData?.filter((item: any) => item.events.visible)
+      const events = FilterJoinedData?.map((item: any) => {
         // 解析 category 欄位為陣列
         const catField = item.events.category;
         const parsed = Array.isArray(catField)
