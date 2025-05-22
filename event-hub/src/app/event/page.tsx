@@ -159,7 +159,7 @@ export default function EventDetailPage() {
           <h1 className="text-4xl font-bold mb-2">{event.title}</h1>
           {IsOrganizer && (
               <button
-                onClick={() => router.push(`/event/edit?event_id=${event.event_id}`)}
+                onClick={() => router.push(`/event/modify?event_id=${event.event_id}`)}
                 className="ml-4 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 編輯活動
