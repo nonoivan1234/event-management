@@ -94,9 +94,6 @@ export default function DashboardPage() {
     .filter((event) => {
       const isExpired = new Date(event.deadline) < now;
 
-      if (statusFilter === "Registered") {
-        // 本頁所有為已報名，跳過
-      }
       if (statusFilter === "Expired" && !isExpired) return false;
       if (statusFilter === "Upcoming" && isExpired) return false;
 
@@ -133,7 +130,7 @@ export default function DashboardPage() {
         <div
           key={event.event_id}
           onClick={() => router.push(`/event?event_id=${event.event_id}`)}
-          className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 flex flex-col justify-between hover:shadow-md transition-shadow transition-colors duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
+          className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 flex flex-col justify-between hover:shadow-md duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
         >
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">

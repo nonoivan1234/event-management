@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 function getDaysLeft(deadline: string | null | undefined): number {
@@ -22,6 +23,7 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false)
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const containerRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchReminders = async () => {
@@ -83,7 +85,7 @@ export default function NotificationBell() {
                 <li
                   key={r.event_id}
                   className="border-b pb-2 cursor-pointer transition rounded px-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  onClick={() => setOpen(false)}
+                  onClick={() => router.push(`/event?event_id=${r.event_id}`)}
                 >
                   <p className="font-medium text-gray-800 dark:text-white">
                     {r.event.title}

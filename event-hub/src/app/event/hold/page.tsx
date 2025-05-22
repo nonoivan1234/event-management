@@ -10,9 +10,14 @@ type Event = {
   organizer_id: string;
   title: string;
   description: string;
-  created_at: string;
   visible: boolean;
   deadline?: string;
+  start?: string;
+  end?: string;
+  venue_name?: string;
+  venue_address?: string;
+  share_link?: string;
+  category?: string[]; // 已經將 category 定義為陣列
 };
 
 export default function DashboardPage() {
@@ -34,44 +39,60 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchUserAndEvents = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error || !user) {
-          router.push('/auth/login');
+        const { data: { user }, error: userErr } = await supabase.auth.getUser();
+        if (userErr || !user) {
+          router.push("/auth/login");
           return;
         }
         setUserID(user.id);
 
+        // 取主辦
         const { data: organizedData } = await supabase
-          .from('event_organizers')
-          .select('events(event_id, organizer_id, title, description, created_at, visible, deadline)')
-          .eq('role_id', user.id)
-          .eq('role', 'organizer');
-        setOrganizedEvents(organizedData?.map(item => item.events).flat() || []);
+          .from("event_organizers")
+          .select("events(event_id, organizer_id, title, description, category, visible, deadline)")
+          .eq("role_id", user.id)
+          .eq("role", "organizer");
 
+        const organized = organizedData?.map((item) => ({
+          ...item.events,
+          category: JSON.parse(item.events.category),
+        })) || [];
+
+        setOrganizedEvents(organized);
+
+        // 取協辦
         const { data: normalData } = await supabase
-          .from('event_organizers')
-          .select('events(event_id, organizer_id, title, description, created_at, visible, deadline)')
-          .eq('role_id', user.id)
-          .eq('role', 'normal');
-        setNormalEvents(normalData?.map(item => item.events).flat() || []);
+          .from("event_organizers")
+          .select("events(event_id, organizer_id, title, description, category, visible, deadline)")
+          .eq("role_id", user.id)
+          .eq("role", "normal");
 
+        const normal = normalData?.map((item) => ({
+          ...item.events,
+          category: JSON.parse(item.events.category),
+        })) || [];
+
+        setNormalEvents(normal);
+
+        // 取所有使用者 map
         const { data: users } = await supabase
-          .from('users')
-          .select('user_id, name, email');
+          .from("users")
+          .select("user_id, name, email");
         const nmap: Record<string, string> = {};
         const emap: Record<string, string> = {};
         users?.forEach((u) => {
-          nmap[u.user_id] = u.name ?? '（未填姓名）';
+          nmap[u.user_id] = u.name ?? "（未填姓名）";
           emap[u.user_id] = u.email;
         });
         setUserMap(emap);
         setUserNameMap(nmap);
       } catch (err) {
-        console.error('fetch error', err);
+        console.error("fetch error", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchUserAndEvents();
   }, [router]);
 
@@ -89,9 +110,11 @@ export default function DashboardPage() {
       alert("更新可見狀態失敗");
       return;
     }
-    setOrganizedEvents(prev =>
-      prev.map(event =>
-        event.event_id === eventId ? { ...event, visible: !currentVisible } : event
+    setOrganizedEvents((prev) =>
+      prev.map((event) =>
+        event.event_id === eventId
+          ? { ...event, visible: !currentVisible }
+          : event
       )
     );
   };
@@ -158,7 +181,10 @@ export default function DashboardPage() {
       .select("organizer_id")
       .eq("event_id", eventID);
     if (error || !data) return alert("找不到活動");
-    if (data[0].organizer_id !== (await supabase.auth.getUser()).data.user?.id)
+    if (
+      data[0].organizer_id !==
+      (await supabase.auth.getUser()).data.user?.id
+    )
       return alert("只有這個活動的原主辦人，無法刪除！");
     const { error: err_delete } = await supabase
       .from("events")
@@ -166,8 +192,12 @@ export default function DashboardPage() {
       .eq("event_id", eventID);
     if (err_delete) return alert("刪除失敗");
     alert("刪除成功");
-    setOrganizedEvents(prev => prev.filter(e => e.event_id !== eventID));
-    setNormalEvents(prev => prev.filter(e => e.event_id !== eventID));
+    setOrganizedEvents((prev) =>
+      prev.filter((e) => e.event_id !== eventID)
+    );
+    setNormalEvents((prev) =>
+      prev.filter((e) => e.event_id !== eventID)
+    );
   };
 
   const renderEventActions = (
@@ -179,16 +209,42 @@ export default function DashboardPage() {
     <div className="mt-4 flex gap-3 flex-wrap">
       {hold && (
         <>
-          <button onClick={() => openEditorModal(eventId)} className="text-sm text-indigo-600 dark:text-indigo-300 hover:underline">編輯人員</button>
-          <button onClick={() => router.push(`/event/modify?id=${eventId}`)} className="text-sm text-indigo-600 dark:text-indigo-300 hover:underline">編輯活動</button>
-          {org && <button onClick={() => delete_event(eventId)} className="text-sm text-red-600 dark:text-red-300 hover:underline">刪除活動</button>}
-          <button onClick={() => handleToggleVisibility(eventId, visible)} className={`text-sm ${visible ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'} hover:underline`}>
-            {visible ? '🔒 隱藏活動' : '🔓 顯示活動'}
+          <button
+            onClick={() => openEditorModal(eventId)}
+            className="text-sm text-indigo-600 dark:text-indigo-300 hover:underline"
+          >
+            編輯人員
+          </button>
+          <button
+            onClick={() => router.push(`/event/modify?id=${eventId}`)}
+            className="text-sm text-indigo-600 dark:text-indigo-300 hover:underline"
+          >
+            編輯活動
+          </button>
+          {org && (
+            <button
+              onClick={() => delete_event(eventId)}
+              className="text-sm text-red-600 dark:text-red-300 hover:underline"
+            >
+              刪除活動
+            </button>
+          )}
+          <button
+            onClick={() => handleToggleVisibility(eventId, visible)}
+            className={`text-sm ${
+              visible
+                ? "text-red-600 dark:text-red-400"
+                : "text-emerald-600 dark:text-emerald-400"
+            } hover:underline`}
+          >
+            {visible ? "🔒 隱藏活動" : "🔓 顯示活動"}
           </button>
         </>
       )}
       <button
-        onClick={() => router.push(`/event/view-register?id=${eventId}`)}
+        onClick={() =>
+          router.push(`/event/view-register?id=${eventId}`)
+        }
         className="text-sm text-teal-600 dark:text-teal-300 hover:underline"
       >
         查看報名者
@@ -204,10 +260,12 @@ export default function DashboardPage() {
 
   const filteredEvents = (events: Event[]) => {
     const now = new Date();
-    return events.filter(event => {
+    return events.filter((event) => {
       const matchesSearch =
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchTerm.toLowerCase());
+        event.description
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
       const deadline = event.deadline ? new Date(event.deadline) : null;
       const isEnded = deadline ? deadline < now : false;
       switch (filterOption) {
@@ -232,7 +290,7 @@ export default function DashboardPage() {
           type="email"
           placeholder="輸入Email後按 Enter"
           className="w-full bg-gray-100 text-black dark:bg-gray-700 dark:text-white px-2 py-1 rounded border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500"
-          onKeyDown={async e => {
+          onKeyDown={async (e) => {
             if (e.key !== "Enter") return;
             const input = e.currentTarget as HTMLInputElement;
             const email = input.value.trim();
@@ -254,7 +312,7 @@ export default function DashboardPage() {
             const { error: insertError } = await supabase
               .from("event_organizers")
               .insert({ event_id: editingEventId, role_id: userId, role });
-            if (!insertError) setState(prev => [...prev, userId]);
+            if (!insertError) setState((prev) => [...prev, userId]);
             else alert(insertError.message);
             input.value = "";
           }}
@@ -266,7 +324,7 @@ export default function DashboardPage() {
           >
             <span className="mr-1 text-sm">{userMap[id] ?? id}</span>
             <button
-              className="text-red-300 hover:text-red-500 dark:text-red-200 dark:hover:text-red-400"
+              className="text-red-300 hover:text-red-500 dark:text-red-200 dark:hover:text-red-400" 
               onClick={async () => {
                 const { data } = await supabase
                   .from("events")
@@ -282,7 +340,9 @@ export default function DashboardPage() {
                   .eq("role_id", id)
                   .eq("role", role);
                 if (!error)
-                  setState(prev => prev.filter((_, i) => i !== index));
+                  setState((prev) =>
+                    prev.filter((_, i) => i !== index)
+                  );
                 else alert("移除失敗");
               }}
             >
@@ -304,12 +364,12 @@ export default function DashboardPage() {
             type="text"
             placeholder="Search activities..."
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:text-white dark:border-gray-600 w-full md:w-64"
           />
           <select
             value={filterOption}
-            onChange={e => setFilterOption(e.target.value)}
+            onChange={(e) => setFilterOption(e.target.value)}
             className="border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:text-white dark:border-gray-600"
           >
             <option value="all">所有活動</option>
@@ -344,20 +404,54 @@ export default function DashboardPage() {
             <section className="mb-12">
               <h2 className="text-xl font-bold mb-4">主辦的活動</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredEvents(organizedEvents).map(event => (
-                  <div key={event.event_id} className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 transition hover:shadow-md">
+                {filteredEvents(organizedEvents).map((event) => (
+                  <div
+                    key={event.event_id}
+                    onClick={() => router.push(`/event?event_id=${event.event_id}`)}
+                    className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 flex flex-col justify-between hover:shadow-md duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
+                  >
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {event.title}{!event.visible && (<span className="ml-2 text-sm text-red-500">(已隱藏)</span>)}
+                      {event.title}
+                      {!event.visible && (
+                        <span className="ml-2 text-sm text-red-500">
+                          (已隱藏)
+                        </span>
+                      )}
                     </h2>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">{event.description}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      {event.description}
+                    </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      截止日期：{new Date(event.deadline).toLocaleDateString()}
-                      {new Date(event.deadline) <= new Date() && (<span className="text-red-500 ml-2">(已結束)</span>)}
+                      截止日期：
+                      {new Date(event.deadline!).toLocaleDateString()}
+                      {new Date(event.deadline!) <= new Date() && (
+                        <span className="text-red-500 ml-2">(已結束)</span>
+                      )}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      🧑‍💼主辦者：{userNameMap[event.organizer_id] != "" ? userNameMap[event.organizer_id] :"Anonymous"}{event.organizer_id == userID && "（您是創辦人）"}
+                      🧑‍💼主辦者：
+                      {userNameMap[event.organizer_id] || "Anonymous"}
+                      {event.organizer_id === userID && "（您是創辦人）"}
                     </p>
-                    {renderEventActions(event.event_id, event.visible, true, event.organizer_id === userID)}
+                    {/* 主辦也顯示 category */}
+                    {event.category && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {event.category.map((cat) => (
+                          <span
+                            key={cat}
+                            className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
+                          >
+                            {cat}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {renderEventActions(
+                      event.event_id,
+                      event.visible,
+                      true,
+                      event.organizer_id === userID
+                    )}
                   </div>
                 ))}
               </div>
@@ -368,17 +462,45 @@ export default function DashboardPage() {
             <section className="mb-12">
               <h2 className="text-xl font-bold mb-4">協辦的活動</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredEvents(NormalEvents).map(event => (
-                  <div key={event.event_id} className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 transition hover:shadow-md">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{event.title}</h2>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">{event.description}</p>
+                {filteredEvents(NormalEvents).map((event) => (
+                  <div
+                    key={event.event_id}
+                    onClick={() => router.push(`/event?event_id=${event.event_id}`)}
+                    className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 flex flex-col justify-between hover:shadow-md duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
+                  >
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {event.title}
+                    </h2>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      {event.description}
+                    </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      截止日期：{new Date(event.deadline).toLocaleDateString()}
+                      截止日期：
+                      {new Date(event.deadline!).toLocaleDateString()}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      🧑‍💼主辦者：{userNameMap[event.organizer_id] != "" ? userNameMap[event.organizer_id] :"Anonymous"}
+                      🧑‍💼主辦者：
+                      {userNameMap[event.organizer_id] || "Anonymous"}
                     </p>
-                    {renderEventActions(event.event_id, event.visible, false, false)}
+                    {/* 協辦也顯示 category */}
+                    {event.category && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {event.category.map((cat) => (
+                          <span
+                            key={cat}
+                            className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
+                          >
+                            {cat}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {renderEventActions(
+                      event.event_id,
+                      event.visible,
+                      false,
+                      false
+                    )}
                   </div>
                 ))}
               </div>
@@ -391,23 +513,26 @@ export default function DashboardPage() {
         <div
           className="fixed inset-0 z-50 bg-black/50 dark:bg-black/70 flex items-center justify-center"
           onClick={() => setShowEditorModal(false)}
-          onKeyDown={e => e.key === "Escape" && setShowEditorModal(false)}
+          onKeyDown={(e) => e.key === "Escape" && setShowEditorModal(false)}
           tabIndex={0}
         >
           <div
             className="bg-white dark:bg-gray-800 w-[80vw] max-w-[1200px] h-[50vh] max-h-[70vh] p-6 rounded-lg shadow-lg overflow-y-auto"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">
               編輯舉辦人員
             </h2>
-
             <div className="flex flex-col md:flex-row gap-6">
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-700 dark:text-white mb-1">
                   主辦人員
                 </h3>
-                {renderEditorChipInput(organizers, setOrganizers, "organizer")}
+                {renderEditorChipInput(
+                  organizers,
+                  setOrganizers,
+                  "organizer"
+                )}
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-700 dark:text-white mb-1">
