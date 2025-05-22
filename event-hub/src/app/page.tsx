@@ -203,7 +203,8 @@ export default function HomePage() {
                         )}
                       </div>
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (!disabled) {
                             router.push(
                               `/event/register?event_id=${event.event_id}`

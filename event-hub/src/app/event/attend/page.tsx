@@ -11,6 +11,7 @@ type Event = {
   description: string;
   deadline: string;
   category?: string[];
+  visible: boolean;
   users?: {
     name: string;
   };
@@ -50,6 +51,7 @@ export default function DashboardPage() {
             description,
             deadline,
             category,
+            visible,
             users:organizer_id (
               name
             )
@@ -57,8 +59,8 @@ export default function DashboardPage() {
         `
         )
         .eq("user_id", user.id);
-
-      const events = joinedData?.map((item: any) => {
+      const visibleEvents = joinedData?.filter((registration) => registration.events.visible)
+      const events = visibleEvents?.map((item: any) => {
         // 解析 category 欄位為陣列
         const catField = item.events.category;
         const parsed = Array.isArray(catField)
@@ -159,7 +161,9 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-          <div className="flex gap-5 flex-wrap">
+          <div className="flex gap-5 flex-wrap"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() =>
                 router.push(`/event/view-data?event_id=${event.event_id}`)

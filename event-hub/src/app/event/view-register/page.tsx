@@ -9,7 +9,7 @@ import LoadingScreen from '@/components/loading'
 
 export default function ViewRegistrationsPage() {
   const searchParams = useSearchParams()
-  const eventId = searchParams.get('id')
+  const eventId = searchParams.get('event_id')
   const [IsOrganizer, setIsOrganizer] = useState(false)
   const [formSchema, setFormSchema] = useState<any>(null)
   const [registrations, setRegistrations] = useState<any[]>([])
@@ -108,6 +108,29 @@ export default function ViewRegistrationsPage() {
     setRegistrations(editedRegs)
     setIsEditing(false)
     setEditedRegs([])
+  }
+
+  const deleteRegistration = async (userId: string) => {
+    if (!eventId) return
+    if(!confirm('確定要刪除這筆報名資料嗎？')) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data: permission} = await supabase
+      .from('event_organizers')
+      .select('role')
+      .eq('event_id', eventId)
+      .eq('role_id', user.id)
+      .eq('role', 'organizer')
+      .single()
+    if (!permission) return alert('您沒有權限刪除報名資料')
+    await supabase
+      .from('registrations')
+      .delete()
+      .eq('event_id', eventId)
+      .eq('user_id', userId)
+    setRegistrations(registrations.filter(reg => reg.user_id !== userId))
+    setEditedRegs(editedRegs.filter(reg => reg.user_id !== userId))
+    alert('報名資料已刪除')
   }
 
   const onPersonalChange = (idx: number, field: string, value: string) => {
@@ -209,6 +232,7 @@ export default function ViewRegistrationsPage() {
                 {q.label}
               </th>
             ))}
+            {isEditing && <th className="border px-2 py-1 text-center text-gray-700 dark:text-gray-200">刪除</th>}
           </tr>
         </thead>
         <tbody>
@@ -276,6 +300,18 @@ export default function ViewRegistrationsPage() {
                 )}
               </td>
             ))}
+
+            {isEditing && (
+              <td className="border px-2 py-1 text-center text-gray-800 dark:text-gray-100">
+                <button
+                  onClick={() => deleteRegistration(reg.user_id)}
+                  className="bg-red-600 text-sm px-2 py-1 rounded hover:bg-red-700 transition-colors dark:bg-red-500 dark:hover:bg-red-400 text-white"
+                  title="刪除報名資料"
+                >
+                  刪除
+                </button>
+              </td>
+            )}
           </tr>
         ))}
       </tbody>

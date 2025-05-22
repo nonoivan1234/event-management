@@ -18,6 +18,7 @@ interface EventDetail {
   price?: number;
   category?: string[];
   images?: string[];
+  share_link?: Record<string, string>;
   organizer?: {
     name: string;
     email?: string;
@@ -25,239 +26,330 @@ interface EventDetail {
   };
 }
 
+function toDatetimeLocal(isoString: string): string {
+  const d = new Date(isoString)                                 // 轉成 Date 物件 (UTC)
+  const offsetMs = d.getTimezoneOffset() * 60 * 1000            // 取得時區差(分鐘) -> 毫秒
+  const local = new Date(d.getTime() - offsetMs)               // 把 UTC 換成本地時間
+  return local.toISOString().slice(0, 16).replace('T', ' ')                      // YYYY-MM-DDTHH:MM
+}
+
 export default function EventDetailPage() {
-    const router = useRouter();
-    const params = useSearchParams();
-    const eventId = params.get("event_id");
-    const [event, setEvent] = useState<EventDetail | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState<any>(null);
-    const [attending, setAttending] = useState(false);
-    const [copySuccess, setCopySuccess] = useState(false);
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const slideInterval = useRef<number>();
-    const now = new Date();
+  const router = useRouter();
+  const params = useSearchParams();
+  const eventId = params.get("event_id");
+  const [event, setEvent] = useState<EventDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [attending, setAttending] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [IsOrganizer, setIsOrganizer] = useState(false);
+  const slideInterval = useRef<number>();
+  const now = new Date();
 
-    useEffect(() => {
-        async function fetchEvent() {
-            if (!eventId) return router.push("/404");
+  useEffect(() => {
+    async function fetchEvent() {
+      if (!eventId) return router.push("/404");
 
-            const { data, error } = await supabase
-                .from("events")
-                .select(`*, users:organizer_id(name, email, avatar)`)
-                .eq("event_id", eventId)
-                .eq("visible", true)
-                .single();
+      const { data, error } = await supabase
+        .from("events")
+        .select(`*, users:organizer_id(name, email, avatar)`)
+        .eq("event_id", eventId)
+        .eq("visible", true)
+        .single();
 
-            if (error || !data) return router.push("/404");
+      if (error || !data) return router.push("/404");
 
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-            if (user && !userError) {
-                setUser(user);
-                const { data: joinedData } = await supabase
-                    .from("registrations")
-                    .select("user_id")
-                    .eq("event_id", eventId)
-                    .eq("user_id", user.id)
-                    .single();
-                if (joinedData) setAttending(true);
-            }
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (user && !userError) {
+        setUser(user);
+        const { data: joinedData } = await supabase
+          .from("registrations")
+          .select("user_id")
+          .eq("event_id", eventId)
+          .eq("user_id", user.id)
+          .single();
+        if (joinedData) setAttending(true);
+      }
 
-            const category =
-            typeof data.category === "string"
-                ? JSON.parse(data.category)
-                : data.category;
+      const { data: organizerData } = await supabase
+        .from("event_organizers")
+        .select("role_id")
+        .eq("event_id", eventId)
+        .eq("role_id", user?.id)
+        .eq("role", "organizer")
+        .single();
+      if (organizerData) setIsOrganizer(true);
 
-            setEvent({...data, category, organizer: data.users, images: [data.users.avatar, data.users.avatar, data.users.avatar, data.users.avatar]});
-            setLoading(false);
-        }
-        fetchEvent();
-    }, [eventId, router]);
+      const category =
+        typeof data.category === "string"
+          ? JSON.parse(data.category)
+          : data.category;
 
-    // 自動輪播
-    useEffect(() => {
-        if (event?.images && event.images.length > 0) {
-            slideInterval.current = window.setInterval(() => {
-                setCurrentIndex(prev => (prev + 1) % event.images!.length);
-            }, 5000);
-            return () => {
-                if (slideInterval.current) clearInterval(slideInterval.current);
-            };
-        }
-    }, [event]);
+      const shareLink =
+        data.share_link && typeof data.share_link === "string"
+          ? JSON.parse(data.share_link)
+          : data.share_link;
 
-    if (loading) return <LoadingScreen />;
+      setEvent({
+        ...data,
+        category,
+        share_link: shareLink,
+        organizer: data.users
+      });
+      setLoading(false);
+    }
+    fetchEvent();
+  }, [eventId, router]);
 
-    const isExpired = new Date(event.deadline) < now;
+  // 自動輪播
+  useEffect(() => {
+    if (event?.images && event.images.length > 0) {
+      slideInterval.current = window.setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % event.images!.length);
+      }, 5000);
+      return () => {
+        if (slideInterval.current) clearInterval(slideInterval.current);
+      };
+    }
+  }, [event]);
 
-    const title = !user? "請先登入才能報名"
-                    : isExpired? "活動已結束"
-                    : "";
+  if (loading) return <LoadingScreen />;
 
-    const handleCopyLink = () => {
-        navigator.clipboard.writeText(window.location.href).then(() => {
-        setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
-        });
-    };
+  const isExpired = new Date(event.deadline) < now;
 
-    const prevSlide = () => {
-        if (!event.images) return;
-        setCurrentIndex(prev => (prev - 1 + event.images!.length) % event.images!.length);
-    };
-    const nextSlide = () => {
-        if (!event.images) return;
-        setCurrentIndex(prev => (prev + 1) % event.images!.length);
-    };
+  const title = !user
+    ? "請先登入才能報名"
+    : isExpired
+    ? "活動已結束"
+    : "";
 
-    return (
-        <main className="max-w-3xl mx-auto p-6">
-            {/* 標題與時間 */}
-            <header>
-                <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
-                {(event.start || event.end) && (
-                <p className="text-md text-gray-600 dark:text-gray-400 mb-1">
-                    {event.start ?? "未設定開始時間"} - {event.end ?? "未設定結束時間"}
-                </p>
-                )}
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                截止報名：{event.deadline}
-                {isExpired && <span className="text-red-500 ml-2">(已結束)</span>}
-                </p>
-                {event.category && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                    {event.category.map((c) => (
-                    <span
-                        key={c}
-                        className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded-full"
-                    >
-                        {c}
-                    </span>
-                    ))}
-                </div>
-                )}
-            </header>
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    });
+  };
 
-            {/* 活動介紹 */}
-            <section className="mb-6">
-                <h2 className="text-2xl font-semibold mb-2">活動介紹</h2>
-                <p className="text-gray-700 dark:text-gray-300">{event.description}</p>
-            </section>
-
-            {/* 詳細資訊 */}
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                <h3 className="text-lg font-semibold mb-1">地點</h3>
-                <p className="text-gray-800 dark:text-gray-200">
-                    {event.venue_name?event.venue_name:"地點待公布"}
-                </p>
-                {event.venue_address &&
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {event.venue_address}
-                </p>}
-                </div>
-                <div>
-                <h3 className="text-lg font-semibold mb-1">主辦單位</h3>
-                <div className="flex items-center gap-2">
-                    {event.organizer?.avatar && (
-                    <img
-                        src={event.organizer.avatar}
-                        alt="主辦人頭像"
-                        className="w-10 h-10 rounded-full"
-                    />
-                    )}
-                    <div>
-                    <p className="text-gray-800 dark:text-gray-200">
-                        {event.organizer?.name}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {event.organizer?.email}
-                    </p>
-                    </div>
-                </div>
-                </div>
-            </section>
-
-            {/* 圖片輪播 */}
-            {event.images && event.images.length > 0 && (
-            <div className="relative overflow-hidden h-[40vh] mb-6 px-4">
-                {event.images.map((url, index) => (
-                <img
-                    key={url}
-                    src={url}
-                    alt={`slide-${index}`}
-                    className={`absolute top-0 left-1/2 transform -translate-x-1/2 h-full object-cover transition-opacity duration-700 ${
-                    index === currentIndex ? 'opacity-100' : 'opacity-0'
-                    }`}
-                />
-                ))}
-
-                {/* 左一鍵切換 */}
-                <button
-                onClick={prevSlide}
-                className="absolute top-1/2 left-4 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
-                >
-                ‹
-                </button>
-
-                {/* 右一鍵切換 */}
-                <button
-                onClick={nextSlide}
-                className="absolute top-1/2 right-4 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
-                >
-                ›
-                </button>
-            </div>
-            )}
-
-
-            {/* 報名資訊 */}
-            <section className="mb-6">
-                <h3 className="text-lg font-semibold mb-2">報名狀態</h3>
-                <div className="flex items-center gap-5 mb-4">
-                    {attending &&
-                    <button
-                        onClick={() => router.push(`/event/view-data?event_id=${event.event_id}`)}
-                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                        檢視報名資訊
-                    </button>}
-
-                    <button
-                        onClick={() => {
-                            if (user && !isExpired)
-                                router.push(`/event/register?event_id=${event.event_id}`);
-                        }}
-                        disabled={!user || isExpired}
-                        title={title}
-                        className={`mt-4 px-4 py-2 rounded ${
-                            (!user || isExpired)
-                            ? "bg-gray-300 text-gray-500 rounded cursor-not-allowed"
-                            : attending
-                            ? "bg-green-600 text-white rounded hover:bg-green-700"
-                            : "bg-blue-600 text-white rounded hover:bg-blue-700"
-                        }`}
-                    >
-                        {isExpired
-                        ? "活動已報名結束"
-                        : attending
-                        ? "修改報名資訊"
-                        : "立刻報名"}
-                    </button>
-                </div>
-            </section>
-            <hr className="my-6 border-gray-300 dark:border-gray-700" />
-            {/* 複製連結 */}
-            <section className="mb-6">
-                <h3 className="text-lg font-semibold mb-2">分享活動</h3>
-                <button
-                    onClick={handleCopyLink}
-                    className="mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                >
-                    🔗 複製連結
-                </button>
-                {copySuccess && <span className="text-green-500 ml-2">已複製</span>}
-            </section>
-        </main>
+  const prevSlide = () => {
+    if (!event.images) return;
+    setCurrentIndex(
+      (prev) => (prev - 1 + event.images!.length) % event.images!.length
     );
+  };
+  const nextSlide = () => {
+    if (!event.images) return;
+    setCurrentIndex((prev) => (prev + 1) % event.images!.length);
+  };
+
+  return (
+    <main className="max-w-3xl mx-auto p-6">
+      {/* 標題與時間 */}
+      <header>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-4xl font-bold mb-2">{event.title}</h1>
+          {IsOrganizer && (
+              <button
+                onClick={() => router.push(`/event/edit?event_id=${event.event_id}`)}
+                className="ml-4 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                編輯活動
+              </button>
+            )}
+          </div>
+        {(event.start || event.end) && (
+          <p className="text-md text-gray-600 dark:text-gray-400 mb-1">
+            {event.start ? toDatetimeLocal(event.start):"未設定開始時間"} - {event.end ? toDatetimeLocal(event.end):"未設定結束時間"}
+          </p>
+        )}
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+          截止報名：{event.deadline}
+          {isExpired && <span className="text-red-500 ml-2">(已結束)</span>}
+        </p>
+        {event.category && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {event.category.map((c) => (
+              <span
+                key={c}
+                className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded-full"
+              >
+                {c}
+              </span>
+            ))}
+          </div>
+        )}
+      </header>
+
+      {/* 活動介紹 */}
+      <section className="mb-6">
+        <h2 className="text-2xl font-semibold mb-2">活動介紹</h2>
+        <p className="text-gray-700 dark:text-gray-300">{event.description}</p>
+      </section>
+
+      {/* 詳細資訊 */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+          <h3 className="text-lg font-semibold mb-1">地點</h3>
+          <p className="text-gray-800 dark:text-gray-200">
+            {event.venue_name ? event.venue_name : "地點待公布"}
+          </p>
+          {event.venue_address && (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {event.venue_address}
+            </p>
+          )}
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold mb-1">主辦單位</h3>
+          <div className="flex items-center gap-2">
+            {event.organizer?.avatar && (
+              <img
+                src={event.organizer.avatar}
+                alt="主辦人頭像"
+                className="w-10 h-10 rounded-full"
+              />
+            )}
+            <div>
+              <p className="text-gray-800 dark:text-gray-200">
+                {event.organizer?.name}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {event.organizer?.email}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 圖片輪播 */}
+      {event.images && event.images.length > 0 && (
+        <div className="relative overflow-hidden h-[40vh] mb-6 px-4">
+          {event.images.map((url, index) => (
+            <img
+              key={url}
+              src={url}
+              alt={`slide-${index}`}
+              className={`absolute top-0 left-1/2 transform -translate-x-1/2 h-full object-cover transition-opacity duration-700 ${index === currentIndex ? 'opacity-100' : 'opacity-0'}
+              `}
+            />
+          ))}
+
+          {/* 左一鍵切換 */}
+          <button
+            onClick={prevSlide}
+            className="absolute top-1/2 left-4 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+          >
+            ‹
+          </button>
+
+          {/* 右一鍵切換 */}
+          <button
+            onClick={nextSlide}
+            className="absolute top-1/2 right-4 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+          >
+            ›
+          </button>
+        </div>
+      )}
+
+      {/* 報名資訊 */}
+      <section className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">報名狀態</h3>
+        <div className="flex items-center gap-5 mb-4">
+          {attending && (
+            <button
+              onClick={() =>
+                router.push(`/event/view-data?event_id=${event.event_id}`)
+              }
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              檢視報名資訊
+            </button>
+          )}
+
+          <button
+            onClick={() => {
+              if (user && !isExpired)
+                router.push(`/event/register?event_id=${event.event_id}`);
+            }}
+            disabled={!user || isExpired}
+            title={title}
+            className={`mt-4 px-4 py-2 rounded ${
+              (!user || isExpired)
+              ? "bg-gray-300 text-gray-500 rounded cursor-not-allowed"
+              : attending
+              ? "bg-green-600 text-white rounded hover:bg-green-700"
+              : "bg-blue-600 text-white rounded hover:bg-blue-700"
+              }`}
+          >
+            {isExpired
+              ? "活動已報名結束"
+              : attending
+              ? "修改報名資訊"
+              : "立刻報名"}
+          </button>
+        </div>
+      </section>
+
+      <hr className="my-6 border-gray-300 dark:border-gray-700" />
+
+      {/* 分享活動 */}
+      <section className="mb-6">
+        <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">
+            分享活動
+        </h3>
+
+        {/* 複製連結按鈕 */}
+        <button
+            onClick={handleCopyLink}
+            className="
+            px-4 py-2
+            bg-gray-200 text-gray-800 border border-gray-300
+            rounded
+            hover:bg-gray-100
+            dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600
+            transition-colors
+            focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500
+            "
+        >
+            🔗 複製連結
+        </button>
+        {copySuccess && (
+            <span className="text-green-500 ml-2 dark:text-green-400">已複製</span>
+        )}
+        
+        {event.share_link &&
+        <h4 className="text-md font-semibold mt-4 mb-2 text-gray-800 dark:text-gray-200">
+            或者分享至社群平台
+        </h4>}
+
+        <div className="flex flex-wrap gap-2 mb-4">
+            {event.share_link &&
+            Object.entries(event.share_link).map(([platform, url]) => (
+                <button
+                key={platform}
+                onClick={() =>
+                    window.open(url, "_blank", "noopener,noreferrer")
+                }
+                className="
+                    px-4 py-2
+                    bg-blue-600 text-white border border-blue-300
+                    rounded
+                    hover:bg-blue-100
+                    dark:bg-blue-700 dark:text-gray-200 dark:border-blue-600 dark:hover:bg-blue-600
+                    transition-colors
+                    focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500
+                "
+                >
+                {platform}
+                </button>
+            ))}
+        </div>
+        </section>
+
+    </main>
+  );
 }
