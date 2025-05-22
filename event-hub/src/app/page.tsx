@@ -173,7 +173,7 @@ export default function HomePage() {
                   return (
                     <div
                       key={event.event_id}
-                      className="w-full border rounded-lg p-4 flex flex-col justify-between shadow-sm dark:bg-gray-900 dark:text-white dark:border-gray-700 hover:shadow-md duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
+                      className="w-full border rounded-lg p-4 flex flex-col justify-between shadow-sm dark:bg-gray-900 dark:text-white dark:border-gray-700 hover:shadow-md duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-500"
                       onClick={() => router.push(`/event?event_id=${event.event_id}`)}
                     >
                       <div>
@@ -216,7 +216,7 @@ export default function HomePage() {
                         className={`mt-4 px-4 py-2 rounded ${
                           disabled
                             ? "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
-                            : "bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                            : "bg-black text-white hover:bg-gray-600 dark:bg-white dark:text-black dark:hover:bg-gray-300"
                         }`}
                       >
                         {expired
