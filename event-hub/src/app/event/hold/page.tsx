@@ -112,7 +112,7 @@ export default function DashboardPage() {
     };
 
     fetchUserAndEvents();
-  }, [router]);
+  }, [router, showEditorModal]);
 
   const handleCreateEvent = () => router.push("/event/modify");
 
@@ -453,56 +453,69 @@ export default function DashboardPage() {
                 </p>
               ) : (<>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredEvents(organizedEvents).map((event) => (
+                {filteredEvents(organizedEvents).map((event) => {
+                  const now = new Date();
+                  const past = new Date(event.start) < now && event.start != null;
+                  const expired = new Date(event.deadline) < now;
+                  return (
                   <div
                     key={event.event_id}
                     onClick={() => router.push(`/event?event_id=${event.event_id}`)}
                     className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 flex flex-col justify-between hover:shadow-md duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
                   >
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {event.title}
-                      {!event.visible && (
-                        <span className="ml-2 text-sm text-red-500">
-                          (已隱藏)
-                        </span>
+                    {/* 上半區塊（標題與內容） */}
+                    <div className="flex-1">
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {event.title}
+                        {!event.visible && (
+                          <span className="ml-2 text-sm text-red-500">(已隱藏)</span>
+                        )}
+                      </h2>
+
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        活動時間：{event.start && toDatetimeLocal(event.start)}{(event.start || event.end) ? ' - ' : 'Coming Soon'}
+                        {event.end && toDatetimeLocal(event.end)}
+                        {past && <span className="text-red-500 ml-2">(已結束)</span>}
+                      </p>
+
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        報名截止：{event.deadline}
+                        {expired && <span className="text-red-500 ml-2">(報名已結束)</span>}
+                      </p>
+
+                      <p className="text-sm mt-2 mb-2 ml-1 text-gray-700 dark:text-gray-300">
+                        {event.description}
+                      </p>
+
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        🧑‍💼
+                        {" " + userNameMap[event.organizer_id] || " Anonymous"}
+                        {event.organizer_id === userID && "（您是創辦人）"}
+                      </p>
+                    </div>
+                    {/* 下半區塊（標籤與按鈕） */}
+                    <div className="mt-2">
+                      {event.category && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {event.category.map((cat) => (
+                            <span
+                              key={cat}
+                              className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
+                            >
+                              {cat}
+                            </span>
+                          ))}
+                        </div>
                       )}
-                    </h2>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      {event.description}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      截止日期：
-                      {new Date(event.deadline!).toLocaleDateString()}
-                      {new Date(event.deadline!) <= new Date() && (
-                        <span className="text-red-500 ml-2">(已結束)</span>
+                      {renderEventActions(
+                        event.event_id,
+                        event.visible,
+                        true,
+                        event.organizer_id === userID
                       )}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      🧑‍💼主辦者：
-                      {userNameMap[event.organizer_id] || "Anonymous"}
-                      {event.organizer_id === userID && "（您是創辦人）"}
-                    </p>
-                    {/* 主辦也顯示 category */}
-                    {event.category && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {event.category.map((cat) => (
-                          <span
-                            key={cat}
-                            className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
-                          >
-                            {cat}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {renderEventActions(
-                      event.event_id,
-                      event.visible,
-                      true,
-                      event.organizer_id === userID
-                    )}
+                    </div>
                   </div>
-                ))}
+                )})}
               </div>
               </>)}
             </section>
@@ -517,47 +530,69 @@ export default function DashboardPage() {
                 </p>
               ) : (<>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredEvents(NormalEvents).map((event) => (
+                {filteredEvents(NormalEvents).map((event) => {
+                  const now = new Date();
+                  const past = new Date(event.start) < now && event.start != null;
+                  const expired = new Date(event.deadline) < now;
+                  return (
                   <div
                     key={event.event_id}
                     onClick={() => router.push(`/event?event_id=${event.event_id}`)}
                     className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 flex flex-col justify-between hover:shadow-md duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
                   >
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {event.title}
-                    </h2>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      {event.description}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      截止日期：
-                      {new Date(event.deadline!).toLocaleDateString()}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      🧑‍💼主辦者：
-                      {userNameMap[event.organizer_id] || "Anonymous"}
-                    </p>
-                    {/* 協辦也顯示 category */}
-                    {event.category && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {event.category.map((cat) => (
-                          <span
-                            key={cat}
-                            className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
-                          >
-                            {cat}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {renderEventActions(
-                      event.event_id,
-                      event.visible,
-                      false,
-                      false
-                    )}
+                    {/* 上半區塊（標題與內容） */}
+                    <div className="flex-1">
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {event.title}
+                        {!event.visible && (
+                          <span className="ml-2 text-sm text-red-500">(已隱藏)</span>
+                        )}
+                      </h2>
+
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        活動時間：{event.start && toDatetimeLocal(event.start)}{(event.start || event.end) ? ' - ' : 'Coming Soon'}
+                        {event.end && toDatetimeLocal(event.end)}
+                        {past && <span className="text-red-500 ml-2">(已結束)</span>}
+                      </p>
+
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        報名截止：{event.deadline}
+                        {expired && <span className="text-red-500 ml-2">(報名已結束)</span>}
+                      </p>
+
+                      <p className="text-sm mt-2 mb-2 ml-1 text-gray-700 dark:text-gray-300">
+                        {event.description}
+                      </p>
+
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        🧑‍💼
+                        {" " + userNameMap[event.organizer_id] || " Anonymous"}
+                      </p>
+                    </div>
+
+                    {/* 下半區塊（標籤與按鈕） */}
+                    <div className="mt-2">
+                      {event.category && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {event.category.map((cat) => (
+                            <span
+                              key={cat}
+                              className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
+                            >
+                              {cat}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {renderEventActions(
+                        event.event_id,
+                        event.visible,
+                        false,
+                        false
+                      )}
+                    </div>
                   </div>
-                ))}
+                )})}
               </div>
               </>)}
             </section>

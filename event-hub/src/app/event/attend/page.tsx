@@ -163,19 +163,19 @@ export default function DashboardPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {event.title}
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
+            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
               活動時間：{event.start && toDatetimeLocal(event.start)}{(event.start || event.end) ? ' - ' : 'Coming Soon'}
               {event.end && toDatetimeLocal(event.end)}{past && <span className="text-red-500 ml-2">(已結束)</span>}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              報名截止時間：{event.deadline}
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              報名截止：{event.deadline}
               {expired && <span className="text-red-500 ml-2">(報名已結束)</span>}
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              🧑‍💼 主辦人：{event.users?.name || "匿名主辦人"}
-            </p>
-            <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+            <p className="text-sm mt-2 mb-2 ml-1 text-gray-700 dark:text-gray-300">
               {event.description}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              🧑‍💼 {event.users?.name || "匿名主辦人"}
             </p>
             {event.category && (
               <div className="flex flex-wrap gap-1 mt-2">
@@ -226,7 +226,7 @@ export default function DashboardPage() {
   if (loading) return <LoadingScreen />;
 
   return (
-    <main className="w-full max-w-6xl mx-auto py-12 px-4 dark:text-white">
+    <main className="w-full max-w-6xl mx-auto py-8 px-4 dark:text-white">
       {/* 篩選區塊 */}
       <header className="mb-6">
         <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl shadow w-full">
