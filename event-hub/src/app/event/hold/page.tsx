@@ -21,6 +21,20 @@ type Event = {
   category?: string[]; // 已經將 category 定義為陣列
 };
 
+const options = {
+  year:   'numeric',
+  month:  '2-digit',
+  day:    '2-digit',
+  hour:   '2-digit',
+  minute: '2-digit',
+  hour12: false,
+};
+
+function toDatetimeLocal(isoString: string): string {
+  if (!isoString) return "";
+  return new Date(isoString).toLocaleString('zh-tw', options);
+}
+
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [userID, setUserID] = useState<string | null>(null);
@@ -28,6 +42,7 @@ export default function DashboardPage() {
   const [NormalEvents, setNormalEvents] = useState<Event[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterOption, setFilterOption] = useState("all");
+  const [filterOrgOption, setFilterOrgOption] = useState("all");
   const [showEditorModal, setShowEditorModal] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [organizers, setOrganizers] = useState<string[]>([]);
@@ -52,7 +67,7 @@ export default function DashboardPage() {
         // 取主辦
         const { data: organizedData } = await supabase
           .from("event_organizers")
-          .select("events(event_id, organizer_id, title, description, category, visible, deadline)")
+          .select("events(event_id, organizer_id, title, start, end, description, category, visible, deadline)")
           .eq("role_id", user.id)
           .eq("role", "organizer");
 
@@ -66,7 +81,7 @@ export default function DashboardPage() {
         // 取協辦
         const { data: normalData } = await supabase
           .from("event_organizers")
-          .select("events(event_id, organizer_id, title, description, category, visible, deadline)")
+          .select("events(event_id, organizer_id, title, start, end, description, category, visible, deadline)")
           .eq("role_id", user.id)
           .eq("role", "normal");
 
@@ -272,8 +287,8 @@ export default function DashboardPage() {
         event.description
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
-      const deadline = event.deadline ? new Date(event.deadline) : null;
-      const isEnded = deadline ? deadline < now : false;
+      const start = event.start ? new Date(event.start) : null;
+      const isEnded = start ? start < now : false;
       switch (filterOption) {
         case "ended":
           return matchesSearch && isEnded;
@@ -396,6 +411,15 @@ export default function DashboardPage() {
             <option value="ended">僅顯示已結束</option>
             <option value="not_ended">僅顯示未結束</option>
           </select>
+          <select
+            value={filterOrgOption}
+            onChange={(e) => setFilterOrgOption(e.target.value)}
+            className="border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+          >
+            <option value="all">所有舉辦的活動</option>
+            <option value="host">僅顯示主辦活動</option>
+            <option value="normal">僅顯示協辦活動</option>
+          </select>
         </div>
         <button
           className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 whitespace-nowrap"
@@ -420,9 +444,14 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          {organizedEvents.length > 0 && (
+          {filterOrgOption != "normal" && (
             <section className="mb-12">
               <h2 className="text-xl font-bold mb-4">主辦的活動</h2>
+              {organizedEvents.length === 0 ? (
+                <p className="text-gray-500 dark:text-gray-400">
+                  您目前尚未主辦任何活動
+                </p>
+              ) : (<>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredEvents(organizedEvents).map((event) => (
                   <div
@@ -475,12 +504,18 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
+              </>)}
             </section>
           )}
 
-          {NormalEvents.length > 0 && (
+          {filterOrgOption != "host"  && (
             <section className="mb-12">
               <h2 className="text-xl font-bold mb-4">協辦的活動</h2>
+              {NormalEvents.length === 0 ? (
+                <p className="text-gray-500 dark:text-gray-400">
+                  您目前尚未協辦任何活動
+                </p>
+              ) : (<>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredEvents(NormalEvents).map((event) => (
                   <div
@@ -524,6 +559,7 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
+              </>)}
             </section>
           )}
         </>

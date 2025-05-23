@@ -5,6 +5,15 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import LoadingScreen from "@/components/loading";
 
+const options = {
+  year:   'numeric',
+  month:  '2-digit',
+  day:    '2-digit',
+  hour:   '2-digit',
+  minute: '2-digit',
+  hour12: false,
+};
+
 export default function HomePage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -26,7 +35,7 @@ export default function HomePage() {
             .from("events")
             .select(`*, users:organizer_id(name)`)
             .eq("visible", true)
-            .order("deadline", { ascending: true }),
+            .gte("deadline", new Date().toISOString())
         ]);
 
       if (userData?.user) {
@@ -70,8 +79,6 @@ export default function HomePage() {
 
       if (statusFilter === "Registered" && !isReg) return false;
       if (statusFilter === "Unregistered" && isReg) return false;
-      if (statusFilter === "Expired" && !isExpired) return false;
-      if (statusFilter === "Upcoming" && isExpired) return false;
 
       const categoryMatch =
         category === "All" ||
@@ -83,18 +90,11 @@ export default function HomePage() {
       );
     })
     .sort((a, b) => {
-      const aExpired = new Date(a.deadline) < now;
-      const bExpired = new Date(b.deadline) < now;
-      if (aExpired !== bExpired) return aExpired ? 1 : -1;
-      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+      if(a.start !== null && b.start == null) return 1;
+      if(a.start == null && b.start !== null) return -1;
+      if(a.start == null && b.start == null) return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();;
+      return new Date(a.start).getTime() - new Date(b.start).getTime();
     });
-
-  const upcomingEvents = filteredEvents.filter(
-    (e) => new Date(e.deadline) >= now
-  );
-  const expiredEvents = filteredEvents.filter(
-    (e) => new Date(e.deadline) < now
-  );
 
   if(loading) return <LoadingScreen />; // ✅ 顯示 loading 畫面
   
@@ -139,8 +139,6 @@ export default function HomePage() {
               <option value="All">📅 所有活動</option>
               <option value="Registered">✅ 已報名</option>
               <option value="Unregistered">📝 未報名</option>
-              <option value="Expired">⏳ 已結束</option>
-              <option value="Upcoming">🚀 未開始</option>
             </select>
           </div>
         </div>
@@ -153,22 +151,17 @@ export default function HomePage() {
         </div>
       ) : (
         <section className="space-y-12">
-          {upcomingEvents.length > 0 && (
+          {filteredEvents.length > 0 && (
             <div>
-              <h2 className="text-xl font-semibold mb-4">⏳ 即將舉辦的活動</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                {upcomingEvents.map((event) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
+                {filteredEvents.map((event) => {
                   const registered = isRegistered(event.event_id);
-                  const disabled =
-                    !user || registered || new Date(event.deadline) < now;
-                  const expired = new Date(event.deadline) < now;
+                  const disabled = !user || registered;
                   const title = !user
                     ? "請先登入才能報名"
                     : registered
                     ? "你已報名此活動"
-                    : expired
-                    ? "活動已結束"
-                    : "";
+                    : '';
 
                   return (
                     <div
@@ -180,6 +173,10 @@ export default function HomePage() {
                         <h2 className="text-lg font-semibold truncate">
                           {event.title}
                         </h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
+                          活動時間：{event.start && new Date(event.start).toLocaleString('zh-tw', options)}{(event.start || event.end) ? ' - ' : 'Coming Soon'}
+                          {event.end && new Date(event.end).toLocaleString('zh-tw', options)}
+                        </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
                           截止日期：{event.deadline}
                         </p>
@@ -219,64 +216,7 @@ export default function HomePage() {
                             : "bg-black text-white hover:bg-gray-600 dark:bg-white dark:text-black dark:hover:bg-gray-300"
                         }`}
                       >
-                        {expired
-                          ? "活動已結束"
-                          : registered
-                          ? "已報名"
-                          : "Sign Up"}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {expiredEvents.length > 0 && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">📌 已結束的活動</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                {expiredEvents.map((event) => {
-                  const registered = isRegistered(event.event_id);
-                  return (
-                    <div
-                      key={event.event_id}
-                      className="w-full border rounded-lg p-4 flex flex-col justify-between shadow-sm dark:bg-gray-900 dark:text-white dark:border-gray-700"
-                    >
-                      <div>
-                        <h2 className="text-lg font-semibold truncate">
-                          {event.title}
-                        </h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
-                          截止日期：
-                          {event.deadline}{" "}
-                          <span className="text-red-500 ml-2">(已結束)</span>
-                        </p>
-                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
-                          {event.description}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                          🧑‍💼 {event.users?.name || "匿名主辦人"}
-                        </p>
-                        {Array.isArray(event.category) && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {event.category.map((cat: string) => (
-                              <span
-                                key={cat}
-                                className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
-                              >
-                                {cat}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        disabled
-                        title="活動已結束"
-                        className="mt-4 px-4 py-2 rounded bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
-                      >
-                        {registered ? "已報名 (活動已結束)" : "活動已結束"}
+                        {registered ? "已報名" : "立刻報名"}
                       </button>
                     </div>
                   );
