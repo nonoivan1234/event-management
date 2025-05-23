@@ -169,7 +169,7 @@ export default function DashboardPage() {
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               報名截止：{event.deadline}
-              {expired && <span className="text-red-500 ml-2">(報名已結束)</span>}
+              {expired && <span className="text-red-500 ml-2">(報名已截止)</span>}
             </p>
             <p className="text-sm mt-2 mb-2 ml-1 text-gray-700 dark:text-gray-300">
               {event.description}
@@ -208,14 +208,14 @@ export default function DashboardPage() {
                 router.push(`/event/register?event_id=${event.event_id}`)
               }
               disabled={expired}
-              title={expired ? "活動已結束，無法編輯報名資料" : ""}
+              title={expired ? "報名已截止，無法編輯報名資料" : ""}
               className={`mt-4 self-end text-sm px-4 py-2 rounded ${
                 expired
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
                   : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
             >
-              {expired ? "已結束" : "編輯報名資料"}
+              {expired ? "已截止報名" : "編輯報名資料"}
             </button>
           </div>
         </div>
