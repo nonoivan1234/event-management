@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import LoadingScreen from "@/components/loading";
+import UserSearchModal from "@/components/UserSearchModal";
 
 interface EventDetail {
   event_id: string;
@@ -45,6 +46,7 @@ export default function EventDetailPage() {
   const [copySuccess, setCopySuccess] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [IsOrganizer, setIsOrganizer] = useState(false);
+  const [showUserSearchModal, setShowUserSearchModal] = useState(false);
   const slideInterval = useRef<number>();
   const now = new Date();
 
@@ -310,24 +312,39 @@ export default function EventDetailPage() {
         </h3>
 
         {/* 複製連結按鈕 */}
-        <button
-            onClick={handleCopyLink}
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={() => setShowUserSearchModal(true)}
             className="
             px-4 py-2
-            bg-gray-200 text-gray-800 border border-gray-300
+            bg-blue-600 text-white border border-blue-700
             rounded
-            hover:bg-gray-100
-            dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600
+            hover:bg-blue-700
+            dark:bg-blue-800 dark:text-white dark:border-blue-700 dark:hover:bg-blue-700
             transition-colors
             focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500
             "
-        >
-            🔗 複製連結
-        </button>
-        {copySuccess && (
-            <span className="text-green-500 ml-2 dark:text-green-400">已複製</span>
-        )}
-        
+          >
+            傳送邀請給朋友
+          </button>
+          <button
+              onClick={handleCopyLink}
+              className="
+              px-4 py-2
+              bg-gray-200 text-gray-800 border border-gray-300
+              rounded
+              hover:bg-gray-100
+              dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600
+              transition-colors
+              focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500
+              "
+          >
+              🔗 複製連結
+          </button>
+          {copySuccess && (
+              <span className="text-green-500 dark:text-green-400">已複製</span>
+          )}
+        </div>
         {event.share_link &&
         <h4 className="text-md font-semibold mt-4 mb-2 text-gray-800 dark:text-gray-200">
             或者分享至社群平台
@@ -349,8 +366,15 @@ export default function EventDetailPage() {
                 </button>
             ))}
         </div>
-        </section>
-
+      </section>
+      <UserSearchModal
+        isOpen={showUserSearchModal}
+        onClose={() => setShowUserSearchModal(false)}
+        onAdd={(user) => {}}
+        isInvite={true}
+        eventId={event.event_id}
+        userId={user.id}
+      />
     </main>
   );
 }

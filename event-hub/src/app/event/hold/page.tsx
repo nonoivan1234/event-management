@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../../lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import LoadingScreen from "@/components/loading";
+import UserSearchModal from "@/components/UserSearchModal";
 
 type Event = {
   event_id: string;
@@ -33,6 +34,8 @@ export default function DashboardPage() {
   const [normals, setNormals] = useState<string[]>([]);
   const [userMap, setUserMap] = useState<Record<string, string>>({});
   const [userNameMap, setUserNameMap] = useState<Record<string, string>>({});
+  const [SearchModal, setSearchModal] = useState(false);
+  const [UserModalOrg, setUserModalOrg] = useState(true);
 
   const router = useRouter();
 
@@ -282,6 +285,20 @@ export default function DashboardPage() {
     });
   };
 
+  const addUser = async (user) => {
+    if (organizers.includes(user.user_id) || normals.includes(user.user_id))
+      throw new Error("此人已為活動人員");
+    const { error: insertError } = await supabase
+      .from("event_organizers")
+      .insert({ event_id: editingEventId, role_id: user.user_id, role: UserModalOrg ? "organizer" : "normal" });
+    if (!insertError){
+      if (UserModalOrg) setOrganizers((prev) => [...prev, user.user_id]);
+      else setNormals((prev) => [...prev, user.user_id]);
+    }
+    else throw new Error("此人員已為活動人員");
+  }
+
+
   const renderEditorChipInput = (
     state: string[],
     setState: React.Dispatch<React.SetStateAction<string[]>>,
@@ -291,7 +308,7 @@ export default function DashboardPage() {
       <div className="flex flex-wrap gap-2 mb-2">
         <input
           type="email"
-          placeholder="輸入Email後按 Enter"
+          placeholder="或輸入使用者Email"
           className="w-full bg-gray-100 text-black dark:bg-gray-700 dark:text-white px-2 py-1 rounded border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500"
           onKeyDown={async (e) => {
             if (e.key !== "Enter") return;
@@ -528,9 +545,17 @@ export default function DashboardPage() {
             </h2>
             <div className="flex flex-col md:flex-row gap-6">
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-700 dark:text-white mb-1">
-                  主辦人員
-                </h3>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="font-semibold text-gray-700 dark:text-white">
+                    主辦人員
+                  </h3>
+                  <button
+                    onClick={() => {setUserModalOrg(true); setSearchModal(true);}}
+                    className="px-2 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
+                  >
+                    搜尋使用者
+                  </button>
+                </div>
                 {renderEditorChipInput(
                   organizers,
                   setOrganizers,
@@ -538,15 +563,31 @@ export default function DashboardPage() {
                 )}
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-700 dark:text-white mb-1">
-                  協辦人員
-                </h3>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="font-semibold text-gray-700 dark:text-white mb-1">
+                    協辦人員
+                  </h3>
+                  <button
+                    onClick={() => {setUserModalOrg(false); setSearchModal(true);}}
+                    className="px-2 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
+                  >
+                    搜尋使用者
+                  </button>
+                </div>
                 {renderEditorChipInput(normals, setNormals, "normal")}
               </div>
             </div>
           </div>
         </div>
       )}
+      <UserSearchModal
+          isOpen={SearchModal}
+          onClose={() => setSearchModal(false)}
+          onAdd={addUser}
+          isInvite={false}
+          eventId={editingEventId}
+          userId={userID}
+      />
     </main>
   );
 }
