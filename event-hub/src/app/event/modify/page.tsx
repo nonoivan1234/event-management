@@ -12,8 +12,8 @@ function toDatetimeLocal(isoString: string): string {
   if (!isoString) return ''
   const d = new Date(isoString)                                 // 轉成 Date 物件 (UTC)
   const offsetMs = d.getTimezoneOffset() * 60 * 1000            // 取得時區差(分鐘) -> 毫秒
-  const local = new Date(d.getTime() - offsetMs)               // 把 UTC 換成本地時間
-  return local.toISOString().slice(0, 16)                      // YYYY-MM-DDTHH:MM
+  const local = new Date(d.getTime() - offsetMs)
+  return local.toISOString().slice(0, 16)
 }
 
 interface EventDetails {
@@ -152,8 +152,13 @@ export default function EventFormPage() {
   }, [form.deadline, form.start])
 
   // Handlers for basic info
-  const handleChange = (field: string, value: string) =>
-    setForm(prev => ({ ...prev, [field]: value }))
+  const handleChange = (field: string, value: string) => {
+    if (field === 'start' || field === 'end') {
+      const localDate = new Date(value)
+      setForm(prev => ({ ...prev, [field]: localDate.toISOString() }))
+    } else
+      setForm(prev => ({ ...prev, [field]: value }))
+  }
 
   const handleCategoryKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
