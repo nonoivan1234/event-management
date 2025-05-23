@@ -115,7 +115,6 @@ export default function EventFormPage() {
           data.share_link && typeof data.share_link === "string"
             ? JSON.parse(data.share_link)
             : data.share_link;
-        console.log(shareLinks)
 
         setForm({
           title: data.title,
@@ -139,7 +138,6 @@ export default function EventFormPage() {
 
   // 時間驗證
   useEffect(() => {
-    console.log(form.start, form.end)
     if (form.start && form.end && new Date(form.end) < new Date(form.start)) {
       setTimeError('❗ 結束時間不得早於開始時間')
     } else setTimeError('')
@@ -200,7 +198,6 @@ export default function EventFormPage() {
     setCustomQuestions(prev => prev.filter(q => q.id !== id))
 
   const handleShareSubmit = (links: Record<string, string>) => {
-    console.log(links)
     setForm(prev => ({ ...prev, shareLinks: links }))
     setModalVisible(false)
   }
