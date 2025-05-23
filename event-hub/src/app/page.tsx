@@ -36,6 +36,7 @@ export default function HomePage() {
             .select(`*, users:organizer_id(name)`)
             .eq("visible", true)
             .gte("deadline", new Date().toISOString())
+            .or(`start.gte.${new Date().toISOString()},start.is.null`)
         ]);
 
       if (userData?.user) {
@@ -173,14 +174,14 @@ export default function HomePage() {
                         <h2 className="text-lg font-semibold truncate">
                           {event.title}
                         </h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                           活動時間：{event.start && new Date(event.start).toLocaleString('zh-tw', options)}{(event.start || event.end) ? ' - ' : 'Coming Soon'}
                           {event.end && new Date(event.end).toLocaleString('zh-tw', options)}
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                           截止日期：{event.deadline}
                         </p>
-                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 mt-2 ml-1 line-clamp-2">
                           {event.description}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400 truncate">

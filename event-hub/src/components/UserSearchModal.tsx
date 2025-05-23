@@ -58,12 +58,12 @@ export default function UserSearchModal({
     setMessage('載入中…')
     setErrorMsg('')
 
-    // 撈出 users
+    const isEmail = searchTerm.includes('@')
     const { data: users, error: userError } = await supabase
       .from('users')
       .select('user_id, name, email, avatar')
       .or(
-        `name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%@%`)
+        `name.ilike.%${searchTerm}%,email.${isEmail ? `eq.${searchTerm}` : `ilike.%${searchTerm}%@%`}`)
       .limit(20)
 
     if (userError) {
@@ -141,7 +141,7 @@ export default function UserSearchModal({
           <input
             type="text"
             className="flex-1 border rounded px-3 py-2 mr-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder="輸入姓名或 Email"
+            placeholder="輸入姓名或Email"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && fetchUsers()}

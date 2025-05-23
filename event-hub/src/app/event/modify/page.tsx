@@ -60,6 +60,7 @@ export default function EventFormPage() {
   // Loading and messages
   const [imageError, setImageError] = useState('')
   const [timeError, setTimeError] = useState('')
+  const [deadlineError, setDeadlineError] = useState('')
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [notAuthorized, setNotAuthorized] = useState(false)
@@ -143,6 +144,13 @@ export default function EventFormPage() {
     } else setTimeError('')
   }, [form.start, form.end])
 
+  // 截止日期驗證
+  useEffect(() => {
+    if (form.deadline && form.start && new Date(form.start) < new Date(form.deadline)) {
+      setDeadlineError('❗ 報名截止日期不得晚於活動開始時間')
+    } else setDeadlineError('')
+  }, [form.deadline, form.start])
+
   // Handlers for basic info
   const handleChange = (field: string, value: string) =>
     setForm(prev => ({ ...prev, [field]: value }))
@@ -208,11 +216,18 @@ export default function EventFormPage() {
     setMessage('')
     setImageError('')
     setTimeError('')
+    setDeadlineError('')
 
     // Validation
     if (timeError !== '') {
-      setMessage('❗ 開始時間不可晚於結束時間')
+      setMessage('❗ 結束時間不得早於開始時間')
       setTimeError('❗ 結束時間不得早於開始時間')
+      setLoading(false)
+      return
+    }
+    if (deadlineError !== '') {
+      setMessage('❗ 報名截止日期不得晚於活動開始時間')
+      setDeadlineError('❗ 報名截止日期不得晚於活動開始時間')
       setLoading(false)
       return
     }
@@ -341,6 +356,7 @@ export default function EventFormPage() {
               onChange={(e) => handleChange('deadline', e.target.value)}
             />
           </label>
+          {deadlineError && <p className="text-red-600 text-sm mb-4">{deadlineError}</p>}
           <div className="flex items-center gap-4 w-full">
             {/* Start Time */}
             <label className="flex-1">
