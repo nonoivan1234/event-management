@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import LoadingScreen from "@/components/loading";
 import UserSearchModal from "@/components/UserSearchModal";
-import { Sen } from "next/font/google";
 
 interface EventDetail {
   event_id: string;
@@ -28,12 +27,18 @@ interface EventDetail {
   };
 }
 
+const options = {
+  year:   'numeric',
+  month:  '2-digit',
+  day:    '2-digit',
+  hour:   '2-digit',
+  minute: '2-digit',
+  hour12: false,
+};
+
 function toDatetimeLocal(isoString: string): string {
   if (!isoString) return "";
-  const d = new Date(isoString)                                 // 轉成 Date 物件 (UTC)
-  const offsetMs = d.getTimezoneOffset() * 60 * 1000            // 取得時區差(分鐘) -> 毫秒
-  const local = new Date(d.getTime() - offsetMs)               // 把 UTC 換成本地時間
-  return local.toISOString().slice(0, 16).replace('T', ' ')                      // YYYY-MM-DDTHH:MM
+  return new Date(isoString).toLocaleString('zh-tw', options);
 }
 
 export default function EventDetailPage() {
@@ -207,7 +212,7 @@ export default function EventDetailPage() {
     <main className="max-w-3xl mx-auto p-6">
       {/* 標題與時間 */}
       <header>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-2">
           <h1 className="text-4xl font-bold mb-2">{event.title}</h1>
           {IsOrganizer && (
               <button
@@ -217,12 +222,11 @@ export default function EventDetailPage() {
                 編輯活動
               </button>
             )}
-          </div>
-        {(event.start || event.end) && (
-          <p className="text-md text-gray-600 dark:text-gray-400 mb-1">
-            {toDatetimeLocal(event.start)} ~ {toDatetimeLocal(event.end)}
-          </p>
-        )}
+        </div>
+        <hr className="mb-2 border-gray-300 dark:border-gray-700" />
+        <p className="text-md text-gray-600 dark:text-gray-400 mb-1">
+          舉辦時間：{toDatetimeLocal(event.start)}{event.start || event.end ? " - " : "Coming Soon"}{toDatetimeLocal(event.end)}
+        </p>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
           截止報名：{event.deadline}
           {isExpired && <span className="text-red-500 ml-2">(已結束)</span>}

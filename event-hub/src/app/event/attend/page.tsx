@@ -11,11 +11,28 @@ type Event = {
   description: string;
   deadline: string;
   category?: string[];
+  start?: string;
+  end?: string;
   visible: boolean;
   users?: {
     name: string;
   };
 };
+
+const options = {
+  year:   'numeric',
+  month:  '2-digit',
+  day:    '2-digit',
+  hour:   '2-digit',
+  minute: '2-digit',
+  hour12: false,
+};
+
+function toDatetimeLocal(isoString: string): string {
+  if (!isoString) return "";
+  return new Date(isoString).toLocaleString('zh-tw', options);
+}
+
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -50,6 +67,8 @@ export default function DashboardPage() {
             title,
             description,
             deadline,
+            start,
+            end,
             category,
             visible,
             users:organizer_id (
@@ -72,15 +91,8 @@ export default function DashboardPage() {
       }) ?? [];
 
       // 提取所有類別
-      const uniqueCats = Array.from(
-        new Set(events.flatMap((e) => e.category || []))
-      );
+      const uniqueCats = Array.from(new Set(events.flatMap((e) => e.category || [])));
       setCategories(uniqueCats);
-
-      events.sort(
-        (a: Event, b: Event) =>
-          new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-      );
 
       setJoinedEvents(events);
       setLoading(false);
@@ -94,7 +106,7 @@ export default function DashboardPage() {
   // 濾出符合條件的活動
   const filteredEvents = joinedEvents
     .filter((event) => {
-      const isExpired = new Date(event.deadline) < now;
+      const isExpired = new Date(event.start) < now && event.start != null;
 
       if (statusFilter === "Expired" && !isExpired) return false;
       if (statusFilter === "Upcoming" && isExpired) return false;
@@ -109,12 +121,24 @@ export default function DashboardPage() {
       );
     })
     .sort((a, b) => {
-      const aExpired = new Date(a.deadline) < now;
-      const bExpired = new Date(b.deadline) < now;
-      if (aExpired !== bExpired) return aExpired ? 1 : -1;
-      return (
-        new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-      );
+      const now = new Date();
+      if(a.start == null && b.start == null)
+        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+      else if(a.start == null && b.start != null){
+        const bStart = new Date(b.start);
+        if(bStart < now) return -1;
+        return 1;
+      } else if(a.start != null && b.start == null){
+        const aStart = new Date(a.start);
+        if(aStart < now) return 1;
+        return -1;
+      } else {
+        const aStart = new Date(a.start);
+        const bStart = new Date(b.start);
+        if (aStart < now && bStart >= now) return 1;
+        if (aStart >= now && bStart < now) return -1;
+        return new Date(a.start).getTime() - new Date(b.start).getTime();
+      }
     });
 
   const renderEvents = () => {
@@ -127,6 +151,7 @@ export default function DashboardPage() {
     }
 
     return filteredEvents.map((event) => {
+      const past = new Date(event.start) < now && event.start != null;
       const expired = new Date(event.deadline) < now;
       return (
         <div
@@ -138,9 +163,13 @@ export default function DashboardPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {event.title}
             </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
+              活動時間：{event.start && toDatetimeLocal(event.start)}{(event.start || event.end) ? ' - ' : 'Coming Soon'}
+              {event.end && toDatetimeLocal(event.end)}{past && <span className="text-red-500 ml-2">(已結束)</span>}
+            </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              舉辦時間：{event.deadline}
-              {expired && <span className="text-red-500 ml-2">(已結束)</span>}
+              報名截止時間：{event.deadline}
+              {expired && <span className="text-red-500 ml-2">(報名已結束)</span>}
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               🧑‍💼 主辦人：{event.users?.name || "匿名主辦人"}
