@@ -27,6 +27,7 @@ type Invitation = {
 }
 
 export default function NotificationBell() {
+  const [user, setUser] = useState<any>(null)
   const [open, setOpen] = useState(false)
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [invitations, setInvitations] = useState<Invitation[]>([])
@@ -39,6 +40,7 @@ export default function NotificationBell() {
         data: { user },
       } = await supabase.auth.getUser()
       if (!user) return
+      else setUser(user)
 
       // 1. 取出已報名活動
       const { data: regs } = await supabase
@@ -79,6 +81,21 @@ export default function NotificationBell() {
 
   const notificationCount = invitations.length
 
+  const handleReject = async (event_id: string) => {
+    const { error } = await supabase
+      .from('invitations')
+      .update({ pending: false })
+      .eq('event_id', event_id)
+      .eq('friend_id', user.id)
+    if (error) {
+      console.error('Error rejecting invitation:', error)
+    } else {
+      setInvitations((prev) =>
+        prev.filter((inv) => inv.event_id !== event_id)
+      )
+    }
+  }
+
   return (
     <div className="relative" ref={containerRef}>
       <button
@@ -103,23 +120,68 @@ export default function NotificationBell() {
         {invitations.length > 0 ? (
           <>
             <ul className="space-y-2 mb-4">
-              {invitations.map((inv) => {
-                return (
-                  <li
-                    key={`${inv.event_id}-${inv.inviter.name}`}
-                    className="border-b pb-2 cursor-pointer rounded px-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => router.push(`/event/register?event_id=${inv.event_id}`)}
+            {invitations.map((inv) => (
+              <li
+                key={`${inv.event_id}-${inv.inviter.name}`}
+                className="flex justify-between items-center border-b pb-2 rounded px-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                {/* 左側整區點擊註冊 */}
+                <div
+                  className="flex-1 cursor-pointer"
+                  onClick={() =>
+                    router.push(`/event?event_id=${inv.event_id}`)
+                  }
+                >
+                  <p className="text-gray-800 dark:text-white">
+                    活動 {inv.event.title} 的邀請
+                  </p>
+                  <p className="text-gray-600 dark:text-gray-300 text-xs">
+                    來自邀請者 {inv.inviter.name}
+                  </p>
+                </div>
+
+                {/* 右側兩個按鈕 */}
+                <div className="flex space-x-2">
+                  {/* 拒絕 */}
+                  <button
+                    className="
+                      px-3 py-1 rounded
+                      bg-red-100 text-red-700
+                      hover:bg-red-200
+                      dark:bg-red-700 dark:text-red-100 dark:hover:bg-red-600
+                      transition-colors duration-150
+                      text-sm
+                    "
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleReject(inv.event_id);
+                    }}
                   >
-                    <p className="text-gray-800 dark:text-white">
-                      活動 {inv.event.title} 的邀請
-                    </p>
-                    <p className="text-gray-600 dark:text-gray-300 text-xs">
-                      來自邀請者 {inv.inviter.name}
-                    </p>
-                  </li>)
-                }
-              )}
-            </ul>
+                    拒絕
+                  </button>
+
+                  {/* 報名 */}
+                  <button
+                    className="
+                      px-3 py-1 rounded
+                      bg-blue-100 text-blue-700
+                      hover:bg-blue-200
+                      dark:bg-blue-700 dark:text-blue-100 dark:hover:bg-blue-600
+                      transition-colors duration-150
+                      text-sm
+                    "
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/event/register?event_id=${inv.event_id}`);
+                    }}
+                  >
+                    報名
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+
           </>
         ) : (
           <p className="text-gray-500 dark:text-gray-300">
