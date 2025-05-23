@@ -156,6 +156,15 @@ export default function EventDetailPage() {
   };
 
   const SendInvitation = async (User) => {
+    if(user.id === User.user_id) throw new Error("不能邀請自己");
+    const { data:Reg, error:RegError } = await supabase
+      .from("registrations")
+      .select("user_id")
+      .eq("event_id", event.event_id)
+      .eq("user_id", User.user_id)
+      .single();
+    console.log(Reg, RegError);
+    if(Reg) throw new Error("該使用者已報名");
     const { data:Inv, error:InvError } = await supabase
       .from("invitations")
       .select("pending")
