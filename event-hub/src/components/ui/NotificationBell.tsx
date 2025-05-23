@@ -58,7 +58,6 @@ export default function NotificationBell() {
         .select('event_id, inviter:users!invitations_inviter_id_fkey(name), event:events!inner(title)')
         .eq('friend_id', user.id)
         .eq('pending', true)
-      console.log('invs', invs)
       setInvitations(invs as Invitation[] ?? [])
     }
 

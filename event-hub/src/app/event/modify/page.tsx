@@ -2,7 +2,7 @@
 
 import { useEffect, useState, KeyboardEvent, ChangeEvent } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { supabase } from '../../../lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
 import LoadingScreen from '@/components/loading'
 import ShareLinkModal from '@/components/ShareLinkModal'
@@ -139,6 +139,7 @@ export default function EventFormPage() {
 
   // 時間驗證
   useEffect(() => {
+    console.log(form.start, form.end)
     if (form.start && form.end && new Date(form.end) < new Date(form.start)) {
       setTimeError('❗ 結束時間不得早於開始時間')
     } else setTimeError('')
@@ -212,6 +213,12 @@ export default function EventFormPage() {
     setTimeError('')
 
     // Validation
+    if (timeError !== '') {
+      setMessage('❗ 開始時間不可晚於結束時間')
+      setTimeError('❗ 結束時間不得早於開始時間')
+      setLoading(false)
+      return
+    }
     if (!form.title || !form.deadline) {
       setMessage('❗ 請完整填寫所有欄位')
       setLoading(false)
