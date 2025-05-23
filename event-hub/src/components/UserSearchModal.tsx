@@ -19,7 +19,7 @@ type UserWithPending = User & {
 type Props = {
   isOpen: boolean
   onClose: () => void
-  onAdd: (user: User) => Promise<void>
+  onAdd: (User: User) => Promise<void>
   isInvite: boolean
   userId: string
   eventId: string

@@ -285,15 +285,15 @@ export default function DashboardPage() {
     });
   };
 
-  const addUser = async (user) => {
-    if (organizers.includes(user.user_id) || normals.includes(user.user_id))
+  const addUser = async (User) => {
+    if (organizers.includes(User.user_id) || normals.includes(User.user_id))
       throw new Error("此人已為活動人員");
     const { error: insertError } = await supabase
       .from("event_organizers")
-      .insert({ event_id: editingEventId, role_id: user.user_id, role: UserModalOrg ? "organizer" : "normal" });
+      .insert({ event_id: editingEventId, role_id: User.user_id, role: UserModalOrg ? "organizer" : "normal" });
     if (!insertError){
-      if (UserModalOrg) setOrganizers((prev) => [...prev, user.user_id]);
-      else setNormals((prev) => [...prev, user.user_id]);
+      if (UserModalOrg) setOrganizers((prev) => [...prev, User.user_id]);
+      else setNormals((prev) => [...prev, User.user_id]);
     }
     else throw new Error("此人員已為活動人員");
   }
