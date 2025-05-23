@@ -163,7 +163,7 @@ export default function EventDetailPage() {
       .eq("inviter_id", user.id)
       .eq("friend_id", User.user_id)
       .single();
-    if(Inv.pending)
+    if(Inv && Inv.pending)
       throw new Error("已邀請過該使用者");
     if (Inv){
       const { data, error } = await supabase
