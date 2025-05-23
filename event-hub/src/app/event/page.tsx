@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import LoadingScreen from "@/components/loading";
 import UserSearchModal from "@/components/UserSearchModal";
+import { Sen } from "next/font/google";
 
 interface EventDetail {
   event_id: string;
@@ -153,6 +154,45 @@ export default function EventDetailPage() {
       setCurrentIndex((prev) => (prev + 1) % event.images!.length);
     }, 5000);
   };
+
+  const SendInvitation = async (User) => {
+    const { data:Inv, error:InvError } = await supabase
+      .from("invitations")
+      .select("pending")
+      .eq("event_id", event.event_id)
+      .eq("inviter_id", user.id)
+      .eq("friend_id", User.user_id)
+      .single();
+    if(Inv.pending)
+      throw new Error("已邀請過該使用者");
+    if (Inv){
+      const { data, error } = await supabase
+        .from("invitations")
+        .update({
+          event_id: event.event_id,
+          inviter_id: user.id,
+          friend_id: User.user_id,
+          pending: true,
+        })
+        .eq("event_id", event.event_id)
+        .eq("inviter_id", user.id)
+        .eq("friend_id", User.user_id)
+        .single();
+      if (error)
+        throw new Error(error.message);
+    } else {
+      const { data, error } = await supabase
+        .from("invitations")
+        .insert({
+          event_id: event.event_id,
+          inviter_id: user.id,
+          friend_id: User.user_id,
+        })
+        .single();
+      if (error)
+        throw new Error(error.message);
+    }
+  }
 
   return (
     <main className="max-w-3xl mx-auto p-6">
@@ -313,6 +353,7 @@ export default function EventDetailPage() {
 
         {/* 複製連結按鈕 */}
         <div className="flex items-center gap-3 mb-4">
+          {user && !isExpired && 
           <button
             onClick={() => setShowUserSearchModal(true)}
             className="
@@ -326,7 +367,7 @@ export default function EventDetailPage() {
             "
           >
             傳送邀請給朋友
-          </button>
+          </button>}
           <button
               onClick={handleCopyLink}
               className="
@@ -370,7 +411,7 @@ export default function EventDetailPage() {
       <UserSearchModal
         isOpen={showUserSearchModal}
         onClose={() => setShowUserSearchModal(false)}
-        onAdd={(user) => {}}
+        onAdd={SendInvitation}
         isInvite={true}
         eventId={event.event_id}
         userId={user.id}
