@@ -11,21 +11,6 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-      // 修改 <title>
-      document.title = "Event Hub - Forgot Password";
-      // 修改 <meta name="description">
-      const metaDescription = document.querySelector("meta[name='description']");
-      if (metaDescription) {
-        metaDescription.setAttribute("content", "忘記密碼");
-      } else {
-        const meta = document.createElement("meta");
-        meta.name = "description";
-        meta.content = "忘記密碼";
-        document.head.appendChild(meta);
-      }
-  }, []);
-
   const handleReset = async () => {
     setMessage('')
     setError('')

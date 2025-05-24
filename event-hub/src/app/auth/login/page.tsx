@@ -11,21 +11,6 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState('')
   const [attempted, setAttempted] = useState(false) // 登入嘗試過的 flag
 
-  useEffect(() => {
-    // 修改 <title>
-    document.title = "Event Hub - Login";
-    // 修改 <meta name="description">
-    const metaDescription = document.querySelector("meta[name='description']");
-    if (metaDescription) {
-      metaDescription.setAttribute("content", "登入帳號");
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content = "登入帳號";
-      document.head.appendChild(meta);
-    }
-  }, []);
-
   const handleLogin = async () => {
     setErrorMsg('')
 

@@ -26,21 +26,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true); // ✅ 加入 loading 狀態
 
   useEffect(() => {
-    // 修改 <title>
-    document.title = "Event Hub - Home Page";
-    // 修改 <meta name="description">
-    const metaDescription = document.querySelector("meta[name='description']");
-    if (metaDescription) {
-      metaDescription.setAttribute("content", "一個活動報名平台");
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content = "一個活動報名平台";
-      document.head.appendChild(meta);
-    }
-  }, []);
-
-  useEffect(() => {
     const fetchData = async () => {
       setLoading(true); // ✅ 開始載入
       const [{ data: userData }, { data: eventsData, error }] =

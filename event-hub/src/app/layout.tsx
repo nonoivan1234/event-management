@@ -9,10 +9,17 @@ const inter = Inter({
   subsets: ['latin'],
 })
 
+// app/layout.tsx (App Router)
 export const metadata: Metadata = {
-  title: 'Event Hub',
+  title: 'Event Hub - Home Page',
   description: '一個活動報名平台',
-}
+  openGraph: {
+    title: '🎓 Event Hub - Home Pgae',
+    description: '一個活動報名平台',
+    type: 'website',
+  },
+};
+
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
