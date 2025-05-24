@@ -34,21 +34,6 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const router = useRouter()
 
-  useEffect(() => {
-    // 修改 <title>
-    document.title = "Event Hub - User Profile";
-    // 修改 <meta name="description">
-    const metaDescription = document.querySelector("meta[name='description']");
-    if (metaDescription) {
-      metaDescription.setAttribute("content", "編輯個人資料");
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content = "編輯個人資料";
-      document.head.appendChild(meta);
-    }
-  }, []);
-
   const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels)
   }, [])

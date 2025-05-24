@@ -12,22 +12,6 @@ export default function SignUpPage() {
 
   const router = useRouter()
 
-  useEffect(() => {
-    // 修改 <title>
-    document.title = "Event Hub - Sign Up";
-    // 修改 <meta name="description">
-    const metaDescription = document.querySelector("meta[name='description']");
-    if (metaDescription) {
-      metaDescription.setAttribute("content", "註冊帳號");
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content = "註冊帳號";
-      document.head.appendChild(meta);
-    }
-  }, []);
-
-
   const handleSignUp = async () => {
     setMessage('')
     setIsError(false)

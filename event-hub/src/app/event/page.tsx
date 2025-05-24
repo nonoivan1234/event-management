@@ -75,27 +75,35 @@ export default function EventDetailPage() {
       if (error || !data) {
         // 修改 <meta name="description">
         const metaDescription = document.querySelector("meta[name='description']");
-        if (metaDescription) {
-          metaDescription.setAttribute("content", "無法找到該活動");
-        } else {
-          const meta = document.createElement("meta");
-          meta.name = "description";
-          meta.content = "無法找到該活動";
-          document.head.appendChild(meta);
-        }
+        metaDescription.setAttribute("content", "無法找到該活動");
         return router.push("/404");
       } else {
-        // 修改 <meta name="description">
-        const metaDescription = document.querySelector("meta[name='description']");
-        if (metaDescription) {
-          metaDescription.setAttribute("content", `${data.title}　${data.description}`);
+        const metaMap: [property: string, content: string][] = [
+          ["og:title", "Event Hub - Event Page"],
+          ["og:description", data.description || ""]
+        ];
+        if (data.images && data.images.length > 0) metaMap.push(["og:image", data.images[0]]);
+
+        for (const [property, content] of metaMap) {
+          const existing = document.querySelector(`meta[property="${property}"]`);
+          if (existing) existing.remove();
+          // 加入新的
+          const meta = document.createElement("meta");
+          meta.setAttribute("property", property);
+          meta.setAttribute("content", content);
+          document.head.appendChild(meta);
+        }
+
+        const descTag = document.querySelector('meta[name="description"]');
+        if (descTag) {
+          descTag.setAttribute("content", data.description || "");
         } else {
           const meta = document.createElement("meta");
-          meta.name = "description";
-          meta.content = `${data.title}　${data.description}`;
+          meta.setAttribute("name", "description");
+          meta.setAttribute("content", data.description || "");
           document.head.appendChild(meta);
+        }
     }
-      }
 
       const {
         data: { user },
