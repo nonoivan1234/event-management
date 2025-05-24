@@ -12,18 +12,13 @@ const inter = Inter({
 // app/layout.tsx (App Router)
 export const metadata: Metadata = {
   title: 'Event Hub - Home Page',
-  description: '一個活動報名平台',
-  openGraph: {
-    title: '🎓 Event Hub - Home Pgae',
-    description: '一個活動報名平台',
-    type: 'website',
-  },
+  description: '一個活動報名平台'
 };
 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="zh-tw" className={inter.variable}>
       <body className="antialiased transition-colors duration-300 bg-white text-black dark:bg-gray-900 dark:text-white">
         <ThemeInitializer />
         <Navbar />
