@@ -130,7 +130,7 @@ export default function NotificationBell() {
                 <div
                   className="flex-1 cursor-pointer"
                   onClick={() =>
-                    router.push(`/event?event_id=${inv.event_id}`)
+                    router.push(`/event/${inv.event_id}`)
                   }
                 >
                   <p className="text-gray-800 dark:text-white">
@@ -204,7 +204,7 @@ export default function NotificationBell() {
                   key={r.event_id}
                   className="border-b pb-2 cursor-pointer transition rounded px-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={() =>
-                    router.push(`/event?event_id=${r.event_id}`)
+                    router.push(`/event/${r.event_id}`)
                   }
                 >
                   <p className="font-medium text-gray-800 dark:text-white">

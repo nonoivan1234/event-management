@@ -71,38 +71,7 @@ export default function EventDetailPage({ params }: { params: { event_id: string
         .eq("visible", true)
         .single();
 
-      if (error || !data) {
-        // 修改 <meta name="description">
-        const metaDescription = document.querySelector("meta[name='description']");
-        metaDescription.setAttribute("content", "無法找到該活動");
-        return router.push("/404");
-      } else {
-        const metaMap: [property: string, content: string][] = [
-          ["og:title", "Event Hub - Event Page"],
-          ["og:description", data.description || ""]
-        ];
-        if (data.images && data.images.length > 0) metaMap.push(["og:image", data.images[0]]);
-
-        for (const [property, content] of metaMap) {
-          const existing = document.querySelector(`meta[property="${property}"]`);
-          if (existing) existing.remove();
-          // 加入新的
-          const meta = document.createElement("meta");
-          meta.setAttribute("property", property);
-          meta.setAttribute("content", content);
-          document.head.appendChild(meta);
-        }
-
-        const descTag = document.querySelector('meta[name="description"]');
-        if (descTag) {
-          descTag.setAttribute("content", data.description || "");
-        } else {
-          const meta = document.createElement("meta");
-          meta.setAttribute("name", "description");
-          meta.setAttribute("content", data.description || "");
-          document.head.appendChild(meta);
-        }
-    }
+      if (error || !data)  return router.push("/404");
 
       const {
         data: { user },
