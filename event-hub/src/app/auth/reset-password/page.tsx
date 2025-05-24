@@ -13,6 +13,21 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    // 修改 <title>
+    document.title = "Event Hub - Reset Password";
+    // 修改 <meta name="description">
+    const metaDescription = document.querySelector("meta[name='description']");
+    if (metaDescription) {
+      metaDescription.setAttribute("content", "重設密碼");
+    } else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = "重設密碼";
+      document.head.appendChild(meta);
+    }
+  }, []);
+
+  useEffect(() => {
     // 驗證是否登入中（使用 magic link 登入）
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession()

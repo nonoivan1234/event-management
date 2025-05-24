@@ -46,6 +46,21 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
+    // 修改 <title>
+    document.title = "Event Hub - Attended Events";
+    // 修改 <meta name="description">
+    const metaDescription = document.querySelector("meta[name='description']");
+    if (metaDescription) {
+      metaDescription.setAttribute("content", "參加活動列表");
+    } else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = "參加活動列表";
+      document.head.appendChild(meta);
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchUserAndEvents = async () => {
       const {
         data: { user },

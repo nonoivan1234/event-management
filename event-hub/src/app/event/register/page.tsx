@@ -21,6 +21,21 @@ export default function RegisterPage() {
   const [deadline, setDeadline] = useState<string | null>(null);
 
   useEffect(() => {
+    // 修改 <title>
+    document.title = "Event Hub - Event Registration";
+    // 修改 <meta name="description">
+    const metaDescription = document.querySelector("meta[name='description']");
+    if (metaDescription) {
+      metaDescription.setAttribute("content", "活動報名");
+    } else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = "活動報名";
+      document.head.appendChild(meta);
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       if (!eventId) {
         router.replace("/404");

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 
@@ -11,6 +11,21 @@ export default function SignUpPage() {
   const [isError, setIsError] = useState(false)
 
   const router = useRouter()
+
+  useEffect(() => {
+    // 修改 <title>
+    document.title = "Event Hub - Sign Up";
+    // 修改 <meta name="description">
+    const metaDescription = document.querySelector("meta[name='description']");
+    if (metaDescription) {
+      metaDescription.setAttribute("content", "註冊帳號");
+    } else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = "註冊帳號";
+      document.head.appendChild(meta);
+    }
+  }, []);
 
 
   const handleSignUp = async () => {

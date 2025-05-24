@@ -57,6 +57,11 @@ export default function EventDetailPage() {
   const now = new Date();
 
   useEffect(() => {
+    // 修改 <title>
+    document.title = "Event Hub - Event Page";
+  }, []);
+
+  useEffect(() => {
     async function fetchEvent() {
       if (!eventId) return router.push("/404");
 
@@ -67,7 +72,30 @@ export default function EventDetailPage() {
         .eq("visible", true)
         .single();
 
-      if (error || !data) return router.push("/404");
+      if (error || !data) {
+        // 修改 <meta name="description">
+        const metaDescription = document.querySelector("meta[name='description']");
+        if (metaDescription) {
+          metaDescription.setAttribute("content", "無法找到該活動");
+        } else {
+          const meta = document.createElement("meta");
+          meta.name = "description";
+          meta.content = "無法找到該活動";
+          document.head.appendChild(meta);
+        }
+        return router.push("/404");
+      } else {
+        // 修改 <meta name="description">
+        const metaDescription = document.querySelector("meta[name='description']");
+        if (metaDescription) {
+          metaDescription.setAttribute("content", `${data.title}　${data.description}`);
+        } else {
+          const meta = document.createElement("meta");
+          meta.name = "description";
+          meta.content = `${data.title}　${data.description}`;
+          document.head.appendChild(meta);
+    }
+      }
 
       const {
         data: { user },

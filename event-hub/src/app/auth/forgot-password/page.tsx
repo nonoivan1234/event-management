@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { useRouter } from 'next/navigation'
 
@@ -10,6 +10,21 @@ export default function ForgotPasswordPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+      // 修改 <title>
+      document.title = "Event Hub - Forgot Password";
+      // 修改 <meta name="description">
+      const metaDescription = document.querySelector("meta[name='description']");
+      if (metaDescription) {
+        metaDescription.setAttribute("content", "忘記密碼");
+      } else {
+        const meta = document.createElement("meta");
+        meta.name = "description";
+        meta.content = "忘記密碼";
+        document.head.appendChild(meta);
+      }
+  }, []);
 
   const handleReset = async () => {
     setMessage('')
