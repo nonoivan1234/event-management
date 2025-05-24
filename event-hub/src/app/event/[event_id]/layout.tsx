@@ -15,7 +15,7 @@ export async function generateMetadata( { params }: { params: { event_id: string
 
   const { data, error } = await supabase
     .from('events')
-    .select('title, description, images')
+    .select('title, description')
     .eq('event_id', eventId)
     .single();
 
@@ -31,8 +31,7 @@ export async function generateMetadata( { params }: { params: { event_id: string
     description: data.description,
     openGraph: {
       title: data.title,
-      description: data.description,
-      images: [data.images ? data.images[0] : ''],
+      description: data.description
     },
   };
 }
