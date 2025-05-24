@@ -15,7 +15,7 @@ type Registration = {
   event_id: string
   event: {
     title: string
-    deadline: string
+    start: string
     visible: boolean
   }
 }
@@ -45,12 +45,13 @@ export default function NotificationBell() {
       // 1. 取出已報名活動
       const { data: regs } = await supabase
         .from('registrations')
-        .select('event_id, event:events!inner(deadline, title, visible)')
+        .select('event_id, event:events!inner(start, title, visible)')
         .eq('user_id', user.id)
-      const visibleRegs = regs?.filter((r) => (r as any).event.visible) ?? []
+      const now = new Date()
+      const visibleRegs = regs?.filter((r) => (r as any).event.visible && r.event.start > now.toISOString()) ?? []
       const sortedRegs = (visibleRegs as Registration[]).sort(
         (a, b) =>
-          getDaysLeft(a.event.deadline) - getDaysLeft(b.event.deadline)
+          getDaysLeft(a.event.start) - getDaysLeft(b.event.start)
       )
       setRegistrations(sortedRegs)
 
@@ -197,7 +198,7 @@ export default function NotificationBell() {
         ) : (
           <ul className="space-y-2">
             {registrations.map((r) => {
-              const daysLeft = getDaysLeft(r.event.deadline)
+              const daysLeft = getDaysLeft(r.event.start)
               return (
                 <li
                   key={r.event_id}

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "../../lib/supabase";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import LoadingScreen from "@/components/loading";
 import UserSearchModal from "@/components/UserSearchModal";
 
@@ -41,10 +41,9 @@ function toDatetimeLocal(isoString: string): string {
   return new Date(isoString).toLocaleString('zh-tw', options);
 }
 
-export default function EventDetailPage() {
+export default function EventDetailPage({ params }: { params: { event_id: string } }) {
   const router = useRouter();
-  const params = useSearchParams();
-  const eventId = params.get("event_id");
+  const eventId = params.event_id;
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -399,7 +398,6 @@ export default function EventDetailPage() {
         <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">
             分享活動
         </h3>
-
         {/* 複製連結按鈕 */}
         <div className="flex items-center gap-3 mb-4">
           {user && !isExpired && 
@@ -435,7 +433,7 @@ export default function EventDetailPage() {
               <span className="text-green-500 dark:text-green-400">已複製</span>
           )}
         </div>
-        {event.share_link &&
+        {event.share_link && Object.keys(event.share_link).length > 0 &&
         <h4 className="text-md font-semibold mt-4 mb-2 text-gray-800 dark:text-gray-200">
             或者分享至社群平台
         </h4>}
