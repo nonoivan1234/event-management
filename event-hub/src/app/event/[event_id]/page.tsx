@@ -86,16 +86,16 @@ export default function EventDetailPage({ params }: { params: { event_id: string
           .eq("user_id", user.id)
           .single();
         if (joinedData) setAttending(true);
+        
+        const { data: organizerData } = await supabase
+          .from("event_organizers")
+          .select("role_id")
+          .eq("event_id", eventId)
+          .eq("role_id", user?.id)
+          .eq("role", "organizer")
+          .single();
+        if (organizerData) setIsOrganizer(true);
       }
-
-      const { data: organizerData } = await supabase
-        .from("event_organizers")
-        .select("role_id")
-        .eq("event_id", eventId)
-        .eq("role_id", user?.id)
-        .eq("role", "organizer")
-        .single();
-      if (organizerData) setIsOrganizer(true);
 
       const category =
         typeof data.category === "string"
@@ -424,6 +424,7 @@ export default function EventDetailPage({ params }: { params: { event_id: string
             ))}
         </div>
       </section>
+      {user && !isExpired && 
       <UserSearchModal
         isOpen={showUserSearchModal}
         onClose={() => setShowUserSearchModal(false)}
@@ -431,7 +432,7 @@ export default function EventDetailPage({ params }: { params: { event_id: string
         isInvite={true}
         eventId={event.event_id}
         userId={user.id}
-      />
+      />}
     </main>
   );
 }
