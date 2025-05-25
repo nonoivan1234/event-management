@@ -74,6 +74,7 @@ export default function ResetPasswordPage() {
           className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
+          onKeyDown={(e) => {if (e.key === 'Enter') handleResetPassword();}}
         />
 
         <button

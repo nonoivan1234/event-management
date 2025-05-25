@@ -1,11 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-import { useRouter } from 'next/navigation'
 
 export default function ForgotPasswordPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -23,12 +21,11 @@ export default function ForgotPasswordPage() {
     setLoading(false)
 
     // 安全處理：無論成功與否，都顯示相同訊息
-    if (error) {
-        console.error('resetPasswordForEmail error:', error.message)
-    }
+    if (error)
+      console.error('resetPasswordForEmail error:', error.message)
 
     setMessage('📧 如果這個 Email 有註冊，我們已寄出密碼重設信。請檢查你的信箱。')
-    }
+  }
 
 
   return (
@@ -42,6 +39,7 @@ export default function ForgotPasswordPage() {
           className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={(e) => {if (e.key === "Enter") handleReset();}}
         />
 
         <button
