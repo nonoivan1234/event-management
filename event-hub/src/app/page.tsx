@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import LoadingScreen from "@/components/loading";
@@ -25,49 +25,61 @@ export default function HomePage() {
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true); // ✅ 加入 loading 狀態
 
+  const fetchSearch = async (user) => {
+    setLoading(true);
+
+    const eventQuery = search.trim() === ""
+      ? supabase
+          .from("events")
+          .select(`*, users:organizer_id(name)`)
+          .eq("visible", true)
+          .gte("deadline", new Date().toISOString())
+          .or(`start.gte.${new Date().toISOString()},start.is.null`)
+          .limit(100)
+      : supabase
+          .from("events")
+          .select(`*, users:organizer_id(name)`)
+          .eq("visible", true)
+          .ilike("title", `%${search.trim()}%`)
+          .limit(100);
+
+    const { data: eventsData, error } = await eventQuery;
+
+    const { data: regData } = await supabase
+      .from("registrations")
+      .select("event_id")
+      .eq("user_id", user.id); // ✅ 這裡就不會出錯了
+
+    setRegistrations(regData || []);
+
+    if (!error && eventsData) {
+      const parsedEvents = eventsData.map((e) => ({
+        ...e,
+        category:
+          typeof e.category === "string" ? JSON.parse(e.category) : [],
+      }));
+      setEvents(parsedEvents);
+
+      const uniqueCategories = Array.from(
+        new Set(parsedEvents.flatMap((e) => e.category || []))
+      );
+      setCategories(uniqueCategories);
+    }
+
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true); // ✅ 開始載入
-      const [{ data: userData }, { data: eventsData, error }] =
-        await Promise.all([
-          supabase.auth.getUser(),
-          supabase
-            .from("events")
-            .select(`*, users:organizer_id(name)`)
-            .eq("visible", true)
-            .gte("deadline", new Date().toISOString())
-            .or(`start.gte.${new Date().toISOString()},start.is.null`)
-        ]);
-
+    const init = async () => {
+      const { data: userData } = await supabase.auth.getUser();
       if (userData?.user) {
-        setUser(userData.user);
-
-        const { data: regData } = await supabase
-          .from("registrations")
-          .select("event_id")
-          .eq("user_id", userData.user.id);
-
-        setRegistrations(regData || []);
+        setUser(userData.user); // 可保留設定 state
+        await fetchSearch(userData.user); // ✅ 傳入 user 對象
       }
-
-      if (!error && eventsData) {
-        const parsedEvents = eventsData.map((e) => ({
-          ...e,
-          category:
-            typeof e.category === "string" ? JSON.parse(e.category) : [],
-        }));
-        setEvents(parsedEvents);
-
-        const uniqueCategories = Array.from(
-          new Set(parsedEvents.flatMap((e) => e.category || []))
-        );
-        setCategories(uniqueCategories);
-      }
-      setLoading(false); // ✅ 結束載入
     };
-
-    fetchData();
+    init();
   }, []);
+
 
   const now = new Date();
   const isRegistered = (event_id: string) =>
@@ -80,15 +92,10 @@ export default function HomePage() {
 
       if (statusFilter === "Registered" && !isReg) return false;
       if (statusFilter === "Unregistered" && isReg) return false;
+      if (statusFilter === "Expired" && !isExpired) return false;
+      if (statusFilter === "Upcoming" && isExpired) return false;
 
-      const categoryMatch =
-        category === "All" ||
-        (Array.isArray(event.category) && event.category.includes(category));
-
-      return (
-        categoryMatch &&
-        event.title?.toLowerCase()?.includes(search.toLowerCase())
-      );
+      return category === "All" || (Array.isArray(event.category) && event.category.includes(category));
     })
     .sort((a, b) => {
       if(a.start !== null && b.start == null) return 1;
@@ -107,16 +114,25 @@ export default function HomePage() {
             🔍 活動篩選
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="搜尋活動名稱…"
-                className="w-full border rounded px-4 py-1 pl-10 dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <span className="absolute left-3 top-1.5 text-gray-400">🔍</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+            <div className="flex items-center gap-2">
+              <div className="relative w-full flex-[5]">
+                <input
+                  type="text"
+                  placeholder="搜尋活動名稱…"
+                  className="w-full border rounded px-4 py-1 pl-10 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => {if (e.key === "Enter") fetchSearch(user);}}
+                />
+                <span className="absolute left-3 top-1.5 text-gray-400">🔍</span>
+              </div>
+              <button
+                className="h-full flex-[1] rounded border border-gray-300 bg-white text-black hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+                onClick={() => fetchSearch(user)}
+              >
+                搜尋
+              </button>
             </div>
 
             <select
@@ -140,6 +156,8 @@ export default function HomePage() {
               <option value="All">📅 所有活動</option>
               <option value="Registered">✅ 已報名</option>
               <option value="Unregistered">📝 未報名</option>
+              <option value="Expired">❌ 已截止報名</option>
+              <option value="Upcoming">⏳ 即將開始</option>
             </select>
           </div>
         </div>
@@ -156,9 +174,13 @@ export default function HomePage() {
             <div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
                 {filteredEvents.map((event) => {
+                  const past = new Date(event.start) < now && event.start != null;
+                  const isExpired = new Date(event.deadline) < new Date();
                   const registered = isRegistered(event.event_id);
-                  const disabled = !user || registered;
-                  const title = !user
+                  const disabled = !user || registered || isExpired;
+                  const title = isExpired
+                    ? "報名已截止"
+                    : !user
                     ? "請先登入才能報名"
                     : registered
                     ? "你已報名此活動"
@@ -176,10 +198,11 @@ export default function HomePage() {
                         </h2>
                         <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                           活動時間：{event.start && new Date(event.start).toLocaleString('zh-tw', options)}{(event.start || event.end) ? ' - ' : 'Coming Soon'}
-                          {event.end && new Date(event.end).toLocaleString('zh-tw', options)}
+                          {event.end && new Date(event.end).toLocaleString('zh-tw', options)}{past && <span className="text-red-500 ml-2">(已結束)</span>}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                           截止日期：{event.deadline}
+                          {isExpired && <span className="text-red-500 ml-2">(已截止)</span>}
                         </p>
                         <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 mt-2 ml-1 line-clamp-2">
                           {event.description}
@@ -217,7 +240,11 @@ export default function HomePage() {
                             : "bg-black text-white hover:bg-gray-600 dark:bg-white dark:text-black dark:hover:bg-gray-300"
                         }`}
                       >
-                        {registered ? "已報名" : "立刻報名"}
+                        {isExpired
+                          ? "報名已截止"
+                          : registered 
+                          ? "已報名" 
+                          : "立刻報名"}
                       </button>
                     </div>
                   );

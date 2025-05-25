@@ -40,6 +40,7 @@ export default function LoginPage() {
           className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={(e) => {if (e.key === "Enter") handleLogin();}}
         />
 
         <input
@@ -48,6 +49,7 @@ export default function LoginPage() {
           className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={(e) => {if (e.key === "Enter") handleLogin();}}
         />
 
         <button
