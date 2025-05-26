@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import LoadingScreen from "@/components/loading";
+import EventCard from "@/components/EventCard";
 
 type Event = {
   event_id: string;
@@ -18,20 +19,6 @@ type Event = {
     name: string;
   };
 };
-
-const options = {
-  year:   'numeric',
-  month:  '2-digit',
-  day:    '2-digit',
-  hour:   '2-digit',
-  minute: '2-digit',
-  hour12: false,
-};
-
-function toDatetimeLocal(isoString: string): string {
-  if (!isoString) return "";
-  return new Date(isoString).toLocaleString('zh-tw', options);
-}
 
 
 export default function DashboardPage() {
@@ -137,50 +124,14 @@ export default function DashboardPage() {
 
     return filteredEvents.map((event) => {
       const today = new Date();
-      const past = new Date(event.start) < today && event.start != null;
       today.setHours(0, 0, 0, 0);
       const deadline = new Date(event.deadline);
       deadline.setHours(0, 0, 0, 0);
       deadline.setDate(deadline.getDate() + 1);
       const expired = deadline < today;
       return (
-        <div
-          key={event.event_id}
-          onClick={() => router.push(`/event/${event.event_id}`)}
-          className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 flex flex-col justify-between hover:shadow-md duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
-        >
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {event.title}
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-              活動時間：{event.start && toDatetimeLocal(event.start)}{(event.start || event.end) ? ' - ' : 'Coming Soon'}
-              {event.end && toDatetimeLocal(event.end)}{past && <span className="text-red-500 ml-2">(已結束)</span>}
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              報名截止：{event.deadline}
-              {expired && <span className="text-red-500 ml-2">(報名已截止)</span>}
-            </p>
-            <p className="text-sm mt-2 mb-2 ml-1 text-gray-700 dark:text-gray-300">
-              {event.description}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              🧑‍💼 {event.users?.name || "匿名主辦人"}
-            </p>
-            {event.category && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {event.category.map((cat) => (
-                  <span
-                    key={cat}
-                    className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
-                  >
-                    {cat}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="flex gap-5 flex-wrap"
+        <EventCard event={event}>
+          <div className="flex gap-3 flex-wrap"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -208,7 +159,7 @@ export default function DashboardPage() {
               {expired ? "已截止報名" : "編輯報名資料"}
             </button>
           </div>
-        </div>
+        </EventCard>
       );
     });
   };

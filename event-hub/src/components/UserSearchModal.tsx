@@ -183,12 +183,12 @@ export default function UserSearchModal({
                   </div>
                 </div>
                 <button
-                  disabled={!user.Available}
+                  disabled={!user.Available || (userId === user.user_id && isInvite)}
                   onClick={() => handleAdd(user)}
                   className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
                 >
                   {isInvite
-                    ? user.Available ? '邀請' : '已邀請'
+                    ? userId === user.user_id ? "自己" : user.Available ? '邀請' : '已邀請'
                     : user.Available ? '加入' : '已加入'}
                 </button>
               </li>

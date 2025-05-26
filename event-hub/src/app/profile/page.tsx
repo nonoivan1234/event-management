@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState, useCallback, use } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '@/lib/supabase'
 import Image from 'next/image'
 import Cropper from 'react-easy-crop'
 import Slider from '@mui/material/Slider'
 import Dialog from '@mui/material/Dialog'
-import getCroppedImg from '../../utils/cropImage'
+import getCroppedImg from '@/utils/cropImage'
 import LoadingScreen from '@/components/loading'
 
 export default function ProfilePage() {

@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import LoadingScreen from "@/components/loading";
 import UserSearchModal from "@/components/UserSearchModal";
+import EventCard from "@/components/EventCard";
 
 type Event = {
   event_id: string;
@@ -20,20 +21,6 @@ type Event = {
   share_link?: string;
   category?: string[]; // 已經將 category 定義為陣列
 };
-
-const options = {
-  year:   'numeric',
-  month:  '2-digit',
-  day:    '2-digit',
-  hour:   '2-digit',
-  minute: '2-digit',
-  hour12: false,
-};
-
-function toDatetimeLocal(isoString: string): string {
-  if (!isoString) return "";
-  return new Date(isoString).toLocaleString('zh-tw', options);
-}
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -392,7 +379,7 @@ export default function DashboardPage() {
   if (loading) return <LoadingScreen />;
 
   return (
-    <main className="w-full max-w-6xl mx-auto py-12 px-4 dark:text-white">
+    <main className="w-full max-w-7xl mx-auto py-12 px-4 dark:text-white">
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
           <input
@@ -455,62 +442,14 @@ export default function DashboardPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredEvents(organizedEvents).map((event) => {
                   const today = new Date();
-                  const past = new Date(event.start) < today && event.start != null;
                   today.setHours(0, 0, 0, 0);
                   const deadline = new Date(event.deadline);
                   deadline.setHours(0, 0, 0, 0);
                   deadline.setDate(deadline.getDate() + 1);
                   const expired = deadline < today;
-                  return (
-                  <div
-                    key={event.event_id}
-                    onClick={() => router.push(`/event/${event.event_id}`)}
-                    className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 flex flex-col justify-between hover:shadow-md duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
-                  >
-                    {/* 上半區塊（標題與內容） */}
-                    <div className="flex-1">
-                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {event.title}
-                        {!event.visible && (
-                          <span className="ml-2 text-sm text-red-500">(已隱藏)</span>
-                        )}
-                      </h2>
-
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        活動時間：{event.start && toDatetimeLocal(event.start)}{(event.start || event.end) ? ' - ' : 'Coming Soon'}
-                        {event.end && toDatetimeLocal(event.end)}
-                        {past && <span className="text-red-500 ml-2">(已結束)</span>}
-                      </p>
-
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        報名截止：{event.deadline}
-                        {expired && <span className="text-red-500 ml-2">(報名已結束)</span>}
-                      </p>
-
-                      <p className="text-sm mt-2 mb-2 ml-1 text-gray-700 dark:text-gray-300">
-                        {event.description}
-                      </p>
-
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        🧑‍💼
-                        {" " + userNameMap[event.organizer_id] || " Anonymous"}
-                        {event.organizer_id === userID && "（您是創辦人）"}
-                      </p>
-                    </div>
-                    {/* 下半區塊（標籤與按鈕） */}
+                  return (<>
+                  <EventCard event={{...event, users:{name: userNameMap[event.organizer_id]}}}>
                     <div className="mt-2">
-                      {event.category && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {event.category.map((cat) => (
-                            <span
-                              key={cat}
-                              className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
-                            >
-                              {cat}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                       {renderEventActions(
                         event.event_id,
                         event.visible,
@@ -518,8 +457,8 @@ export default function DashboardPage() {
                         event.organizer_id === userID
                       )}
                     </div>
-                  </div>
-                )})}
+                  </EventCard>
+                </>)})}
               </div>
               </>)}
             </section>
@@ -536,7 +475,6 @@ export default function DashboardPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredEvents(NormalEvents).map((event) => {
                   const today = new Date();
-                  const past = new Date(event.start) < today && event.start != null;
                   today.setHours(0, 0, 0, 0);
                   const deadline = new Date(event.deadline);
                   deadline.setHours(0, 0, 0, 0);
@@ -548,50 +486,9 @@ export default function DashboardPage() {
                     onClick={() => router.push(`/event/${event.event_id}`)}
                     className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 flex flex-col justify-between hover:shadow-md duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
                   >
-                    {/* 上半區塊（標題與內容） */}
-                    <div className="flex-1">
-                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {event.title}
-                        {!event.visible && (
-                          <span className="ml-2 text-sm text-red-500">(已隱藏)</span>
-                        )}
-                      </h2>
-
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        活動時間：{event.start && toDatetimeLocal(event.start)}{(event.start || event.end) ? ' - ' : 'Coming Soon'}
-                        {event.end && toDatetimeLocal(event.end)}
-                        {past && <span className="text-red-500 ml-2">(已結束)</span>}
-                      </p>
-
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        報名截止：{event.deadline}
-                        {expired && <span className="text-red-500 ml-2">(報名已結束)</span>}
-                      </p>
-
-                      <p className="text-sm mt-2 mb-2 ml-1 text-gray-700 dark:text-gray-300">
-                        {event.description}
-                      </p>
-
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        🧑‍💼
-                        {" " + userNameMap[event.organizer_id] || " Anonymous"}
-                      </p>
-                    </div>
-
+                    <div className="flex-1"><EventCard event={{...event, users:{name: userNameMap[event.organizer_id] || "匿名主辦人"}}} /></div>
                     {/* 下半區塊（標籤與按鈕） */}
                     <div className="mt-2">
-                      {event.category && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {event.category.map((cat) => (
-                            <span
-                              key={cat}
-                              className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-white px-2 py-0.5 rounded"
-                            >
-                              {cat}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                       {renderEventActions(
                         event.event_id,
                         event.visible,

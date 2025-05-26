@@ -258,9 +258,16 @@ export default function EventDetailPage({ params }: { params: { event_id: string
       {/* 活動介紹 */}
       <section className="mb-6">
         <h2 className="text-2xl font-semibold mb-2">活動介紹</h2>
-        <p className="text-gray-700 dark:text-gray-300">{event.description}</p>
+        <p className="text-gray-700 dark:text-gray-300">
+          {event.description.split('\n').map((line, index) => (
+            <span key={index}>
+              {line}
+              <br />
+            </span>
+          ))}
+        </p>
       </section>
-
+      <hr className="my-6 border-gray-300 dark:border-gray-700" />
       {/* 詳細資訊 */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
@@ -326,7 +333,7 @@ export default function EventDetailPage({ params }: { params: { event_id: string
           </button>
         </div>
       )}
-
+      <hr className="my-6 border-gray-300 dark:border-gray-700" />
       {/* 報名資訊 */}
       <section className="mb-6">
         <h3 className="text-lg font-semibold mb-2">報名狀態</h3>
