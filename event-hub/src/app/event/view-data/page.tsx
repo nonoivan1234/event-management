@@ -18,21 +18,6 @@ export default function RegistrationViewPage() {
   const [isClosed, setIsClosed] = useState(false);
 
   useEffect(() => {
-    // 修改 <title>
-    document.title = "Event Hub - View Registration";
-    // 修改 <meta name="description">
-    const metaDescription = document.querySelector("meta[name='description']");
-    if (metaDescription) {
-      metaDescription.setAttribute("content", "檢視報名資料");
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content = "檢視報名資料";
-      document.head.appendChild(meta);
-    }
-  }, []);
-
-  useEffect(() => {
     const fetchData = async () => {
       if (!eventId)
         return router.replace("/404");

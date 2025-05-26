@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import Image from 'next/image'
@@ -30,6 +30,7 @@ export default function ProfilePage() {
   const [showCropper, setShowCropper] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [loading, setLoading] = useState(true) // ✅ 加入 loading 狀態
+  const [showPopover, setShowPopover] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const router = useRouter()
@@ -100,7 +101,18 @@ export default function ProfilePage() {
     }
   }, [showPasswordModal])
 
+  useEffect(() => {
+    const isValidPhone = (val: string) => /^\d{9,10}$/.test(val);
+    setShowPopover(form.phone !== '' && !isValidPhone(form.phone));
+  }, [form.phone]);
+
+
   const handleSave = async () => {
+    if(showPopover){
+      setMainMessage('⚠️ 請輸入正確的電話格式')
+      setMainIsError(true)
+      return
+    }
     if (!userId) {
       setMainMessage('⚠️ 尚未取得使用者 ID')
       setMainIsError(true)
@@ -166,21 +178,31 @@ export default function ProfilePage() {
       />
 
       {['name', 'student_id', 'phone', 'school'].map((field) => (
-        <label key={field} className="block mb-4">
-          {field === 'name'
-            ? '姓名'
-            : field === 'student_id'
-            ? '學號'
-            : field === 'phone'
-            ? '電話'
-            : '就讀學校'}
-          <input
-            type="text"
-            className="w-full border px-3 py-2 rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-            value={(form as any)[field]}
-            onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-          />
-        </label>
+        <div key={field} className="mb-4 relative">
+          <label key={field} className="block mb-1">
+            {field === 'name'
+              ? '姓名'
+              : field === 'student_id'
+              ? '學號'
+              : field === 'phone'
+              ? '電話'
+              : '就讀學校'}
+            <input
+              type={field === 'phone' ? 'tel' : 'text'}
+              placeholder={`請輸入${field === 'name' ? '姓名' : field === 'student_id' ? '學號' : field === 'phone' ? '電話' : '就讀學校'}`}
+              className="w-full border px-3 py-2 rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+              {...field === 'phone' ? { pattern: '[0-9]*', inputMode: 'numeric'} : {}}
+              value={(form as any)[field]}
+              onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+            />
+            {field === "phone" && showPopover && (
+              <div className="absolute z-10 mt-1 left-0 bg-red-500/90 dark:bg-red-700/90 text-white text-sm px-3 py-2 rounded shadow-md backdrop-blur-sm">
+                請輸入正確的電話格式
+                <div className="absolute top-[-6px] left-3 w-3 h-3 rotate-45 bg-red-500/90 dark:bg-red-700/90" />
+              </div>
+            )}
+          </label>
+        </div>
       ))}
 
       <button

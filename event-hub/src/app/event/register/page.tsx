@@ -1,6 +1,5 @@
 "use client"
 
-import dynamic from 'next/dynamic'
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -19,21 +18,6 @@ export default function RegisterPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
   const [deadline, setDeadline] = useState<string | null>(null);
-
-  useEffect(() => {
-    // 修改 <title>
-    document.title = "Event Hub - Event Registration";
-    // 修改 <meta name="description">
-    const metaDescription = document.querySelector("meta[name='description']");
-    if (metaDescription) {
-      metaDescription.setAttribute("content", "活動報名");
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content = "活動報名";
-      document.head.appendChild(meta);
-    }
-  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
