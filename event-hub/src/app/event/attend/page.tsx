@@ -137,7 +137,13 @@ export default function DashboardPage() {
 
     return filteredEvents.map((event) => {
       const past = new Date(event.start) < now && event.start != null;
-      const expired = new Date(event.deadline) < now;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const deadline = new Date(event.deadline);
+      deadline.setHours(0, 0, 0, 0);
+      const expired = deadline < tomorrow;
       return (
         <div
           key={event.event_id}

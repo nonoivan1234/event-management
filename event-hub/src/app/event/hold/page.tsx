@@ -454,9 +454,14 @@ export default function DashboardPage() {
               ) : (<>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredEvents(organizedEvents).map((event) => {
-                  const now = new Date();
                   const past = new Date(event.start) < now && event.start != null;
-                  const expired = new Date(event.deadline) < now;
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const tomorrow = new Date(today);
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  const deadline = new Date(event.deadline);
+                  deadline.setHours(0, 0, 0, 0);
+                  const expired = deadline < tomorrow;
                   return (
                   <div
                     key={event.event_id}
@@ -531,9 +536,14 @@ export default function DashboardPage() {
               ) : (<>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredEvents(NormalEvents).map((event) => {
-                  const now = new Date();
                   const past = new Date(event.start) < now && event.start != null;
-                  const expired = new Date(event.deadline) < now;
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const tomorrow = new Date(today);
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  const deadline = new Date(event.deadline);
+                  deadline.setHours(0, 0, 0, 0);
+                  const expired = deadline < tomorrow;
                   return (
                   <div
                     key={event.event_id}

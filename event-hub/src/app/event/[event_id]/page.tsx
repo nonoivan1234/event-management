@@ -132,7 +132,13 @@ export default function EventDetailPage({ params }: { params: { event_id: string
 
   if (loading) return <LoadingScreen />;
 
-  const isExpired = new Date(event.deadline) < now;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const deadline = new Date(event.deadline);
+  deadline.setHours(0, 0, 0, 0);
+  const isExpired = deadline < tomorrow;
 
   const title = !user
     ? "請先登入才能報名"
