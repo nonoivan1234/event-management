@@ -69,21 +69,6 @@ export default function EventFormPage() {
   const [modalVisible, setModalVisible] = useState(false)
 
   useEffect(() => {
-    // 修改 <title>
-    document.title = "Event Hub - Event Editor";
-    // 修改 <meta name="description">
-    const metaDescription = document.querySelector("meta[name='description']");
-    if (metaDescription) {
-      metaDescription.setAttribute("content", "編輯活動");
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content = "編輯活動";
-      document.head.appendChild(meta);
-    }
-  }, []);
-
-  useEffect(() => {
     const id = searchParams.get('event_id')
     if (!id) {
       setLoading(false)

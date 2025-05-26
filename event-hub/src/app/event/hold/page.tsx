@@ -55,21 +55,6 @@ export default function DashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // 修改 <title>
-    document.title = "Event Hub - Organizer Dashboard";
-    // 修改 <meta name="description">
-    const metaDescription = document.querySelector("meta[name='description']");
-    if (metaDescription) {
-      metaDescription.setAttribute("content", "活動管理");
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content = "活動管理";
-      document.head.appendChild(meta);
-    }
-  }, []);
-
-  useEffect(() => {
     const fetchUserAndEvents = async () => {
       try {
         const { data: { user }, error: userErr } = await supabase.auth.getUser();

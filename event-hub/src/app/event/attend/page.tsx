@@ -46,21 +46,6 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    // 修改 <title>
-    document.title = "Event Hub - Attended Events";
-    // 修改 <meta name="description">
-    const metaDescription = document.querySelector("meta[name='description']");
-    if (metaDescription) {
-      metaDescription.setAttribute("content", "參加活動列表");
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content = "參加活動列表";
-      document.head.appendChild(meta);
-    }
-  }, []);
-
-  useEffect(() => {
     const fetchUserAndEvents = async () => {
       const {
         data: { user },
@@ -74,24 +59,9 @@ export default function DashboardPage() {
 
       const { data: joinedData } = await supabase
         .from("registrations")
-        .select(
-          `
-          event_id,
-          events (
-            event_id,
-            title,
-            description,
-            deadline,
-            start,
-            end,
-            category,
-            visible,
-            users:organizer_id (
-              name
-            )
-          )
-        `
-        )
+        .select(`event_id, events(event_id, title,
+            description, deadline, start, end,
+            category, visible, users:organizer_id (name))`)
         .eq("user_id", user.id);
       const FilterJoinedData = joinedData?.filter((item: any) => item.events.visible)
       const events = FilterJoinedData?.map((item: any) => {
