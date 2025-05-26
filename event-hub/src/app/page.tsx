@@ -44,13 +44,13 @@ export default function HomePage() {
           .limit(100);
 
     const { data: eventsData, error } = await eventQuery;
-
-    const { data: regData } = await supabase
-      .from("registrations")
-      .select("event_id")
-      .eq("user_id", user.id); // ✅ 這裡就不會出錯了
-
-    setRegistrations(regData || []);
+    if(user) {
+      const { data: regData } = await supabase
+        .from("registrations")
+        .select("event_id")
+        .eq("user_id", user?.id); // ✅ 這裡就不會出錯了
+      setRegistrations(regData || []);
+    }
 
     if (!error && eventsData) {
       const parsedEvents = eventsData.map((e) => ({
@@ -75,6 +75,8 @@ export default function HomePage() {
       if (userData?.user) {
         setUser(userData.user); // 可保留設定 state
         await fetchSearch(userData.user); // ✅ 傳入 user 對象
+      } else {
+        await fetchSearch(null); // 如果沒有登入，傳入 null
       }
     };
     init();
