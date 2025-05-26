@@ -184,6 +184,7 @@ export default function HomePage() {
                   const deadline = new Date(event.deadline);
                   deadline.setHours(0, 0, 0, 0);
                   const isExpired = deadline < tomorrow;
+                  console.log(deadline, tomorrow, isExpired);
                   const registered = isRegistered(event.event_id);
                   const disabled = !user || registered || isExpired;
                   const title = isExpired

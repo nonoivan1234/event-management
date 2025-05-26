@@ -136,8 +136,8 @@ export default function DashboardPage() {
     }
 
     return filteredEvents.map((event) => {
-      const past = new Date(event.start) < now && event.start != null;
       const today = new Date();
+      const past = new Date(event.start) < today && event.start != null;
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
