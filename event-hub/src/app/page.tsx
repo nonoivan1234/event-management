@@ -176,15 +176,14 @@ export default function HomePage() {
             <div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
                 {filteredEvents.map((event) => {
-                  const past = new Date(event.start) < now && event.start != null;
                   const today = new Date();
+                  const past = new Date(event.start) < today && event.start != null;
                   today.setHours(0, 0, 0, 0);
                   const tomorrow = new Date(today);
                   tomorrow.setDate(tomorrow.getDate() + 1);
                   const deadline = new Date(event.deadline);
                   deadline.setHours(0, 0, 0, 0);
                   const isExpired = deadline < tomorrow;
-                  console.log(deadline, tomorrow, isExpired);
                   const registered = isRegistered(event.event_id);
                   const disabled = !user || registered || isExpired;
                   const title = isExpired

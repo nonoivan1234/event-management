@@ -143,7 +143,7 @@ export default function DashboardPage() {
       tomorrow.setDate(tomorrow.getDate() + 1);
       const deadline = new Date(event.deadline);
       deadline.setHours(0, 0, 0, 0);
-      const expired = deadline < tomorrow;
+      const expired = deadline > tomorrow;
       return (
         <div
           key={event.event_id}
