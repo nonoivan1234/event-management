@@ -438,29 +438,22 @@ export default function DashboardPage() {
                 <p className="text-gray-500 dark:text-gray-400">
                   您目前尚未主辦任何活動
                 </p>
-              ) : (<>
+              ) : ( filteredEvents(organizedEvents) .length === 0 ? (
+                <p className="text-gray-500 dark:text-gray-400">
+                  沒有符合搜尋條件的主辦活動
+                </p>
+              ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredEvents(organizedEvents).map((event) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  const deadline = new Date(event.deadline);
-                  deadline.setHours(0, 0, 0, 0);
-                  deadline.setDate(deadline.getDate() + 1);
-                  const expired = deadline < today;
-                  return (<>
+                  return (
                   <EventCard event={{...event, users:{name: userNameMap[event.organizer_id]}}}>
                     <div className="mt-2">
-                      {renderEventActions(
-                        event.event_id,
-                        event.visible,
-                        true,
-                        event.organizer_id === userID
-                      )}
+                      {renderEventActions(event.event_id, event.visible, true, event.organizer_id === userID)}
                     </div>
                   </EventCard>
-                </>)})}
+                )})}
               </div>
-              </>)}
+              ))}
             </section>
           )}
 
@@ -471,35 +464,23 @@ export default function DashboardPage() {
                 <p className="text-gray-500 dark:text-gray-400">
                   您目前尚未協辦任何活動
                 </p>
-              ) : (<>
+              ) : ( filteredEvents(organizedEvents).length === 0 ? (
+                <p className="text-gray-500 dark:text-gray-400">
+                  沒有符合搜尋條件的協辦活動
+                </p>
+              ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredEvents(NormalEvents).map((event) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  const deadline = new Date(event.deadline);
-                  deadline.setHours(0, 0, 0, 0);
-                  deadline.setDate(deadline.getDate() + 1);
-                  const expired = deadline < today;
                   return (
-                  <div
-                    key={event.event_id}
-                    onClick={() => router.push(`/event/${event.event_id}`)}
-                    className="border rounded-lg p-4 shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 flex flex-col justify-between hover:shadow-md duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
-                  >
-                    <div className="flex-1"><EventCard event={{...event, users:{name: userNameMap[event.organizer_id] || "匿名主辦人"}}} /></div>
+                  <EventCard event={{...event, users:{name: userNameMap[event.organizer_id] || "匿名主辦人"}}}>
                     {/* 下半區塊（標籤與按鈕） */}
                     <div className="mt-2">
-                      {renderEventActions(
-                        event.event_id,
-                        event.visible,
-                        false,
-                        false
-                      )}
+                      {renderEventActions(event.event_id, event.visible, false, false)}
                     </div>
-                  </div>
+                  </EventCard>
                 )})}
               </div>
-              </>)}
+              ))}
             </section>
           )}
         </>

@@ -167,7 +167,7 @@ export default function DashboardPage() {
   if (loading) return <LoadingScreen />;
 
   return (
-    <main className="w-full max-w-6xl mx-auto py-8 px-4 dark:text-white">
+    <main className="w-full max-w-7xl mx-auto py-8 px-4 dark:text-white">
       {/* 篩選區塊 */}
       <header className="mb-6">
         <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl shadow w-full">
