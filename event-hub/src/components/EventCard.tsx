@@ -24,7 +24,6 @@ type Event_Detail = {
 }
 
 export default function EventCard({ event, children }: { event: Event_Detail, children?: React.ReactNode }) {
-    console.log(event);
     const router = useRouter();
     const today = new Date();
     const past = event.start != null && new Date(event.start) < today;
