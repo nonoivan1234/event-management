@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import send_email from '@/lib/resend'
-import { Send } from 'lucide-react'
 
 const defaultAvatar = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAA2ZJREFUeF7tmk3ITUEcxn8vkVLyka8UkRRZEAsldiQbW0qxQknZ2rGRLSuyUErY2QlLygJRIhYKC1/53JDydSZnNO907nvPzDz/13u7Z5b3zv+Z53n+/5kz58yMMORtZMj10xnQVcCQO9BNgSEvgG4R/F9TYDZwBlhfV+Bd4CDwbrwrcjwNcIL3tRR4HtjTsm9Rt/Ew4AhwPJPlCcDFmzVrA35HzL8C0/uo+QTMjPqY8TQDBkLxP4ApiWn8XlXO1CDGhKsJaCR+CfAyUbzvPg94a2mChQFh5icDvzLFh2EhppSzFAxYBjyrmW8HrgrEO4iNwK0ayz0674lw5Rshs0xF00qWOBkQMAP4UmdGids0FUrWlVHFoyRqmX1PWj6GhQHbgGuqORrhrAHuK6vMwgAlZpOPvgok40hAapZSYmNUkHScQTZgUfVy9ap0qg2yAbOAz8NsgCR5EpBuDfjrgF+cHgBrS0uzR7zbWrvHrGuS5ElAakJPgRVKcg0meJPfA3MVJisNCKtgM3BTQTDAWAk8VhtsZYCsRAMD5NtgC5JhFSjxTcQrCYbVvgW4HvxQWmU/gUk13m7ggnJqlZLrxeUhsFpgQpj558BSpXirCvAcbwMbAsKXgF0tBZwD9gZ9nwBuEZQ3qwrwRBcArxtY76wEXY5+3wFcaei7PPjMNnAGeMLOBGdGSvsIzEkJyOlrXQHxU2HCcbQ0ID4VCsUfBk5GbhwCTo3hkAlXC9A7wamv13O02rsfS0x/05mifDFUGxBnfb7gyNsdpX+IzJPxlgFF3+3fVOf/CxMz3q/7C2Bx0EnCXQISiVdkvZcZ4dmD61PMvxjA6sSmTznI3g1KDZAR6Vf/Df9Lxi4xINy5ba0OMG9kiCgJWQe4u0WuHajvHCXjlRggyUAy49EBxRxyDXgErKq55GIUav8XXvSZLJe8H9Sd2W9SKcnEuQi4l6usp0KOAeEHj5z4TJ1jhvmEuGt4Z1MGyBFQPO9SCLbsm82pxAC303M7vonQpgHfcqZBiQE5sZZmZZ0ap4rYX33YOJ3jtKXyGtsbkHS7NNWA8IUkNdbaA2+Au5bnrue1aqkishebVmzKOmVxSzXAUXQD5cSVyWsXncxtogppJ1fQqzNAYOJAQ3QVMNDpE5DvKkBg4kBDDH0F/AGQ2IFBGnXtNgAAAABJRU5ErkJggg=="
 
@@ -126,10 +124,11 @@ export default function UserSearchModal({
     const {data:event_data, error:event_error} = await supabase
       .from('events')
       .select('title, ')
-      .eq('event_id', eventId)
-    const Send_Status = await send_email(email, "", "")
-    setHasSend_email(Send_Status)
-    setLoading(false)
+    setTimeout(() => {
+      setHasSend_email(true)
+      setLoading(false)
+    }, 1000)
+      
   }
 
   const handleAdd = async (user: UserWithPending) => {
