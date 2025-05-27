@@ -117,7 +117,7 @@ export default function HomePage() {
                   className="w-full border rounded px-4 py-1 pl-10 dark:bg-gray-700 dark:text-white dark:border-gray-600"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={(e) => {if (e.key === "Enter") fetchSearch(user);}}
+                  onKeyDown={(e) => {if (e.key === "Enter" && !e.nativeEvent.isComposing) fetchSearch(user);}}
                 />
                 <span className="absolute left-3 top-1.5 text-gray-400">🔍</span>
               </div>
