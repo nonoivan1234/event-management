@@ -20,7 +20,7 @@ async function uploadEventCover(eventId: string, cover_image: string) {
     .from('event-covers')
     .upload(fileName, imageBlob, { contentType: 'image/jpeg', upsert: true })
 
-  const publicUrl = `https://your-project.supabase.co/storage/v1/object/public/event-covers/${fileName}`
+  const publicUrl = `https://ulannnnbfftsuttmzpea.supabase.co/storage/v1/object/public/event-covers/${fileName}`
   await supabase.from('events').update({ cover_url: publicUrl }).eq('event_id', eventId)
 }
 

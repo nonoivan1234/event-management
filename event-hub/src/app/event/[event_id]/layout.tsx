@@ -15,7 +15,7 @@ export async function generateMetadata( { params }: { params: { event_id: string
 
   const { data, error } = await supabase
     .from('events')
-    .select('title, description, cover_url')
+    .select('event_id, title, description, cover_url')
     .eq('event_id', eventId)
     .single();
 
