@@ -193,7 +193,7 @@ export default function RegisterPage() {
     <div className="w-full max-w-2xl lg:max-w-3xl mx-auto p-6 text-gray-900 dark:text-white">
       {" "}
       <h1 className="text-2xl font-bold mb-1">
-        {!nologin ? (isEditMode ? "修改報名表單" : "報名表單") : "報名表單（新建帳號）"}
+        {isEditMode ? "修改報名表單" : "報名表單"}
       </h1>
       {deadline && (
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -264,7 +264,7 @@ export default function RegisterPage() {
         <hr className="my-6 border-gray-300 dark:border-gray-600" />
         <div className="mb-6">
           <h2 className="font-semibold mb-2 text-gray-800 dark:text-white">
-            帳號密碼（新建帳號）
+            帳號密碼（修改報名資料用）
           </h2>
           <div className="mb-2">
             <label className="block text-sm text-gray-700 dark:text-gray-300">
@@ -288,7 +288,7 @@ export default function RegisterPage() {
           onClick={handleSubmit}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          {nologin ? "報名並註冊帳號" : isEditMode ? "更新報名資料" : "送出報名資料"}
+          {isEditMode ? "更新報名資料" : "送出報名資料"}
         </button>
         <button
           onClick={() => router.back()}

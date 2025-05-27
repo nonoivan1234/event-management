@@ -33,6 +33,7 @@ export default function SignUpPage() {
       setIsError(true)
       return
     } else {
+      await supabase.auth.signOut()
       setMessage('✅ 註冊成功！請至信箱驗證，等事後跳轉登入。')
       setTimeout(() => router.push('/auth/login'), 2000)
     }
