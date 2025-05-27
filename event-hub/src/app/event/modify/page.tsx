@@ -6,33 +6,22 @@ import { supabase } from "@/lib/supabase";
 import { v4 as uuidv4 } from "uuid";
 import LoadingScreen from "@/components/loading";
 import ShareLinkModal from "@/components/ShareLinkModal";
-import { readAndCompressImage } from 'browser-image-resizer'
 
-const resizeConfig = {quality: 0.9, maxWidth: 800, maxHeight: 800, autoRotate: true, debug: false, mimeType: 'image/jpeg'}
-async function base64ToBlob(base64: string): Promise<Blob> {const res = await fetch(base64); return await res.blob()}
-async function blobToImageFile(blob: Blob): Promise<File> {return new File([blob], 'image.jpg', { type: 'image/jpeg' })}
+async function base64ToBlob(base64: string): Promise<Blob> {
+  const res = await fetch(base64)
+  return await res.blob()
+}
+
 async function uploadEventCover(eventId: string, cover_image: string) {
   const imageBlob = await base64ToBlob(cover_image)
-  const resizedBlob = await readAndCompressImage(await blobToImageFile(imageBlob), resizeConfig)
 
   const fileName = `cover-${eventId}.jpg`
-  const { error: uploadError } = await supabase.storage
+  await supabase.storage
     .from('event-covers')
-    .upload(fileName, resizedBlob, {contentType: 'image/jpeg', upsert: true})
+    .upload(fileName, imageBlob, { contentType: 'image/jpeg', upsert: true })
 
-  if (uploadError) {
-    console.error('Upload failed:', uploadError)
-    return
-  }
-
-  // 4. 組合 Public URL 並更新資料表
-  const publicUrl = `https://ulannnnbfftsuttmzpea.supabase.co/storage/v1/object/public/event-covers/${fileName}`
-  await supabase
-    .from('events')
-    .update({ cover_url: publicUrl })
-    .eq('event_id', eventId)
-
-  console.log('Uploaded cover image:', publicUrl)
+  const publicUrl = `https://your-project.supabase.co/storage/v1/object/public/event-covers/${fileName}`
+  await supabase.from('events').update({ cover_url: publicUrl }).eq('event_id', eventId)
 }
 
 const defaultPersonalFields = [

@@ -32,7 +32,14 @@ export async function generateMetadata( { params }: { params: { event_id: string
     openGraph: {
       title: data.title,
       description: data.description,
-      images: data.cover_url ? data.cover_url : "https://ulannnnbfftsuttmzpea.supabase.co/storage/v1/object/public/event-covers/default.jpg",
+      images: [
+        {
+          url: data.cover_url ? data.cover_url : "https://ulannnnbfftsuttmzpea.supabase.co/storage/v1/object/public/event-covers/default.jpg",
+          alt: data.title,
+        },
+      ],
+      locale: 'zh_TW',
+      type: 'website',
     },
   };
 }
