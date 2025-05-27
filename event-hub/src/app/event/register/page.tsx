@@ -38,10 +38,11 @@ export default function RegisterPage() {
       }
 
       const now = new Date();
-      const eventDeadline = eventData.deadline
-        ? new Date(eventData.deadline)
-        : null;
-      if (eventDeadline && eventDeadline < now) {
+      const eventDeadline = new Date(eventData.deadline);
+      const deadline = new Date(eventData.deadline);
+      deadline.setHours(0, 0, 0, 0);
+      deadline.setDate(deadline.getDate() + 1);
+      if (deadline < now) {
         setIsClosed(true);
         setDeadline(eventDeadline.toLocaleDateString());
         return;
