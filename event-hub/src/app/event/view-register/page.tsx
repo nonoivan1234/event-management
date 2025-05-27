@@ -540,32 +540,30 @@ export default function ViewRegistrationsPage() {
                 </button>
               </td>
             )}
-            {IsOrganizer && (<>
-              {isSend ? (
-                <td className="border px-2 py-1 text-center text-gray-800 dark:text-gray-100">
-                  <button
-                    onClick={handleSendNotification(reg.user_id, reg.notification)}
-                    disabled={sendingUserIds.includes(reg.user_id) || sendingAll}
-                    className={`text-sm px-2 py-1 rounded transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed ${reg.notification 
-                      ?'bg-gray-500 hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600' 
-                      :'bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-400'}`}
-                    title="發送通知"
-                  >
-                    { sendingUserIds.includes(reg.user_id)
-                      ? "寄送中..."
-                      : reg.notification 
-                      ? "已發送"
-                      : sendingAll
-                      ? "寄送中..."
-                      : "發送通知"}
-                  </button>
-                </td>
-              ) : (
-                <td className="border px-2 py-1 text-center text-gray-800 dark:text-gray-100">
-                  {reg.notification ? '已發送' : '未發送'}
-                </td>
-              )}
-            </>)}
+            {IsOrganizer && isSend ? (
+              <td className="border px-2 py-1 text-center text-gray-800 dark:text-gray-100">
+                <button
+                  onClick={handleSendNotification(reg.user_id, reg.notification)}
+                  disabled={sendingUserIds.includes(reg.user_id) || sendingAll}
+                  className={`text-sm px-2 py-1 rounded transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed ${reg.notification 
+                    ?'bg-gray-500 hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600' 
+                    :'bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-400'}`}
+                  title="發送通知"
+                >
+                  { sendingUserIds.includes(reg.user_id)
+                    ? "寄送中..."
+                    : reg.notification 
+                    ? "已發送"
+                    : sendingAll
+                    ? "寄送中..."
+                    : "發送通知"}
+                </button>
+              </td>
+            ) : (
+              <td className="border px-2 py-1 text-center text-gray-800 dark:text-gray-100">
+                {reg.notification ? '已發送' : '未發送'}
+              </td>
+            )}
           </tr>
         ))}
       </tbody>
