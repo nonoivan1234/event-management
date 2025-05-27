@@ -7,6 +7,23 @@ import { v4 as uuidv4 } from "uuid";
 import LoadingScreen from "@/components/loading";
 import ShareLinkModal from "@/components/ShareLinkModal";
 
+async function base64ToBlob(base64: string): Promise<Blob> {
+  const res = await fetch(base64)
+  return await res.blob()
+}
+
+async function uploadEventCover(eventId: string, cover_image: string) {
+  const imageBlob = await base64ToBlob(cover_image)
+
+  const fileName = `cover-${eventId}.jpg`
+  await supabase.storage
+    .from('event-covers')
+    .upload(fileName, imageBlob, { contentType: 'image/jpeg', upsert: true })
+
+  const publicUrl = `https://ulannnnbfftsuttmzpea.supabase.co/storage/v1/object/public/event-covers/${fileName}`
+  await supabase.from('events').update({ cover_url: publicUrl }).eq('event_id', eventId)
+}
+
 const defaultPersonalFields = [
   "name",
   "email",
@@ -294,14 +311,8 @@ export default function EventFormPage() {
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      setMessage("❗ 請先登入");
-      setLoading(false);
-      return;
-    }
+    const {data: { user }} = await supabase.auth.getUser();
+    if (!user) { setMessage("❗ 請先登入"); setLoading(false); return;}
 
     const payload = {
       title: form.title,
@@ -322,6 +333,8 @@ export default function EventFormPage() {
         .from("events")
         .update(payload)
         .eq("event_id", eventId);
+      if(form.images.length > 0)
+        await uploadEventCover(eventId, form.images[0]);
       setMessage(error ? `❌ 更新失敗：${error.message}` : "✅ 活動已更新");
     } else {
       const { error, data } = await supabase
@@ -332,11 +345,9 @@ export default function EventFormPage() {
       if (error) {
         setMessage(`❌ 建立失敗：${error.message}`);
       } else {
-        await supabase.from("event_organizers").insert({
-          event_id: data.event_id,
-          role_id: user.id,
-          role: "organizer",
-        });
+        await supabase.from("event_organizers").insert({ event_id: data.event_id, role_id: user.id, role: "organizer"});
+        if(form.images.length > 0)
+          await uploadEventCover(data.event_id, form.images[0]);
         setMessage("✅ 活動已建立");
         router.push(`/event/hold`);
       }
