@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import send_email from '@/lib/resend'
-import { Send } from 'lucide-react'
+import SendEmail from '@/lib/SendEmail'
 
 const defaultAvatar = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAA2ZJREFUeF7tmk3ITUEcxn8vkVLyka8UkRRZEAsldiQbW0qxQknZ2rGRLSuyUErY2QlLygJRIhYKC1/53JDydSZnNO907nvPzDz/13u7Z5b3zv+Z53n+/5kz58yMMORtZMj10xnQVcCQO9BNgSEvgG4R/F9TYDZwBlhfV+Bd4CDwbrwrcjwNcIL3tRR4HtjTsm9Rt/Ew4AhwPJPlCcDFmzVrA35HzL8C0/uo+QTMjPqY8TQDBkLxP4ApiWn8XlXO1CDGhKsJaCR+CfAyUbzvPg94a2mChQFh5icDvzLFh2EhppSzFAxYBjyrmW8HrgrEO4iNwK0ayz0674lw5Rshs0xF00qWOBkQMAP4UmdGids0FUrWlVHFoyRqmX1PWj6GhQHbgGuqORrhrAHuK6vMwgAlZpOPvgok40hAapZSYmNUkHScQTZgUfVy9ap0qg2yAbOAz8NsgCR5EpBuDfjrgF+cHgBrS0uzR7zbWrvHrGuS5ElAakJPgRVKcg0meJPfA3MVJisNCKtgM3BTQTDAWAk8VhtsZYCsRAMD5NtgC5JhFSjxTcQrCYbVvgW4HvxQWmU/gUk13m7ggnJqlZLrxeUhsFpgQpj558BSpXirCvAcbwMbAsKXgF0tBZwD9gZ9nwBuEZQ3qwrwRBcArxtY76wEXY5+3wFcaei7PPjMNnAGeMLOBGdGSvsIzEkJyOlrXQHxU2HCcbQ0ID4VCsUfBk5GbhwCTo3hkAlXC9A7wamv13O02rsfS0x/05mifDFUGxBnfb7gyNsdpX+IzJPxlgFF3+3fVOf/CxMz3q/7C2Bx0EnCXQISiVdkvZcZ4dmD61PMvxjA6sSmTznI3g1KDZAR6Vf/Df9Lxi4xINy5ba0OMG9kiCgJWQe4u0WuHajvHCXjlRggyUAy49EBxRxyDXgErKq55GIUav8XXvSZLJe8H9Sd2W9SKcnEuQi4l6usp0KOAeEHj5z4TJ1jhvmEuGt4Z1MGyBFQPO9SCLbsm82pxAC303M7vonQpgHfcqZBiQE5sZZmZZ0ap4rYX33YOJ3jtKXyGtsbkHS7NNWA8IUkNdbaA2+Au5bnrue1aqkishebVmzKOmVxSzXAUXQD5cSVyWsXncxtogppJ1fQqzNAYOJAQ3QVMNDpE5DvKkBg4kBDDH0F/AGQ2IFBGnXtNgAAAABJRU5ErkJggg=="
 
@@ -25,6 +24,20 @@ type Props = {
   isInvite: boolean
   userId: string
   eventId: string
+}
+
+const options = {
+  year:   'numeric',
+  month:  '2-digit',
+  day:    '2-digit',
+  hour:   '2-digit',
+  minute: '2-digit',
+  hour12: false,
+};
+
+function toDatetimeLocal(isoString: string): string {
+  if (!isoString) return "";
+  return new Date(isoString).toLocaleString('zh-tw', options);
 }
 
 export default function UserSearchModal({
@@ -123,13 +136,51 @@ export default function UserSearchModal({
   const SendInvite = async (email: string) => {
     setLoading(true)
     setErrorMsg('')
+    const baseUrl = window.location.origin;
     const {data:event_data, error:event_error} = await supabase
       .from('events')
-      .select('title, ')
+      .select('title, description, start, end, deadline, venue_name, venue_address, users:organizer_id(name, email)')
       .eq('event_id', eventId)
-    const Send_Status = await send_email(email, "", "")
-    setHasSend_email(Send_Status)
+      .single()
+    if (event_error || !event_data) 
+      throw new Error('無法找到活動資訊')
+    const htmlBody= `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2>邀請您參加【${event_data.title}】</h2>
+        <p>親愛的朋友，您好：</p>
+        <p>
+          我們誠摯邀請您參加即將舉辦的<strong>【${event_data.title}】</strong>，的精彩活動，邀請您一同參與！
+        </p>
+        <h3>📅 活動資訊</h3>
+        <ul>
+          ${event_data.start || event_data.end ? `<li><strong>舉辦時間：</strong>${toDatetimeLocal(event_data.start)} - ${toDatetimeLocal(event_data.end)}</li>`:""}
+          ${event_data.venue_name? `<li><strong>舉辦地點：</strong>${event_data.venue_name}</li>` : ""}
+          ${event_data.venue_address? `<li><strong>舉辦地址：</strong>${event_data.venue_address}</li>` : ""}
+        </ul>
+        <p style="margin-top: 20px;">
+          👉 <a href="${baseUrl + "/event/register?event_id=" + eventId}" style="color: #007BFF;">點我報名活動</a>
+          <br/>
+          <p>報名截止日期：${toDatetimeLocal(event_data.deadline)}</p>
+        </p>
+        <p>
+          若您尚未註冊我們的系統，請先完成帳號註冊：<br/>
+          👉 <a href="${baseUrl + "/auth/signup"}" style="color: #007BFF;">點我註冊帳號</a>
+        </p>
+
+        <p>如有任何問題，歡迎回信與我們聯繫。</p>
+        <p>敬祝 順心如意！</p>
+        <p>
+          【主辦單位名稱】<br />
+          <a href="mailto:${event_data.users.email}">${event_data.users.email}</a> |
+          <a href="${baseUrl + "/event/" + eventId}">官方網站</a>
+        </p>
+      </div>`
+    const SendResult = await SendEmail(email, `邀請您參加【${event_data.title}】活動`, htmlBody)
+    setHasSend_email(SendResult)
+    if (!SendResult)
+      setErrorMsg('寄送邀請失敗，請稍後再試')
     setLoading(false)
+      
   }
 
   const handleAdd = async (user: UserWithPending) => {

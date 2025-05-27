@@ -56,11 +56,6 @@ export default function EventDetailPage({ params }: { params: { event_id: string
   const now = new Date();
 
   useEffect(() => {
-    // 修改 <title>
-    document.title = "Event Hub - Event Page";
-  }, []);
-
-  useEffect(() => {
     async function fetchEvent() {
       if (!eventId) return router.push("/404");
 
@@ -134,11 +129,10 @@ export default function EventDetailPage({ params }: { params: { event_id: string
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
   const deadline = new Date(event.deadline);
   deadline.setHours(0, 0, 0, 0);
-  const isExpired = deadline < tomorrow;
+  deadline.setDate(deadline.getDate() + 1);
+  const isExpired = deadline < today;
 
   const title = !user
     ? "請先登入才能報名"
