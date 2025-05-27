@@ -446,7 +446,7 @@ export default function DashboardPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredEvents(organizedEvents).map((event) => {
                   return (
-                  <EventCard event={{...event, users:{name: userNameMap[event.organizer_id]}}}>
+                  <EventCard event={{...event, users:{name: userNameMap[event.organizer_id]}}} key={event.event_id}>
                     <div className="mt-2">
                       {renderEventActions(event.event_id, event.visible, true, event.organizer_id === userID)}
                     </div>
@@ -472,7 +472,7 @@ export default function DashboardPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredEvents(NormalEvents).map((event) => {
                   return (
-                  <EventCard event={{...event, users:{name: userNameMap[event.organizer_id] || "匿名主辦人"}}}>
+                  <EventCard event={{...event, users:{name: userNameMap[event.organizer_id] || "匿名主辦人"}}} key={event.event_id}>
                     {/* 下半區塊（標籤與按鈕） */}
                     <div className="mt-2">
                       {renderEventActions(event.event_id, event.visible, false, false)}

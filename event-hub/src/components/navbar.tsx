@@ -65,6 +65,9 @@ export default function Navbar() {
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setUserEmail(null)
+    window.localStorage.removeItem('theme')
+    setTheme('system')
+    await window.location.reload()
     router.push('/')
   }
 

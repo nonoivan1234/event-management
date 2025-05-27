@@ -70,6 +70,10 @@ export default function UserSearchModal({
   const fetchUsers = async () => {
     if (!searchTerm) {
       setResults([])
+      setInviteEmail('')
+      setMessage('請輸入姓名或Email')
+      setLoading(false)
+      setErrorMsg('')
       return
     }
     setResults([])
@@ -160,17 +164,15 @@ export default function UserSearchModal({
         <p style="margin-top: 20px;">
           👉 <a href="${baseUrl + "/event/register?event_id=" + eventId}" style="color: #007BFF;">點我報名活動</a>
           <br/>
+          若您尚未註冊我們的系統，將會同時完成註冊流程。
+          <br/>
           <p>報名截止日期：${toDatetimeLocal(event_data.deadline)}</p>
-        </p>
-        <p>
-          若您尚未註冊我們的系統，請先完成帳號註冊：<br/>
-          👉 <a href="${baseUrl + "/auth/signup"}" style="color: #007BFF;">點我註冊帳號</a>
         </p>
 
         <p>如有任何問題，歡迎回信與我們聯繫。</p>
         <p>敬祝 順心如意！</p>
         <p>
-          【主辦單位名稱】<br />
+          【${event_data.users.name || event_data.users.email}】<br />
           <a href="mailto:${event_data.users.email}">${event_data.users.email}</a> |
           <a href="${baseUrl + "/event/" + eventId}">官方網站</a>
         </p>

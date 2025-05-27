@@ -32,16 +32,6 @@ export default function SignUpPage() {
       setMessage('註冊失敗，無法取得使用者資料')
       setIsError(true)
       return
-    }
-
-    const { error: insertError } = await supabase.from('users').insert([{
-      user_id: user.id,
-      email: user.email,
-    }])
-
-    if (insertError) {
-      setMessage(`註冊成功，但同步用戶資料失敗：${insertError.message}`)
-      setIsError(true)
     } else {
       setMessage('✅ 註冊成功！請至信箱驗證，等事後跳轉登入。')
       setTimeout(() => router.push('/auth/login'), 2000)
@@ -64,6 +54,7 @@ export default function SignUpPage() {
         <input
           type="password"
           placeholder="密碼"
+          autoComplete='new-password'
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleSignUp() }}

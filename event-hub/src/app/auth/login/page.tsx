@@ -25,7 +25,10 @@ export default function LoginPage() {
     } else if (error) {
       setErrorMsg('❌ 登入失敗：' + error.message)
     } else {
-      router.push('/')
+      if(document.referrer && !document.referrer.includes(window.location.hostname) || document.referrer.includes(window.location.hostname+ '/auth'))
+        router.push('/')
+      else
+        router.back()
     }
   }
 

@@ -130,7 +130,7 @@ export default function DashboardPage() {
       deadline.setDate(deadline.getDate() + 1);
       const expired = deadline < today;
       return (
-        <EventCard event={event}>
+        <EventCard event={event} key={event.event_id}>
           <div className="flex gap-3 flex-wrap"
             onClick={(e) => e.stopPropagation()}
           >

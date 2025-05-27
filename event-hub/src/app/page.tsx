@@ -174,17 +174,15 @@ export default function HomePage() {
                   deadline.setDate(deadline.getDate() + 1);
                   const isExpired = deadline < today;
                   const registered = isRegistered(event.event_id);
-                  const disabled = !user || registered || isExpired;
+                  const disabled = registered || isExpired;
                   const title = isExpired
                     ? "報名已截止"
-                    : !user
-                    ? "請先登入才能報名"
                     : registered
                     ? "你已報名此活動"
                     : '';
 
                   return (
-                    <EventCard event={event}>
+                    <EventCard event={event} key={event.event_id}>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
