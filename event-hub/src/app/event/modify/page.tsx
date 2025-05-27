@@ -164,20 +164,12 @@ export default function EventFormPage() {
 
   // 時間驗證
   useEffect(() => {
-    if (form.start && form.end && new Date(form.end) < new Date(form.start)) {
-      setTimeError("❗ 結束時間不得早於開始時間");
-    } else setTimeError("");
+    setTimeError((form.start && form.end && new Date(form.end) < new Date(form.start)) ? "❗ 結束時間不得早於開始時間" : "");
   }, [form.start, form.end]);
 
   // 截止日期驗證
   useEffect(() => {
-    if (
-      form.deadline &&
-      form.start &&
-      new Date(form.start) < new Date(form.deadline)
-    ) {
-      setDeadlineError("❗ 報名截止日期不得晚於活動開始時間");
-    } else setDeadlineError("");
+    setDeadlineError((form.deadline && form.start && new Date(form.start) < new Date(form.deadline)) ? "❗ 報名截止日期不得晚於活動開始時間" : "");
   }, [form.deadline, form.start]);
 
   // Handlers for basic info
@@ -191,22 +183,16 @@ export default function EventFormPage() {
   const handleCategoryKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
+      if(e.nativeEvent.isComposing) return;
       const value = categoryInput.trim();
-      if (value && !form.categories.includes(value)) {
-        setForm((prev) => ({
-          ...prev,
-          categories: [...prev.categories, value],
-        }));
-      }
+      if (value && !form.categories.includes(value))
+        setForm((prev) => ({...prev, categories: [...prev.categories, value],}));
       setCategoryInput("");
     }
   };
 
   const removeCategory = (cat: string) =>
-    setForm((prev) => ({
-      ...prev,
-      categories: prev.categories.filter((c) => c !== cat),
-    }));
+    setForm((prev) => ({...prev, categories: prev.categories.filter((c) => c !== cat)}));
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -217,8 +203,8 @@ export default function EventFormPage() {
         setImageError("❗ 只能上傳圖片檔案（jpg/png/gif檔）");
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        setImageError("❗ 圖片超過 5MB，請重新選擇");
+      if (file.size > 10 * 1024 * 1024) {
+        setImageError("❗ 圖片超過 10MB，請重新選擇");
         return;
       }
       const reader = new FileReader();
@@ -231,34 +217,17 @@ export default function EventFormPage() {
     });
   };
   const removeImage = (i: number) =>
-    setForm((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, idx) => idx !== i),
-    }));
+    setForm((prev) => ({...prev, images: prev.images.filter((_, idx) => idx !== i)}));
 
   // Handlers for form settings
   const togglePersonalField = (field: string) =>
-    setPersonalFields((prev) =>
-      prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field]
-    );
+    setPersonalFields((prev) => prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field]);
 
-  const addQuestion = () => {
-    setCustomQuestions((prev) => [
-      ...prev,
-      {
-        id: uuidv4(),
-        label: "新問題",
-        type: "text",
-        required: false,
-        options: [],
-      },
-    ]);
-  };
+  const addQuestion = () => 
+    setCustomQuestions((prev) => [...prev,{id: uuidv4(), label: "新問題", type: "text", required: false, options: []}])
 
   const updateQuestion = (id: string, changes: any) =>
-    setCustomQuestions((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, ...changes } : q))
-    );
+    setCustomQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, ...changes } : q)));
 
   const deleteQuestion = (id: string) =>
     setCustomQuestions((prev) => prev.filter((q) => q.id !== id));
@@ -532,9 +501,7 @@ export default function EventFormPage() {
               onChange={handleImageUpload}
             />
           </div>
-          {imageError && (
-            <p className="text-red-600 text-sm mb-2">{imageError}</p>
-          )}
+          {imageError && <p className="text-red-600 text-sm mb-2">{imageError}</p>}
           <div className="flex flex-wrap gap-3 mb-4">
             {form.images.map((src, i) => (
               <div key={i} className="relative">
@@ -575,8 +542,7 @@ export default function EventFormPage() {
                     onChange={() => togglePersonalField(field)}
                     className="mr-2"
                   />
-                  {field.charAt(0).toUpperCase() +
-                    field.slice(1).replace("_", " ")}
+                  {field.charAt(0).toUpperCase() + field.slice(1).replace("_", " ")}
                 </label>
               ))}
             </div>
@@ -605,19 +571,24 @@ export default function EventFormPage() {
                       </>
                     )}
                     {customQuestions.map((q) => (
-                      <div key={q.id} className="mb-4">
+                      <div key={q.id} className="mb-3">
                         <p className="font-semibold">
                           {q.label} {q.required ? "*" : ""}
                         </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 ml-1">
                           Type: {q.type}
                         </p>
                         {q.type === "select" && (
-                          <ul className="list-disc ml-5 text-sm text-gray-700 dark:text-gray-300">
-                            {q.options.map((opt: string, i: number) => (
-                              <li key={i}>{opt}</li>
-                            ))}
-                          </ul>
+                        <div className="w-full flex flex-wrap items-center gap-2 mt-1 ml-2">
+                          {q.options.map((opt: string, i: number) => (
+                            <span
+                              key={i}
+                              className="bg-gray-300 dark:bg-gray-600 px-1 py-0.5 rounded text-xs flex items-center"
+                            >
+                              {opt}
+                            </span>
+                          ))}
+                        </div>
                         )}
                       </div>
                     ))}
@@ -650,50 +621,38 @@ export default function EventFormPage() {
                 <option value="textarea">Paragraph</option>
                 <option value="select">Dropdown</option>
               </select>
-              {q.type === "select" && (
-                <div className="border px-3 py-2 rounded bg-white dark:bg-gray-700 dark:text-white">
-                  <div className="mb-2 flex flex-wrap gap-2">
-                    {q.options.map((opt: string, i: number) => (
-                      <span
-                        key={i}
-                        className="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded text-sm flex items-center"
+              {q.type === "select" && 
+                <div className="w-full border px-3 py-2 mb-1 rounded flex flex-wrap items-center gap-2 dark:bg-gray-700">
+                  {q.options.map((opt: string, i: number) => (
+                    <span
+                      key={i}
+                      className="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded text-sm flex items-center"
+                    >
+                      {opt}
+                      <button
+                        className="ml-1 text-red-500"
+                        onClick={() => updateQuestion(q.id, {options: q.options.filter((_: any, idx: number) => idx !== i)})}
                       >
-                        {opt}
-                        <button
-                          className="ml-1 text-red-500"
-                          onClick={() =>
-                            updateQuestion(q.id, {
-                              options: q.options.filter(
-                                (_: any, idx: number) => idx !== i
-                              ),
-                            })
-                          }
-                        >
-                          ✕
-                        </button>
-                      </span>
-                    ))}
-                  </div>
+                        ✕
+                      </button>
+                    </span>
+                  ))}
                   <input
-                    className="w-full border px-2 py-1 rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                    placeholder="輸入選項後按 Enter"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        const value = (
-                          e.target as HTMLInputElement
-                        ).value.trim();
-                        if (value && !q.options.includes(value)) {
-                          updateQuestion(q.id, {
-                            options: [...q.options, value],
-                          });
-                        }
-                        (e.target as HTMLInputElement).value = "";
+                        if(e.nativeEvent.isComposing) return;
+                        const input = e.target as HTMLInputElement;
+                        const value = input.value.trim();
+                        if (value && !q.options.includes(value))
+                          updateQuestion(q.id, {options: [...q.options, value]});
+                        input.value = "";
                       }
                     }}
+                    placeholder="輸入後按 Enter"
+                    className="flex-grow bg-transparent text-sm focus:outline-none"
                   />
-                </div>
-              )}
+                </div>}
               <label className="text-sm flex items-center gap-2">
                 <input
                   type="checkbox"
