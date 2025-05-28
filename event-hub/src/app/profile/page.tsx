@@ -66,7 +66,7 @@ export default function ProfilePage() {
   }
 
   useEffect(() => {
-    const LINE_CLIENT_ID = process.env.NEXT_PUBLIC_LINE_CHANNEL_ID!
+    const LINE_CLIENT_ID = "2007493440"
     const REDIRECT_URI = window.location.origin + '/api/bind-line'
     setLINE_AUTH_URL(`https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=1234&scope=profile%20openid`)
     const fetchProfile = async () => {
