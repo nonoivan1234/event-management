@@ -576,7 +576,7 @@ export default function ViewRegistrationsPage() {
                     : reg.notification 
                     ? "已發送"
                     : sendingAll
-                    ? "寄送中..."
+                    ? <Spinner className='h-5 w-5 text-blue-800 dark:text-blue-200'/>
                     : "發送通知"}
                 </button>
               </td>

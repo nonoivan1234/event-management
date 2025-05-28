@@ -19,10 +19,10 @@ export default function ProfilePage() {
   const [form, setForm] = useState({ name: '', student_id: '', phone: '', school: ''})
   const [password, setPassword] = useState('')
   const [lineBound, setLineBound] = useState(false)
-  const [LINE_AUTH_URL, setLINE_AUTH_URL] = useState('')
 
   const [mainMessage, setMainMessage] = useState('')
   const [mainIsError, setMainIsError] = useState(false)
+  const [lineMsg, setLineMsg] = useState('')
 
   const [passwordMessage, setPasswordMessage] = useState('')
   const [passwordIsError, setPasswordIsError] = useState(false)
@@ -34,6 +34,7 @@ export default function ProfilePage() {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [loading, setLoading] = useState(true) // ✅ 加入 loading 狀態
   const [submitting, setSubmitting] = useState(false)
+  const [isbinding, setBinding] = useState(false)
   const [unbinding, setUnbinding] = useState(false)
   const [showPopover, setShowPopover] = useState(false);
 
@@ -76,28 +77,54 @@ export default function ProfilePage() {
         return
       }
 
-      setUserId(user.id)
-      setEmail(user.email ?? null)
+    setUserId(user.id)
+    setEmail(user.email ?? null)
 
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', user.email)
-        .single()
+    const { data } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', user.email)
+      .single()
 
-      if (data) {
-        setForm({
-          name: data.name ?? '',
-          student_id: data.student_id ?? '',
-          phone: data.phone ?? '',
-          school: data.school ?? '',
-        })
-        setAvatar(data.avatar ?? null)
-        setLineBound(!!data.line_id) // 假設有 line_id 表示已綁定 LINE
-      }
-      setLoading(false) // ✅ 結束載入
+    if (data) {
+      setForm({
+        name: data.name ?? '',
+        student_id: data.student_id ?? '',
+        phone: data.phone ?? '',
+        school: data.school ?? '',
+      })
+      setAvatar(data.avatar ?? null)
+      setLineBound(!!data.line_id) // 假設有 line_id 表示已綁定 LINE
     }
+    setLoading(false) // ✅ 結束載入
+  }
+  
+  const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels)
+  }, [])
 
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      setImageSrc(reader.result as string)
+      setShowCropper(true)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const showCroppedImage = async () => {
+    try {
+      const base64 = await getCroppedImg(imageSrc!, croppedAreaPixels)
+      setAvatar(base64)
+      setShowCropper(false)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  useEffect(() => {
     fetchProfile()
   }, [router])
 
@@ -237,11 +264,46 @@ export default function ProfilePage() {
         🔐 更改密碼
       </button>
       <button
-        onClick={() => {window.location.href = LINE_AUTH_URL}}
-        className="mt-2 w-full py-2 rounded text-white transition-colors bg-green-600 hover:bg-green-700"
+        onClick={() => {
+          if(lineBound) window.open("https://line.me/R/ti/p/@463cxqls", "_blank")
+          else {
+            setBinding(true)
+            const popup = window.open("/line-bindpage", '_blank', 'width=500,height=700')
+            
+            const handleMessage = (event: MessageEvent) => {
+              if (event.data?.type === 'LINE_BIND_SUCCESS') {
+                // ✅ 綁定成功，更新畫面或顯示提示
+                setLineMsg('✅ LINE 綁定成功！')
+                setLineBound(true) // 假設你有這個 state 來顯示已綁定
+                // 你也可以重新撈一次使用者資料來同步更新
+                fetchProfile()
+                window.removeEventListener('message', handleMessage)
+              } else {
+                // ✅ 綁定失敗，顯示錯誤訊息
+                setLineMsg(`❌ LINE 綁定失敗：${event.data?.message || '未知錯誤'}`)
+                setLineBound(false)
+                window.removeEventListener('message', handleMessage)
+              }
+              clearInterval(timer) // 清除定時器
+              setBinding(false)
+            }
+            const timer = setInterval(() => {
+              if (popup.closed) {
+                clearInterval(timer)
+                window.removeEventListener('message', handleMessage)
+                setBinding(false)
+                fetchProfile()
+              }
+            }, 500)
+            window.addEventListener('message', handleMessage)
+          }
+        }}
+        disabled={isbinding}
+        className="mt-2 w-full py-2 rounded text-white transition-colors bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed items-center justify-items-center"
       >
-        {lineBound ? '✅ 已綁定 LINE 帳號' : '📲 綁定 LINE 帳號'}
+        {isbinding ? <Spinner className='w-6 h-6'/> : lineBound ? '✅ 已綁定 LINE 帳號，加入好友' : '📲 綁定 LINE 帳號'}
       </button>
+      {lineMsg != "" && <p className="text-sm mt-2">${lineMsg}</p>}
       {lineBound && 
         <button
           onClick={() => UnbindLine()}
