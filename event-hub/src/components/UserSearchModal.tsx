@@ -143,41 +143,64 @@ export default function UserSearchModal({
     const baseUrl = window.location.origin;
     const {data:event_data, error:event_error} = await supabase
       .from('events')
-      .select('title, description, start, end, deadline, venue_name, venue_address, users:organizer_id(name, email)')
+      .select('title, description, start, end, deadline, venue_name, venue_address, users:organizer_id(name, email, avatar)')
       .eq('event_id', eventId)
       .single()
     if (event_error || !event_data) 
       throw new Error('無法找到活動資訊')
+
+    const {data: user_data, error: user_error} = await supabase
+      .from('users')
+      .select('name, email, avatar')
+      .eq('user_id', userId)
+      .single()
+    if (user_error || !user_data)
+      throw new Error('無法找到邀請人資訊')
+    
     const htmlBody= `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <h2>邀請您參加【${event_data.title}】</h2>
+        <h2><u>${user_data.name || user_data.email}</u>邀請您參加【${event_data.title}】</h2>
         <p>親愛的朋友，您好：</p>
         <p>
-          我們誠摯邀請您參加即將舉辦的<strong>【${event_data.title}】</strong>，的精彩活動，邀請您一同參與！
+          <strong><u>${user_data.name || user_data.email}</u></strong>邀請您參加即將舉辦的<strong>【${event_data.title}】</strong>的精彩活動，邀請您一同參與！
         </p>
+
         <h3>📅 活動資訊</h3>
         <ul>
-          ${event_data.start || event_data.end ? `<li><strong>舉辦時間：</strong>${toDatetimeLocal(event_data.start)} - ${toDatetimeLocal(event_data.end)}</li>`:""}
-          ${event_data.venue_name? `<li><strong>舉辦地點：</strong>${event_data.venue_name}</li>` : ""}
-          ${event_data.venue_address? `<li><strong>舉辦地址：</strong>${event_data.venue_address}</li>` : ""}
+          ${event_data.start || event_data.end ? `<li><strong>舉辦時間：</strong>${toDatetimeLocal(event_data.start)} - ${toDatetimeLocal(event_data.end)}</li>` : ""}
+          ${event_data.venue_name ? `<li><strong>舉辦地點：</strong>${event_data.venue_name}</li>` : ""}
+          ${event_data.venue_address ? `<li><strong>舉辦地址：</strong>${event_data.venue_address}</li>` : ""}
         </ul>
+
         <p style="margin-top: 20px;">
-          👉 <a href="${baseUrl + "/event/register?event_id=" + eventId}" style="color: #007BFF;">點我報名活動</a>
-          <br/>
-          若您尚未註冊我們的系統，將會同時完成註冊流程。
-          <br/>
+          👉 <a href="${baseUrl + "/event/" + eventId}" style="color: #007BFF;">點我查看官方網站</a>
+          👉 <a href="${baseUrl + "/event/register?event_id=" + eventId}" style="color: #007BFF;">點我報名活動</a><br/>
+          若您尚未註冊我們的系統，將會同時完成註冊流程。<br/>
           <p>報名截止日期：${toDatetimeLocal(event_data.deadline)}</p>
         </p>
 
-        <p>如有任何問題，歡迎回信與我們聯繫。</p>
+        <h3>📨 主辦單位資訊</h3>
+        <div style="display: flex; align-items: center;">
+          <img src="${event_data.users.avatar || defaultAvatar}" alt="邀請人頭像" style="width: 48px; height: 48px; border-radius: 50%; margin-right: 10px;" />
+          <div>
+            <div><strong>${event_data.users.name || '匿名邀請人'}</strong></div>
+            <div><a href="mailto:${event_data.users.email}" style="color: #007BFF;">${event_data.users.email}</a></div>
+          </div>
+        </div>
+
+        <p style="margin-top: 20px;">如有任何問題，歡迎回信與我們聯繫。</p>
         <p>敬祝 順心如意！</p>
-        <p>
-          【${event_data.users.name || event_data.users.email}】<br />
-          <a href="mailto:${event_data.users.email}">${event_data.users.email}</a> |
-          <a href="${baseUrl + "/event/" + eventId}">官方網站</a>
-        </p>
+
+        <div style="display: flex; align-items: center; margin-top: 10px;">
+          <img src="${user_data.avatar || defaultAvatar}" alt="邀請人頭像" style="width: 48px; height: 48px; border-radius: 50%; margin-right: 10px;" />
+          <div>
+            <div><strong>${user_data.name || '匿名邀請人'}</strong></div>
+            <div><a href="mailto:${user_data.email}" style="color: #007BFF;">${user_data.email}</a></div>
+          </div>
+        </div>
+        <p style="margin-top: 20px; color: #888;">此郵件由系統自動發送，請勿直接回覆。</p>
       </div>`
-    const SendResult = await SendEmail(email, `邀請您參加【${event_data.title}】活動`, htmlBody)
+    const SendResult = await SendEmail(email, `${user_data.name || user_data.email}邀請您參加【${event_data.title}】活動`, htmlBody)
     setHasSend_email(SendResult)
     if (!SendResult)
       setErrorMsg('寄送邀請失敗，請稍後再試')

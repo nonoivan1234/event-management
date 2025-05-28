@@ -327,7 +327,7 @@ export default function EventDetailPage({ params }: { params: { event_id: string
       {/* 報名資訊 */}
       <section className="mb-6">
         <h3 className="text-lg font-semibold mb-2">報名狀態</h3>
-        <div className="flex items-center gap-5 mb-4">
+        <div className="flex items-center gap-3 mb-4">
           {attending && (
             <button
               onClick={() =>
@@ -372,29 +372,15 @@ export default function EventDetailPage({ params }: { params: { event_id: string
           {user && !isExpired && 
           <button
             onClick={() => setShowUserSearchModal(true)}
-            className="
-            px-4 py-2
-            bg-blue-600 text-white border border-blue-700
-            rounded
-            hover:bg-blue-700
-            dark:bg-blue-800 dark:text-white dark:border-blue-700 dark:hover:bg-blue-700
-            transition-colors
-            focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500
-            "
+            className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
           >
             傳送邀請給朋友
           </button>}
           <button
               onClick={handleCopyLink}
-              className="
-              px-4 py-2
-              bg-gray-200 text-gray-800 border border-gray-300
-              rounded
-              hover:bg-gray-100
-              dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600
-              transition-colors
-              focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500
-              "
+              className="px-4 py-2 rounded
+              bg-gray-200 text-gray-800 hover:bg-gray-100
+              dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
               🔗 複製連結
           </button>

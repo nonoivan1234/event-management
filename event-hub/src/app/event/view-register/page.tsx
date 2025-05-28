@@ -217,7 +217,7 @@ export default function ViewRegistrationsPage() {
 
     const {data:EventData} = await supabase
       .from('events')
-      .select('title, start, end, deadline, venue_name, venue_address, users:organizer_id(name, email)')
+      .select('title, start, end, deadline, venue_name, venue_address, users:organizer_id(name, email, avatar)')
       .eq('event_id', eventId)
       .single()
     
@@ -257,12 +257,14 @@ export default function ViewRegistrationsPage() {
         <p>如有任何問題，歡迎聯繫我們。</p>
 
         <p>期待與您在現場相見！</p>
-
-        <p>
-          【${EventData.users.name || EventData.users.email}】<br />
-          <a href="mailto:${EventData.users.email}">${EventData.users.email}</a> |
-          <a href="${baseUrl + "/event/" + eventId}">官方網站</a>
-        </p>
+        <div style="display: flex; align-items: center; margin-top: 10px;">
+          ${EventData.users.avatar ? `<img src="${EventData.users.avatar}" alt="邀請人頭像" style="width: 48px; height: 48px; border-radius: 50%; margin-right: 10px;" />` : ""}
+          <div>
+            <div><strong>${EventData.users.name || '匿名邀請人'}</strong></div>
+            <div><a href="mailto:${EventData.users.email}" style="color: #007BFF;">${EventData.users.email}</a></div>
+          </div>
+        </div>
+        <p style="margin-top: 20px; color: #888;">此郵件由系統自動發送，請勿直接回覆。</p>
       </div>`
     // 發送通知
     const status = await sendEmail(reg.user_info_snapshot.email, `活動 ${EventData.title} 通知`, htmlBody)
@@ -301,7 +303,7 @@ export default function ViewRegistrationsPage() {
 
     const { data: EventData } = await supabase
       .from('events')
-      .select('title, start, end, deadline, venue_name, venue_address, users:organizer_id(name, email)')
+      .select('title, start, end, deadline, venue_name, venue_address, users:organizer_id(name, email,avatar)')
       .eq('event_id', eventId)
       .single()
     if (!EventData) {
@@ -347,12 +349,14 @@ export default function ViewRegistrationsPage() {
           <p>如有任何問題，歡迎聯繫我們。</p>
 
           <p>期待與您在現場相見！</p>
-
-          <p>
-            【${EventData.users.name || EventData.users.email}】<br />
-            <a href="mailto:${EventData.users.email}">${EventData.users.email}</a> |
-            <a href="${baseUrl + "/event/" + eventId}">官方網站</a>
-          </p>
+          <div style="display: flex; align-items: center; margin-top: 10px;">
+            ${EventData.users.avatar ? `<img src="${EventData.users.avatar}" alt="邀請人頭像" style="width: 48px; height: 48px; border-radius: 50%; margin-right: 10px;" />` : ""}
+            <div>
+              <div><strong>${EventData.users.name || '匿名邀請人'}</strong></div>
+              <div><a href="mailto:${EventData.users.email}" style="color: #007BFF;">${EventData.users.email}</a></div>
+            </div>
+          </div>
+          <p style="margin-top: 20px; color: #888;">此郵件由系統自動發送，請勿直接回覆。</p>
         </div>`
 
       const status = await sendEmail(userData.email, `活動 ${EventData.title} 通知`, htmlBody)
