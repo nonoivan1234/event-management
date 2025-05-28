@@ -1,34 +1,38 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
-  const [attempted, setAttempted] = useState(false) // 登入嘗試過的 flag
+  const [attempted, setAttempted] = useState(false)
 
   const handleLogin = async () => {
     setErrorMsg('')
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { error } = await supabase.auth.signInWithPassword({email, password})
 
-    if (error && error.message == 'Invalid login credentials') {
+    if (error && error.message === 'Invalid login credentials') {
       setErrorMsg('❌ 登入失敗：請檢查您的電子郵件和密碼')
       setAttempted(true)
     } else if (error) {
       setErrorMsg('❌ 登入失敗：' + error.message)
     } else {
-      if(document.referrer && !document.referrer.includes(window.location.hostname) || document.referrer.includes(window.location.hostname+ '/auth'))
+      // ✅ 登入成功後刷新 App Router session
+      if (
+        document.referrer &&
+        (!document.referrer.includes(window.location.hostname) ||
+         document.referrer.includes(window.location.hostname + '/auth'))
+      ) {
         router.push('/')
-      else
+      } else {
         router.back()
+      }
+      router.refresh() // ✅ 刷新 session
     }
   }
 
@@ -43,7 +47,7 @@ export default function LoginPage() {
           className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={(e) => {if (e.key === "Enter") handleLogin();}}
+          onKeyDown={(e) => { if (e.key === "Enter") handleLogin(); }}
         />
 
         <input
@@ -52,7 +56,7 @@ export default function LoginPage() {
           className="w-full border px-3 py-2 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => {if (e.key === "Enter") handleLogin();}}
+          onKeyDown={(e) => { if (e.key === "Enter") handleLogin(); }}
         />
 
         <button
@@ -62,21 +66,18 @@ export default function LoginPage() {
           登入
         </button>
 
-         {/* 錯誤訊息只有在嘗試過登入後才顯示 */}
         {errorMsg && (
           <p className="text-sm text-center text-red-500">{errorMsg}</p>
         )}
 
-        {/* 忘記密碼連結 */}
-        {attempted && <p className="text-sm text-center text-gray-600 dark:text-gray-400">
+        {attempted && (
+          <p className="text-sm text-center text-gray-600 dark:text-gray-400">
             忘記密碼了嗎？{' '}
-          <a
-            href="/auth/forgot-password"
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            忘記密碼？
-          </a>
-        </p>}
+            <a href="/auth/forgot-password" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+              忘記密碼？
+            </a>
+          </p>
+        )}
 
         <p className="text-sm text-center text-gray-600 dark:text-gray-400">
           還沒有帳號嗎？{' '}

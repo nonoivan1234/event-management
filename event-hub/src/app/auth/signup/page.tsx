@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '../../../lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('')
@@ -16,10 +16,7 @@ export default function SignUpPage() {
     setMessage('')
     setIsError(false)
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-    })
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({email, password})
 
     if (signUpError) {
       setMessage(`註冊失敗：${signUpError.message}`)
@@ -68,12 +65,14 @@ export default function SignUpPage() {
         >
           註冊
         </button>
+
         <p className="text-sm text-center text-gray-600 dark:text-gray-400">
           已經有帳號了嗎？{' '}
           <a href="/auth/login" className="text-blue-600 dark:text-blue-400 hover:underline">
             登入
           </a>
         </p>
+
         {message && (
           <p className={`text-sm text-center ${isError ? 'text-red-500' : 'text-green-500'}`}>
             {message}

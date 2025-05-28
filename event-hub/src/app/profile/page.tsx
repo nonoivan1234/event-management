@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback, use } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Image from 'next/image'
@@ -9,6 +9,7 @@ import Slider from '@mui/material/Slider'
 import Dialog from '@mui/material/Dialog'
 import getCroppedImg from '@/utils/cropImage'
 import LoadingScreen from '@/components/loading'
+import Spinner from '@/components/ui/Spinner'
 
 export default function ProfilePage() {
   const [userId, setUserId] = useState<string | null>(null)
@@ -17,6 +18,8 @@ export default function ProfilePage() {
   const [imageSrc, setImageSrc] = useState<string | null>(null)
   const [form, setForm] = useState({ name: '', student_id: '', phone: '', school: ''})
   const [password, setPassword] = useState('')
+  const [lineBound, setLineBound] = useState(false)
+  const [LINE_AUTH_URL, setLINE_AUTH_URL] = useState('')
 
   const [mainMessage, setMainMessage] = useState('')
   const [mainIsError, setMainIsError] = useState(false)
@@ -30,6 +33,8 @@ export default function ProfilePage() {
   const [showCropper, setShowCropper] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [loading, setLoading] = useState(true) // ✅ 加入 loading 狀態
+  const [submitting, setSubmitting] = useState(false)
+  const [unbinding, setUnbinding] = useState(false)
   const [showPopover, setShowPopover] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -61,6 +66,9 @@ export default function ProfilePage() {
   }
 
   useEffect(() => {
+    const LINE_CLIENT_ID = process.env.NEXT_PUBLIC_LINE_CHANNEL_ID!
+    const REDIRECT_URI = window.location.origin + '/api/bind-line'
+    setLINE_AUTH_URL(`https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=1234&scope=profile%20openid`)
     const fetchProfile = async () => {
       const { data: { user }, error } = await supabase.auth.getUser()
       if (error || !user) {
@@ -85,8 +93,8 @@ export default function ProfilePage() {
           school: data.school ?? '',
         })
         setAvatar(data.avatar ?? null)
+        setLineBound(!!data.line_id) // 假設有 line_id 表示已綁定 LINE
       }
-
       setLoading(false) // ✅ 結束載入
     }
 
@@ -118,7 +126,7 @@ export default function ProfilePage() {
       setMainIsError(true)
       return
     }
-
+    setSubmitting(true)
     const { error } = await supabase
       .from('users')
       .update({ ...form, avatar })
@@ -130,9 +138,26 @@ export default function ProfilePage() {
     } else {
       setMainMessage('✅ 資料已成功更新！')
       setMainIsError(false)
-      setTimeout(() => router.back(), 1000)
     }
+    setSubmitting(false)
   }
+
+  const UnbindLine = async () => {
+    if (!userId) 
+      return setMainMessage('⚠️ 尚未取得使用者 ID')
+    setLoading(unbinding)
+    const { error } = await supabase.from('users').update({ line_id: null }).eq('user_id', userId)
+    if (error) {
+      setMainMessage(`❌ 取消綁定 LINE 失敗：${error.message}`)
+      setMainIsError(true)
+    } else {
+      setMainMessage('✅ 已成功取消綁定 LINE 帳號')
+      setMainIsError(false)
+      setLineBound(false)
+    }
+    setUnbinding(false)
+  }
+
 
   // ✅ Loading UI
   if (loading) return <LoadingScreen />
@@ -207,18 +232,34 @@ export default function ProfilePage() {
 
       <button
         onClick={() => setShowPasswordModal(true)}
-        className="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 mt-4 transition-colors"
+        className="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 mt-2 mb-2 transition-colors"
       >
         🔐 更改密碼
       </button>
-
+      <button
+        onClick={() => {window.location.href = LINE_AUTH_URL}}
+        className="mt-2 w-full py-2 rounded text-white transition-colors bg-green-600 hover:bg-green-700"
+      >
+        {lineBound ? '✅ 已綁定 LINE 帳號' : '📲 綁定 LINE 帳號'}
+      </button>
+      {lineBound && 
+        <button
+          onClick={() => UnbindLine()}
+          disabled={unbinding}
+          className="mt-2 w-full py-2 rounded text-white transition-colors bg-gray-600 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed items-center justify-items-center"
+        >
+          {unbinding ? <Spinner className='w-6 h-6'/> : "取消綁定 LINE 帳號"}
+        </button>
+      }
+      
       <hr className="my-4 border-gray-300 dark:border-gray-600" />
 
       <button
         onClick={handleSave}
-        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors"
+        disabled={submitting}
+        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed items-center justify-items-center"
       >
-        💾 儲存變更
+        {submitting ? <Spinner className='w-6 h-6'/> : "💾 儲存變更"}
       </button>
 
       <button
