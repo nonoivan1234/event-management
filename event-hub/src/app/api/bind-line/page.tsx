@@ -39,8 +39,11 @@ export default function BindLinePage() {
 
       const result = await res.json()
 
-      setStatus(result.success ? '綁定成功！即將返回個人資料頁面...' : '綁定失敗：' + (result.error || '未知錯誤'))
-      setTimeout(() => router.replace('/profile'), 1000)
+      setStatus(result.success ? '綁定成功！即將導向加好友頁面...' : '綁定失敗：' + (result.error || '未知錯誤'))
+      if(result.success)
+        setTimeout(() => router.replace('https://line.me/R/ti/p/@463cxqls'), 1000)
+      else
+        setTimeout(() => window.close(), 3000)  
     }
 
     bindLine()
