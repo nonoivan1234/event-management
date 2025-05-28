@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import SendEmail from '@/lib/SendEmail'
+import Spinner from '@/components/ui/Spinner'
 
 const defaultAvatar = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAA2ZJREFUeF7tmk3ITUEcxn8vkVLyka8UkRRZEAsldiQbW0qxQknZ2rGRLSuyUErY2QlLygJRIhYKC1/53JDydSZnNO907nvPzDz/13u7Z5b3zv+Z53n+/5kz58yMMORtZMj10xnQVcCQO9BNgSEvgG4R/F9TYDZwBlhfV+Bd4CDwbrwrcjwNcIL3tRR4HtjTsm9Rt/Ew4AhwPJPlCcDFmzVrA35HzL8C0/uo+QTMjPqY8TQDBkLxP4ApiWn8XlXO1CDGhKsJaCR+CfAyUbzvPg94a2mChQFh5icDvzLFh2EhppSzFAxYBjyrmW8HrgrEO4iNwK0ayz0674lw5Rshs0xF00qWOBkQMAP4UmdGids0FUrWlVHFoyRqmX1PWj6GhQHbgGuqORrhrAHuK6vMwgAlZpOPvgok40hAapZSYmNUkHScQTZgUfVy9ap0qg2yAbOAz8NsgCR5EpBuDfjrgF+cHgBrS0uzR7zbWrvHrGuS5ElAakJPgRVKcg0meJPfA3MVJisNCKtgM3BTQTDAWAk8VhtsZYCsRAMD5NtgC5JhFSjxTcQrCYbVvgW4HvxQWmU/gUk13m7ggnJqlZLrxeUhsFpgQpj558BSpXirCvAcbwMbAsKXgF0tBZwD9gZ9nwBuEZQ3qwrwRBcArxtY76wEXY5+3wFcaei7PPjMNnAGeMLOBGdGSvsIzEkJyOlrXQHxU2HCcbQ0ID4VCsUfBk5GbhwCTo3hkAlXC9A7wamv13O02rsfS0x/05mifDFUGxBnfb7gyNsdpX+IzJPxlgFF3+3fVOf/CxMz3q/7C2Bx0EnCXQISiVdkvZcZ4dmD61PMvxjA6sSmTznI3g1KDZAR6Vf/Df9Lxi4xINy5ba0OMG9kiCgJWQe4u0WuHajvHCXjlRggyUAy49EBxRxyDXgErKq55GIUav8XXvSZLJe8H9Sd2W9SKcnEuQi4l6usp0KOAeEHj5z4TJ1jhvmEuGt4Z1MGyBFQPO9SCLbsm82pxAC303M7vonQpgHfcqZBiQE5sZZmZZ0ap4rYX33YOJ3jtKXyGtsbkHS7NNWA8IUkNdbaA2+Au5bnrue1aqkishebVmzKOmVxSzXAUXQD5cSVyWsXncxtogppJ1fQqzNAYOJAQ3QVMNDpE5DvKkBg4kBDDH0F/AGQ2IFBGnXtNgAAAABJRU5ErkJggg=="
 
@@ -53,6 +54,7 @@ export default function UserSearchModal({
   const [hasSend_email, setHasSend_email] = useState(false)
   const [results, setResults] = useState<UserWithPending[]>([])
   const [loading, setLoading] = useState(false)
+  const [sending, setSending] = useState(false)
   const [message, setMessage] = useState('請搜尋使用者')
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -138,7 +140,7 @@ export default function UserSearchModal({
   }
 
   const SendInvite = async (email: string) => {
-    setLoading(true)
+    setSending(true)
     setErrorMsg('')
     const baseUrl = window.location.origin;
     const {data:event_data, error:event_error} = await supabase
@@ -204,8 +206,7 @@ export default function UserSearchModal({
     setHasSend_email(SendResult)
     if (!SendResult)
       setErrorMsg('寄送邀請失敗，請稍後再試')
-    setLoading(false)
-      
+    setSending(false)
   }
 
   const handleAdd = async (user: UserWithPending) => {
@@ -302,12 +303,12 @@ export default function UserSearchModal({
                 <p className="font-semibold break-all">{inviteEmail}<span className="text-gray-500 dark:text-gray-300">？</span></p>
               </div>
               <button
-                className="mt-2 md:mt-0 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+                className="mt-2 md:mt-0 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 min-w-[4.5rem] items-center justify-items-center"
                 onClick={() => SendInvite(inviteEmail)}
                 disabled={hasSend_email}
                 title={hasSend_email ? "已寄送邀請" : "寄送邀請"}
               >
-                {loading ? "寄送中..." : hasSend_email ? '已寄送' : '寄送邀請'}
+                {sending ? <Spinner className='w-6 h-6'/> : hasSend_email ? '已寄送' : '寄送邀請'}
               </button>
             </li>
           )}
