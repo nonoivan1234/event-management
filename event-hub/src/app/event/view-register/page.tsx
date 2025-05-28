@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import LoadingScreen from '@/components/loading'
 import sendEmail from '@/lib/SendEmail'
+import sendLine from '@/lib/SendLine'
 import Spinner from '@/components/ui/Spinner'
 
 const options = {
@@ -217,13 +218,13 @@ export default function ViewRegistrationsPage() {
 
     const {data:EventData} = await supabase
       .from('events')
-      .select('title, start, end, deadline, venue_name, venue_address, users:organizer_id(name, email, avatar)')
+      .select('title, start, end, deadline, venue_name, venue_address, cover_url, users:organizer_id(name, email, avatar)')
       .eq('event_id', eventId)
       .single()
     
     const { data: userData } = await supabase
       .from('users')
-      .select('name, email')
+      .select('name, email, line_id')
       .eq('user_id', userId)
       .single()
     if (!EventData || !userData) {
@@ -279,7 +280,14 @@ export default function ViewRegistrationsPage() {
       console.error('發送通知失敗:')
       alert('發送通知失敗，請稍後再試。')
     }
-    setSendingUserIds(prev => prev.filter(id => id !== userId)) // ❌ 清除寄送中狀態
+    if(userData.line_id){
+      const status = await sendLine(userData.line_id, EventData.title, EventData.cover_url, toDatetimeLocal(EventData.start), EventData.venue_name, baseUrl + "/event/" + eventId)
+      if(!status){
+        console.error('發送 Line 通知失敗:', userData.line_id)
+        alert('發送 Line 通知失敗，請稍後再試。')
+      }
+    }
+    setSendingUserIds(prev => prev.filter(id => id !== userId))
   }
 
   const SendAllNotifications = async () => {
@@ -303,7 +311,7 @@ export default function ViewRegistrationsPage() {
 
     const { data: EventData } = await supabase
       .from('events')
-      .select('title, start, end, deadline, venue_name, venue_address, users:organizer_id(name, email,avatar)')
+      .select('title, start, end, deadline, venue_name, venue_address, cover_url, users:organizer_id(name, email,avatar)')
       .eq('event_id', eventId)
       .single()
     if (!EventData) {
@@ -318,7 +326,7 @@ export default function ViewRegistrationsPage() {
 
       const { data: userData } = await supabase
         .from('users')
-        .select('name, email')
+        .select('name, email, line_id')
         .eq('user_id', reg.user_id)
         .single()
       if (!userData) continue
@@ -372,6 +380,13 @@ export default function ViewRegistrationsPage() {
       } else {
         console.error('發送通知失敗:', reg.user_id)
         alert(`發送通知失敗：${userData.email}`)
+      }
+      if(userData.line_id){
+        const status = await sendLine(userData.line_id, EventData.title, EventData.cover_url, toDatetimeLocal(EventData.start), EventData.venue_name, baseUrl + "/event/" + eventId)
+        if(!status){
+          console.error('發送 Line 通知失敗:', userData.line_id)
+          alert('發送 Line 通知失敗，請稍後再試。')
+        }
       }
     }
     setSendingAll(false) // ✅ 全部處理完才關閉 loading 狀態
