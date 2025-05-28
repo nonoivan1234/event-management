@@ -257,7 +257,7 @@ export default function ViewRegistrationsPage() {
         <p>期待與您在現場相見！</p>
 
         <p>
-          【主辦單位名稱】<br />
+          【${EventData.users.name || EventData.users.email}】<br />
           <a href="mailto:${EventData.users.email}">${EventData.users.email}</a> |
           <a href="${baseUrl + "/event/" + eventId}">官方網站</a>
         </p>
@@ -347,7 +347,7 @@ export default function ViewRegistrationsPage() {
           <p>期待與您在現場相見！</p>
 
           <p>
-            【${EventData.users.name || EventData.users.email}】<br/>
+            【${EventData.users.name || EventData.users.email}】<br />
             <a href="mailto:${EventData.users.email}">${EventData.users.email}</a> |
             <a href="${baseUrl + "/event/" + eventId}">官方網站</a>
           </p>
