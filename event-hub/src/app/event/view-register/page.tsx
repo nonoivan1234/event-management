@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import LoadingScreen from '@/components/loading'
 import sendEmail from '@/lib/SendEmail'
+import Spinner from '@/components/ui/Spinner'
 
 const options = {
   year:   'numeric',
@@ -79,6 +80,7 @@ export default function ViewRegistrationsPage() {
         .from('registrations')
         .select('user_id, user_info_snapshot, answers, notification')
         .eq('event_id', eventId)
+        .order('created_at', { ascending: true })
 
       setRegistrations(regData || [])
       setLoading(false)
@@ -415,9 +417,9 @@ export default function ViewRegistrationsPage() {
           <button
             disabled={sendingAll}
             onClick={SendAllNotifications}
-            className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[7.25rem] items-center flex justify-center"
           >
-            {sendingAll ? "寄送通知中":"發送所有通知"}
+            {sendingAll ? <Spinner className='w-5 h-5 text-gray-200'/>:"發送所有通知"}
           </button>}
           {!isEditing && IsOrganizer &&
           <button
@@ -545,13 +547,13 @@ export default function ViewRegistrationsPage() {
                 <button
                   onClick={handleSendNotification(reg.user_id, reg.notification)}
                   disabled={sendingUserIds.includes(reg.user_id) || sendingAll}
-                  className={`text-sm px-2 py-1 rounded transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed ${reg.notification 
+                  className={`text-sm px-2 py-1 rounded transition-colors text-white disabled:bg-transparent disabled:cursor-not-allowed dark:disabled:bg-transparent ${reg.notification 
                     ?'bg-gray-500 hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600' 
                     :'bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-400'}`}
                   title="發送通知"
                 >
                   { sendingUserIds.includes(reg.user_id)
-                    ? "寄送中..."
+                    ? <Spinner className='h-5 w-5 text-blue-800 dark:text-blue-200'/>
                     : reg.notification 
                     ? "已發送"
                     : sendingAll

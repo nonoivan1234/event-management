@@ -21,6 +21,7 @@ type Event_Detail = {
     end: string | null;
     deadline: string;
     users: {name: string;};
+    visible?: boolean;
 }
 
 export default function EventCard({ event, children }: { event: Event_Detail, children?: React.ReactNode }) {
@@ -39,7 +40,7 @@ export default function EventCard({ event, children }: { event: Event_Detail, ch
         >
             <div>
                 <h2 className="text-lg font-semibold truncate">
-                    {event.title}
+                    {event.title}{event.visible === false && <span className='font-semibold text-red-500 ml-2'>(已隱藏)</span>}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                     活動時間：{event.start && new Date(event.start).toLocaleString('zh-tw', options)}{(event.start || event.end) ? ' - ' : 'Coming Soon'}

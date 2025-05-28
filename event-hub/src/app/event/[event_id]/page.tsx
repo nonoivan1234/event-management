@@ -53,7 +53,8 @@ export default function EventDetailPage({ params }: { params: { event_id: string
   const [IsOrganizer, setIsOrganizer] = useState(false);
   const [showUserSearchModal, setShowUserSearchModal] = useState(false);
   const slideInterval = useRef<number>();
-  const now = new Date();
+  const [title, setTitle] = useState("");
+  const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
     async function fetchEvent() {
@@ -67,6 +68,13 @@ export default function EventDetailPage({ params }: { params: { event_id: string
         .single();
 
       if (error || !data)  return router.push("/404");
+
+      const today = new Date();
+      const deadline = new Date(data.deadline);
+      deadline.setHours(0, 0, 0, 0);
+      deadline.setDate(deadline.getDate() + 1);
+      setIsExpired(deadline < today);
+      setTitle(isExpired ? "報名已截止" : "");
 
       const {
         data: { user },
@@ -127,18 +135,6 @@ export default function EventDetailPage({ params }: { params: { event_id: string
 
   if (loading) return <LoadingScreen />;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const deadline = new Date(event.deadline);
-  deadline.setHours(0, 0, 0, 0);
-  deadline.setDate(deadline.getDate() + 1);
-  const isExpired = deadline < today;
-
-  const title = !user
-    ? "請先登入才能報名"
-    : isExpired
-    ? "活動已結束"
-    : "";
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href).then(() => {
@@ -344,14 +340,11 @@ export default function EventDetailPage({ params }: { params: { event_id: string
           )}
 
           <button
-            onClick={() => {
-              if (user && !isExpired)
-                router.push(`/event/register?event_id=${event.event_id}`);
-            }}
-            disabled={!user || isExpired}
+            onClick={() => !isExpired && router.push(`/event/register?event_id=${event.event_id}`)}
+            disabled={isExpired}
             title={title}
             className={`mt-4 px-4 py-2 rounded ${
-              (!user || isExpired)
+              isExpired
               ? "bg-gray-300 text-gray-500 rounded cursor-not-allowed"
               : attending
               ? "bg-green-600 text-white rounded hover:bg-green-700"

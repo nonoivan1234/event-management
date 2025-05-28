@@ -218,16 +218,16 @@ export default function DashboardPage() {
       {hold && (
         <>
           <button
-            onClick={() => openEditorModal(eventId)}
-            className="text-sm text-indigo-600 dark:text-indigo-300 hover:underline"
-          >
-            編輯人員
-          </button>
-          <button
             onClick={() => router.push(`/event/modify?event_id=${eventId}`)}
             className="text-sm text-indigo-600 dark:text-indigo-300 hover:underline"
           >
             編輯活動
+          </button>
+          <button
+            onClick={() => openEditorModal(eventId)}
+            className="text-sm text-indigo-600 dark:text-indigo-300 hover:underline"
+          >
+            編輯人員
           </button>
           {org && (
             <button

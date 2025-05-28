@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import LoadingScreen from "@/components/loading";
-import { User } from "lucide-react";
+import Spinner from "@/components/ui/Spinner";
 
 
 export default function RegisterPage() {
@@ -20,6 +20,7 @@ export default function RegisterPage() {
   const [isClosed, setIsClosed] = useState(false);
   const [deadline, setDeadline] = useState<string | null>(null);
   const [nologin, setNologin] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,7 +93,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async () => {
     if (!formSchema) return;
-
+    setLoading(true);
     // 驗證必填欄位
     const Cust_missingFields = formSchema.customQuestions?.filter((q: any) => q.required && !answers[q.id]?.trim()) || [];
     const Person_missingFields = formSchema.personalFields?.filter((field: string) => !userInfo[field]?.trim()) || [];
@@ -107,6 +108,7 @@ export default function RegisterPage() {
       if (nologin_missingPasswd)
         msg += "密碼";
       setMessage(`⚠️ ${msg}`);
+      setLoading(false);
       return;
     }
     let error;
@@ -116,6 +118,7 @@ export default function RegisterPage() {
       if (error && error.message.includes("already registered")) {
         setMessage("⚠️ 已有帳號，請登入，即將跳轉。");
         setTimeout(() => router.push("/auth/login"), 1000);
+        setLoading(false);
         return;
       } else if (error) {
         setMessage(`❌ 註冊失敗：${error.message}`);
@@ -168,6 +171,7 @@ export default function RegisterPage() {
       : nologin ? "✅ 報名並建立帳號成功！"
       : `✅ ${isEditMode ? "更新成功！" : "報名成功！"} 即將跳轉到報名頁面`
     );
+    setLoading(false);
     if (!error) setTimeout(() => router.push(`/event/attend`), 1000);
   };
 
@@ -286,9 +290,10 @@ export default function RegisterPage() {
       <div className="gap-4 flex">
         <button
           onClick={handleSubmit}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          disabled={loading}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 min-w-[8rem] disabled:opacity-50 disabled:cursor-not-allowed items-center justify-items-center"
         >
-          {isEditMode ? "更新報名資料" : "送出報名資料"}
+          {loading ? <Spinner className="w-6 h-5"/>: isEditMode ? "更新報名資料" : "送出報名資料"}
         </button>
         <button
           onClick={() => router.back()}

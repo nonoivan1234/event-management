@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { v4 as uuidv4 } from "uuid";
 import LoadingScreen from "@/components/loading";
 import ShareLinkModal from "@/components/ShareLinkModal";
+import Spinner from "@/components/ui/Spinner";
 
 async function base64ToBlob(base64: string): Promise<Blob> {
   const res = await fetch(base64)
@@ -85,6 +86,7 @@ export default function EventFormPage() {
   const [timeError, setTimeError] = useState("");
   const [deadlineError, setDeadlineError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [notAuthorized, setNotAuthorized] = useState(false);
 
@@ -93,9 +95,9 @@ export default function EventFormPage() {
 
   useEffect(() => {
     const id = searchParams.get("event_id");
-    if (!id) {
+    if (!id)
       setLoading(false);
-    } else {
+    else {
       // Fetch event data for edit
       const fetchEventData = async () => {
         const { data: userData } = await supabase.auth.getUser();
@@ -245,43 +247,40 @@ export default function EventFormPage() {
 
   // Submit handler
   const handleSubmit = async () => {
-    setLoading(true);
+    setSubmitting(true);
     setMessage("");
-    setImageError("");
-    setTimeError("");
-    setDeadlineError("");
 
     // Validation
     if (timeError !== "") {
       setMessage("❗ 結束時間不得早於開始時間");
       setTimeError("❗ 結束時間不得早於開始時間");
-      setLoading(false);
+      setSubmitting(false);
       return;
     }
     if (deadlineError !== "") {
       setMessage("❗ 報名截止日期不得晚於活動開始時間");
       setDeadlineError("❗ 報名截止日期不得晚於活動開始時間");
-      setLoading(false);
+      setSubmitting(false);
       return;
     }
     if (!form.title || !form.deadline) {
       setMessage("❗ 請完整填寫所有欄位");
-      setLoading(false);
+      setSubmitting(false);
       return;
     }
     if (personalFields.length === 0 && customQuestions.length === 0) {
       setMessage("❗請至少選擇一項個人欄位或新增一題自訂問題");
-      setLoading(false);
+      setSubmitting(false);
       return;
     }
     if (customQuestions.some((q) => !q.label.trim())) {
       setMessage("❗ 所有自訂問題都必須填寫標題");
-      setLoading(false);
+      setSubmitting(false);
       return;
     }
 
     const {data: { user }} = await supabase.auth.getUser();
-    if (!user) { setMessage("❗ 請先登入"); setLoading(false); return;}
+    if (!user) { setMessage("❗ 請先登入"); setSubmitting(false); return;}
 
     const payload = {
       title: form.title,
@@ -321,7 +320,7 @@ export default function EventFormPage() {
         router.push(`/event/hold`);
       }
     }
-    setLoading(false);
+    setSubmitting(false);
   };
 
   if (loading) return <LoadingScreen />;
@@ -493,7 +492,7 @@ export default function EventFormPage() {
             </div>
           </div>
           <div className="mb-4">
-            <label className="block mb-1">上傳圖片（最多5MB/張，可多張）</label>
+            <label className="block mb-1">上傳圖片（最多10MB/張，可多張）</label>
             <input
               type="file"
               accept="image/*"
@@ -685,10 +684,10 @@ export default function EventFormPage() {
       <div className="flex flex-col md:flex-row gap-3 mt-4">
         <button
           onClick={handleSubmit}
-          disabled={loading}
-          className="flex-[3] bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+          disabled={submitting}
+          className="flex-[3] bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50 min-w-[6rem] items-center justify-items-center"
         >
-          {loading ? "儲存中..." : isEdit ? "更新活動" : "建立活動"}
+          {submitting ? <Spinner className="w-6 h-6"/> : isEdit ? "更新活動" : "建立活動"}
         </button>
         <button
           onClick={() => router.back()}
