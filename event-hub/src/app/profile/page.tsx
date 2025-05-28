@@ -41,41 +41,12 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const router = useRouter()
 
-  const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
-    setCroppedAreaPixels(croppedAreaPixels)
-  }, [])
-
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      setImageSrc(reader.result as string)
-      setShowCropper(true)
+  const fetchProfile = async () => {
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error || !user) {
+      router.push('/auth/login')
+      return
     }
-    reader.readAsDataURL(file)
-  }
-
-  const showCroppedImage = async () => {
-    try {
-      const base64 = await getCroppedImg(imageSrc!, croppedAreaPixels)
-      setAvatar(base64)
-      setShowCropper(false)
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
-  useEffect(() => {
-    const LINE_CLIENT_ID = "2007493440"
-    const REDIRECT_URI = window.location.origin + '/api/bind-line'
-    setLINE_AUTH_URL(`https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${LINE_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&state=1234&scope=profile%20openid`)
-    const fetchProfile = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser()
-      if (error || !user) {
-        router.push('/auth/login')
-        return
-      }
 
     setUserId(user.id)
     setEmail(user.email ?? null)
