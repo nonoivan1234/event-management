@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import LoadingScreen from "@/components/loading";
 import Spinner from "@/components/ui/Spinner";
@@ -142,6 +142,7 @@ export default function RegisterPage() {
           };
           ({ error } = await supabase.from("registrations").insert(payload));
         }
+        await supabase.auth.signOut();
       }
     }
     else {
@@ -168,7 +169,7 @@ export default function RegisterPage() {
 
     setMessage(error
       ? `❌ ${isEditMode ? "更新" : "報名"}失敗：${error.message}`
-      : nologin ? "✅ 報名並建立帳號成功！"
+      : nologin ? "✅ 報名並建立帳號成功，請登入！"
       : `✅ ${isEditMode ? "更新成功！" : "報名成功！"} 即將跳轉到報名頁面`
     );
     setLoading(false);
