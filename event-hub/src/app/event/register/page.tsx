@@ -142,7 +142,6 @@ export default function RegisterPage() {
           };
           ({ error } = await supabase.from("registrations").insert(payload));
         }
-        await supabase.auth.signOut();
       }
     }
     else {
@@ -169,7 +168,7 @@ export default function RegisterPage() {
 
     setMessage(error
       ? `❌ ${isEditMode ? "更新" : "報名"}失敗：${error.message}`
-      : nologin ? "✅ 報名並建立帳號成功，請登入！"
+      : nologin ? "✅ 報名並建立帳號成功！"
       : `✅ ${isEditMode ? "更新成功！" : "報名成功！"} 即將跳轉到報名頁面`
     );
     setLoading(false);

@@ -269,6 +269,7 @@ export default function ViewRegistrationsPage() {
       </div>`
     // 發送通知
     const status = await sendEmail(reg.user_info_snapshot.email, `活動 ${EventData.title} 通知`, htmlBody)
+    let attempt = status;
     if(status) {
       await supabase
         .from('registrations')
@@ -276,17 +277,23 @@ export default function ViewRegistrationsPage() {
         .eq('event_id', eventId)
         .eq('user_id', userId)
       setRegistrations(registrations.map(r => r.user_id === userId ? { ...r, notification: true } : r))
-    } else {
+    } else
       console.error('發送通知失敗:')
-      alert('發送通知失敗，請稍後再試。')
-    }
     if(userData.line_id){
       const status = await sendLine(userData.line_id, EventData.title, EventData.cover_url, toDatetimeLocal(EventData.start), EventData.venue_name, baseUrl + "/event/" + eventId)
-      if(!status){
+      attempt = status || attempt; // 如果 Line 發送失敗，仍然保留 email 的狀態
+      if(status){
+        await supabase
+          .from('registrations')
+          .update({ notification: true })
+          .eq('event_id', eventId)
+          .eq('user_id', userId)
+        setRegistrations(registrations.map(r => r.user_id === userId ? { ...r, notification: true } : r))
+      } else
         console.error('發送 Line 通知失敗:', userData.line_id)
-        alert('發送 Line 通知失敗，請稍後再試。')
-      }
     }
+    if(!attempt)
+      alert(`發送信件${userData.line_id?"及Line訊息":""}通知失敗`)
     setSendingUserIds(prev => prev.filter(id => id !== userId))
   }
 
@@ -368,26 +375,31 @@ export default function ViewRegistrationsPage() {
         </div>`
 
       const status = await sendEmail(userData.email, `活動 ${EventData.title} 通知`, htmlBody)
+      let attempt = status;
       if (status) {
         await supabase
           .from('registrations')
           .update({ notification: true })
           .eq('event_id', eventId)
           .eq('user_id', reg.user_id)
-        setRegistrations(prev =>
-          prev.map(r => r.user_id === reg.user_id ? { ...r, notification: true } : r)
-        )
-      } else {
+        setRegistrations(prev =>prev.map(r => r.user_id === reg.user_id ? { ...r, notification: true } : r))
+      } else
         console.error('發送通知失敗:', reg.user_id)
-        alert(`發送通知失敗：${userData.email}`)
-      }
       if(userData.line_id){
         const status = await sendLine(userData.line_id, EventData.title, EventData.cover_url, toDatetimeLocal(EventData.start), EventData.venue_name, baseUrl + "/event/" + eventId)
-        if(!status){
+        attempt = status || attempt; // 如果 Line 發送失敗，仍然保留 email 的狀態
+        if (status) {
+          await supabase
+            .from('registrations')
+            .update({ notification: true })
+            .eq('event_id', eventId)
+            .eq('user_id', reg.user_id)
+          setRegistrations(prev =>prev.map(r => r.user_id === reg.user_id ? { ...r, notification: true } : r))
+        } else
           console.error('發送 Line 通知失敗:', userData.line_id)
-          alert('發送 Line 通知失敗，請稍後再試。')
-        }
       }
+      if (!attempt)
+        alert(`發送信件${userData.line_id?"及Line訊息":""}通知失敗`)
     }
     setSendingAll(false) // ✅ 全部處理完才關閉 loading 狀態
     setMessage('所有通知已發送完成。')
