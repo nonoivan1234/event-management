@@ -16,6 +16,7 @@ type User = {
 
 type UserWithPending = User & {
   Available: boolean
+  registered?: boolean
 }
 
 type Props = {
@@ -122,7 +123,12 @@ export default function UserSearchModal({
             .eq('event_id', eventId)
             .eq('inviter_id', userId)
             .eq('pending', true)
-          return { ...u, Available: (invs?.length === 0) }
+          const { data: reg } = await supabase
+            .from('registrations')
+            .select('user_id')
+            .eq('user_id', u.user_id)
+            .eq('event_id', eventId)
+          return { ...u, Available: (invs?.length === 0 && reg?.length === 0), registered: (reg?.length > 0) }
         } else {
           const { data: orgs } = await supabase
             .from('event_organizers')
@@ -284,7 +290,7 @@ export default function UserSearchModal({
                 className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
               >
                 {isInvite
-                  ? userId === user.user_id ? "自己" : user.Available ? '邀請' : '已邀請'
+                  ? userId === user.user_id ? "自己" : user.registered ? '已報名' : user.Available ? '邀請' : '已邀請'
                   : user.Available ? '加入' : '已加入'}
               </button>
             </li>
