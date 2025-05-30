@@ -578,12 +578,14 @@ export default function ViewRegistrationsPage() {
                 <button
                   onClick={handleSendNotification(reg.user_id, reg.notification)}
                   disabled={sendingUserIds.includes(reg.user_id) || sendingAll}
-                  className={`text-sm px-2 py-1 rounded transition-colors text-white disabled:bg-transparent disabled:cursor-not-allowed dark:disabled:bg-transparent ${reg.notification 
+                  className={`text-sm px-2 py-1 rounded transition-colors text-white disabled:cursor-not-allowed ${reg.notification 
                     ?'bg-gray-500 hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600' 
-                    :'bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-400'}`}
+                    :'bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-400'}
+                    ${!reg.notification && "disabled:bg-transparent dark:disabled:bg-transparent"}
+                  `}
                   title="發送通知"
                 >
-                  { sendingUserIds.includes(reg.user_id)
+                  {sendingUserIds.includes(reg.user_id)
                     ? <Spinner className='h-5 w-5 text-blue-800 dark:text-blue-200'/>
                     : reg.notification 
                     ? "已發送"
