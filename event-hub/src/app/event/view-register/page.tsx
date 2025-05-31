@@ -280,7 +280,7 @@ export default function ViewRegistrationsPage() {
     } else
       console.error('發送通知失敗:')
     if(userData.line_id){
-      const status = await sendLine(userData.line_id, EventData.title, EventData.cover_url, toDatetimeLocal(EventData.start), EventData.venue_name, baseUrl + "/event/" + eventId)
+      const status = await sendLine(userData.line_id, "活動通知："+EventData.title, EventData.cover_url, { "開始時間": toDatetimeLocal(EventData.start)? toDatetimeLocal(EventData.start) : 'Coming Soon', "舉辦地點": EventData.venue_name? EventData.venue_name : 'TBD' }, baseUrl + "/event/" + eventId);
       attempt = status || attempt; // 如果 Line 發送失敗，仍然保留 email 的狀態
       if(status){
         await supabase
@@ -386,7 +386,7 @@ export default function ViewRegistrationsPage() {
       } else
         console.error('發送通知失敗:', reg.user_id)
       if(userData.line_id){
-        const status = await sendLine(userData.line_id, EventData.title, EventData.cover_url, toDatetimeLocal(EventData.start), EventData.venue_name, baseUrl + "/event/" + eventId)
+        const status = await sendLine(userData.line_id, "活動通知："+EventData.title, EventData.cover_url, { "開始時間": toDatetimeLocal(EventData.start)? toDatetimeLocal(EventData.start) : 'Coming Soon', "舉辦地點": EventData.venue_name? EventData.venue_name : 'TBD' }, baseUrl + "/event/" + eventId);
         attempt = status || attempt; // 如果 Line 發送失敗，仍然保留 email 的狀態
         if (status) {
           await supabase
@@ -581,7 +581,7 @@ export default function ViewRegistrationsPage() {
                   className={`text-sm px-2 py-1 rounded transition-colors text-white disabled:cursor-not-allowed ${reg.notification 
                     ?'bg-gray-500 hover:bg-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600' 
                     :'bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-400'}
-                    ${!reg.notification && "disabled:bg-transparent dark:disabled:bg-transparent"}
+                    ${(!reg.notification || sendingUserIds.includes(reg.user_id))&& "disabled:bg-transparent dark:disabled:bg-transparent"}
                   `}
                   title="發送通知"
                 >

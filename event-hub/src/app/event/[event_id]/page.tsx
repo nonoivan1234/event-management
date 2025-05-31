@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import LoadingScreen from "@/components/loading";
 import UserSearchModal from "@/components/UserSearchModal";
+import sendLine from "@/lib/SendLine";
 
 interface EventDetail {
   event_id: string;
@@ -179,6 +180,33 @@ export default function EventDetailPage({ params }: { params: { event_id: string
       .single();
     if(Inv && Inv.pending)
       throw new Error("已邀請過該使用者");
+    const { data:userData, error:UserError } = await supabase
+      .from("users")
+      .select("line_id")
+      .eq("user_id", User.user_id)
+      .single();
+    const { data: userName, error: userNameError } = await supabase
+      .from("users")
+      .select("name")
+      .eq("user_id", user.id)
+      .single();
+    if (userData.line_id){
+      const baseUrl = window.location.origin;
+      const { data:EventData, error:EventError } = await supabase
+        .from("events")
+        .select("title, cover_url, deadline, start, venue_name")
+        .eq("event_id", event.event_id)
+        .single();
+      if (EventError) throw new Error(EventError.message);
+      if (!EventData) throw new Error("活動資料不存在");
+      const status = await sendLine(userData.line_id, "活動邀請："+EventData.title, EventData.cover_url, 
+        { "邀請人": userName.name? userName.name : user.email,
+          "報名截止": EventData.deadline, 
+          "開始時間": toDatetimeLocal(EventData.start)? toDatetimeLocal(EventData.start) : 'Coming Soon', 
+          "舉辦地點": EventData.venue_name? EventData.venue_name : 'TBD' 
+        }, baseUrl + "/event/" + eventId);
+        if (!status) console.error("Line通知失敗，請檢查Line ID是否正確或是否已授權");
+    }
     if (Inv){
       const { data, error } = await supabase
         .from("invitations")
