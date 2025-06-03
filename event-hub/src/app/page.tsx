@@ -19,14 +19,13 @@ export default function HomePage() {
 
   const fetchSearch = async (user) => {
     setLoading(true);
-
     const eventQuery = search.trim() === ""
       ? supabase
           .from("events")
           .select(`*, users:organizer_id(name)`)
           .eq("visible", true)
-          .gte("deadline", new Date().toISOString())
-          .or(`start.gte.${new Date().toISOString()},start.is.null`)
+          .gte("deadline", new Date().toLocaleDateString("en-CA", { timeZone: 'Asia/Taipei' }))
+          .or(`start.is.null, start.gte.${new Date().toLocaleDateString("en-CA", { timeZone: 'Asia/Taipei' })}`)
           .limit(100)
       : supabase
           .from("events")
