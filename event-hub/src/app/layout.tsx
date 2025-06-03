@@ -4,6 +4,7 @@ import './globals.css'
 import ThemeInitializer from './theme-initializer'
 import Navbar from '../components/navbar'
 import { supabase } from '@/lib/supabase'
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const inter = Inter({
   variable: '--font-inter',
