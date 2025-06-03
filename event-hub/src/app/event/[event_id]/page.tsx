@@ -56,6 +56,7 @@ export default function EventDetailPage({ params }: { params: { event_id: string
   const slideInterval = useRef<number>();
   const [title, setTitle] = useState("");
   const [isExpired, setIsExpired] = useState(false);
+  const [displayMap, setDisplayMap] = useState(false);
 
   useEffect(() => {
     async function fetchEvent() {
@@ -288,8 +289,9 @@ export default function EventDetailPage({ params }: { params: { event_id: string
       <hr className="my-6 border-gray-300 dark:border-gray-700" />
       {/* 詳細資訊 */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div>
-          <h3 className="text-lg font-semibold mb-1">地點</h3>
+        <div onClick={() => {if (event.venue_address != "") setDisplayMap(!displayMap)}}
+        className={event.venue_address != "" && "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"}>
+          <h3 className="text-lg font-semibold mb-1">地點{(event.venue_address != "") && (displayMap ?" (點擊隱藏地圖)":" (點擊查看地圖)")}</h3>
           <p className="text-gray-800 dark:text-gray-200">
             {event.venue_name ? event.venue_name : "地點待公布"}
           </p>
@@ -320,6 +322,22 @@ export default function EventDetailPage({ params }: { params: { event_id: string
           </div>
         </div>
       </section>
+
+      {displayMap && (event.venue_address != "") && (<>
+        <section className="mb-6">
+          <h3 className="text-lg font-semibold mb-2">地圖位置</h3>
+          <div className="w-full h-96">
+            <iframe
+              src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${event.venue_address}`}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+            ></iframe>
+          </div>
+        </section>
+      </>)}
 
       {/* 圖片輪播 */}
       {event.images && event.images.length > 0 && (

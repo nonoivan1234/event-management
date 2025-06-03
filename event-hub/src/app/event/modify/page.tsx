@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, KeyboardEvent, ChangeEvent } from "react";
+import { useEffect, useState, KeyboardEvent, ChangeEvent, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { v4 as uuidv4 } from "uuid";
@@ -76,6 +76,8 @@ export default function EventFormPage() {
     categories: [],
   });
   const [categoryInput, setCategoryInput] = useState("");
+  const [venueAddress, setVenueAddress] = useState("");
+  const [venueAddressTimeout, setVenueAddressTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Form settings state
   const [personalFields, setPersonalFields] = useState<string[]>([]);
@@ -120,6 +122,8 @@ export default function EventFormPage() {
           router.replace("/404");
           return;
         }
+
+        setVenueAddress(data.venue_address || "");
 
         const { data: organizerData, error: org_err } = await supabase
           .from("event_organizers")
@@ -176,6 +180,12 @@ export default function EventFormPage() {
 
   // Handlers for basic info
   const handleChange = (field: string, value: string) => {
+    if (field === "venue_address") {
+      if (venueAddressTimeout)
+        clearTimeout(venueAddressTimeout);
+      const timeout = setTimeout(() => setVenueAddress(value), 500);
+      setVenueAddressTimeout(timeout);
+    }
     if (field === "start" || field === "end") {
       const localDate = new Date(value);
       setForm((prev) => ({ ...prev, [field]: localDate.toISOString() }));
@@ -228,7 +238,7 @@ export default function EventFormPage() {
   const addQuestion = () => 
     setCustomQuestions((prev) => [...prev,{id: uuidv4(), label: "新問題", type: "text", required: false, options: []}])
 
-  const updateQuestion = (id: string, changes: any) =>
+  const updateQuestion = (id: string, changes: any) => 
     setCustomQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, ...changes } : q)));
 
   const deleteQuestion = (id: string) =>
@@ -441,6 +451,11 @@ export default function EventFormPage() {
               />
             </label>
           </div>
+          <iframe
+            src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${venueAddress || "Taipei"}`}
+            allowFullScreen
+            className="h-64 w-full mt-4 rounded shadow"
+          />
           {/* Categories */}
           <label className="block mb-2">活動類別</label>
           <div className="w-full border px-3 py-2 rounded flex flex-wrap items-center gap-2 dark:bg-gray-700">
