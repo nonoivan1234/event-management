@@ -9,6 +9,20 @@ import sendEmail from '@/lib/SendEmail'
 import sendLine from '@/lib/SendLine'
 import Spinner from '@/components/ui/Spinner'
 
+interface EventDetail {
+  title: string;
+  start?: string;
+  end?: string;
+  venue_name?: string;
+  venue_address?: string;
+  cover_url?: string;
+  users?: {
+    name?: string;
+    email: string;
+    avatar?: string;
+  };
+}
+
 const options = {
   year:   'numeric',
   month:  '2-digit',
@@ -26,6 +40,7 @@ function toDatetimeLocal(isoString: string): string {
 export default function ViewRegistrationsPage() {
   const searchParams = useSearchParams()
   const eventId = searchParams.get('event_id')
+  const [EventDetail, setEventDetail] = useState<EventDetail>(null)
   const [IsOrganizer, setIsOrganizer] = useState(false)
   const [formSchema, setFormSchema] = useState<any>(null)
   const [registrations, setRegistrations] = useState<any[]>([])
@@ -66,6 +81,13 @@ export default function ViewRegistrationsPage() {
         return
       } else {
         setIsOrganizer(organizerMatch.role === 'organizer')
+        const {data:EventData} = await supabase
+          .from('events')
+          .select('title, start, end, venue_name, venue_address, cover_url, users:organizer_id(name, email, avatar)')
+          .eq('event_id', eventId)
+          .single()
+        if (!EventData) window.location.href = '/404'
+        setEventDetail(EventData)
       }
 
       // 讀事件schema
@@ -216,59 +238,53 @@ export default function ViewRegistrationsPage() {
       return alert('找不到該報名資料')
     }
 
-    const {data:EventData} = await supabase
-      .from('events')
-      .select('title, start, end, deadline, venue_name, venue_address, cover_url, users:organizer_id(name, email, avatar)')
-      .eq('event_id', eventId)
-      .single()
-    
     const { data: userData } = await supabase
       .from('users')
       .select('name, email, line_id')
       .eq('user_id', userId)
       .single()
-    if (!EventData || !userData) {
+    if (!userData) {
       setSendingUserIds(prev => prev.filter(id => id !== userId)) // ❌ 清除寄送中狀態
       return alert('無法取得活動或使用者資料，請稍後再試。')
     }
     const baseUrl = window.location.origin;
     const htmlBody = `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <h2>📢 活動即將開始！您已成功報名【${EventData.title}】</h2>
+        <h2>📢 活動即將開始！您已成功報名【${EventDetail.title}】</h2>
 
         <p>親愛的${userData.name !== "" ? userData.name : userData.email}，您好：</p>
         <p>
-          感謝您報名參加 <strong>【${EventData.title}】</strong>，活動即將登場，以下是活動資訊提醒，敬請準時出席！
+          感謝您報名參加 <strong>【${EventDetail.title}】</strong>，活動即將登場，以下是活動資訊提醒，敬請準時出席！
         </p>
 
         <h3>📅 活動資訊</h3>
         <ul>
-          ${EventData.start || EventData.end ? `<li><strong>舉辦時間：</strong>${toDatetimeLocal(EventData.start)} - ${toDatetimeLocal(EventData.end)}</li>`:""}
-          ${EventData.venue_name? `<li><strong>舉辦地點：</strong>${EventData.venue_name}</li>` : ""}
-          ${EventData.venue_address? `<li><strong>舉辦地址：</strong>${EventData.venue_address}</li>` : ""}
+          ${EventDetail.start || EventDetail.end ? `<li><strong>舉辦時間：</strong>${toDatetimeLocal(EventDetail.start)} - ${toDatetimeLocal(EventDetail.end)}</li>`:""}
+          ${EventDetail.venue_name? `<li><strong>舉辦地點：</strong>${EventDetail.venue_name}</li>` : ""}
+          ${EventDetail.venue_address? `<li><strong>舉辦地址：</strong>${EventDetail.venue_address}</li>` : ""}
         </ul>
 
         <p>🎟️ <strong>請於活動當天提前 15 分鐘報到</strong>，現場將核對您的姓名或報名 Email。</p>
 
         <p style="margin-top: 20px;">
           👉 <a href="${baseUrl + "/event/" + eventId}" style="color: #007BFF;">查看活動詳情</a><br/>
-          📅 <a href="https://calendar.google.com/calendar/u/0/r/eventedit?text=${EventData.title}${EventData.start && EventData.end ? `&data=${EventData.start}/${EventData.end}`:""}&details=活動詳情請見官方網站${EventData.venue_name?`&location=${EventData.venue_name}`:""}&sf=true&output=xml" style="color: #007BFF;">加入 Google 行事曆</a>
+          📅 <a href="https://calendar.google.com/calendar/u/0/r/eventedit?text=${EventDetail.title}${EventDetail.start && EventDetail.end ? `&data=${EventDetail.start}/${EventDetail.end}`:""}&details=活動詳情請見官方網站${EventDetail.venue_name?`&location=${EventDetail.venue_name}`:""}&sf=true&output=xml" style="color: #007BFF;">加入 Google 行事曆</a>
         </p>
 
         <p>如有任何問題，歡迎聯繫我們。</p>
 
         <p>期待與您在現場相見！</p>
         <div style="display: flex; align-items: center; margin-top: 10px;">
-          ${EventData.users.avatar ? `<img src="${EventData.users.avatar}" alt="邀請人頭像" style="width: 48px; height: 48px; border-radius: 50%; margin-right: 10px;" />` : ""}
+          ${EventDetail.users.avatar ? `<img src="${EventDetail.users.avatar}" alt="主辦人頭像" style="width: 48px; height: 48px; border-radius: 50%; margin-right: 10px;" />` : ""}
           <div>
-            <div><strong>${EventData.users.name || '匿名邀請人'}</strong></div>
-            <div><a href="mailto:${EventData.users.email}" style="color: #007BFF;">${EventData.users.email}</a></div>
+            <div><strong>${EventDetail.users.name || '匿名主辦人'}</strong></div>
+            <div><a href="mailto:${EventDetail.users.email}" style="color: #007BFF;">${EventDetail.users.email}</a></div>
           </div>
         </div>
         <p style="margin-top: 20px; color: #888;">此郵件由系統自動發送，請勿直接回覆。</p>
       </div>`
     // 發送通知
-    const status = await sendEmail(reg.user_info_snapshot.email, `活動 ${EventData.title} 通知`, htmlBody)
+    const status = await sendEmail(reg.user_info_snapshot.email, `活動 ${EventDetail.title} 通知`, htmlBody)
     let attempt = status;
     if(status) {
       await supabase
@@ -280,7 +296,7 @@ export default function ViewRegistrationsPage() {
     } else
       console.error('發送通知失敗:')
     if(userData.line_id){
-      const status = await sendLine(userData.line_id, "活動通知："+EventData.title, EventData.cover_url, { "開始時間": toDatetimeLocal(EventData.start)? toDatetimeLocal(EventData.start) : 'Coming Soon', "舉辦地點": EventData.venue_name? EventData.venue_name : 'TBD' }, baseUrl + "/event/" + eventId);
+      const status = await sendLine(userData.line_id, "活動通知："+EventDetail.title, EventDetail.cover_url, { "開始時間": toDatetimeLocal(EventDetail.start)? toDatetimeLocal(EventDetail.start) : 'Coming Soon', "舉辦地點": EventDetail.venue_name? EventDetail.venue_name : 'TBD' }, baseUrl + "/event/" + eventId);
       attempt = status || attempt; // 如果 Line 發送失敗，仍然保留 email 的狀態
       if(status){
         await supabase
@@ -315,17 +331,6 @@ export default function ViewRegistrationsPage() {
       setSendingAll(false)
       return alert('您沒有權限發送通知')
     }
-
-    const { data: EventData } = await supabase
-      .from('events')
-      .select('title, start, end, deadline, venue_name, venue_address, cover_url, users:organizer_id(name, email,avatar)')
-      .eq('event_id', eventId)
-      .single()
-    if (!EventData) {
-      setSendingAll(false)
-      return alert('無法取得活動資料，請稍後再試。')
-    }
-
     const baseUrl = window.location.origin
 
     for (const reg of registrations) {
@@ -340,41 +345,41 @@ export default function ViewRegistrationsPage() {
 
       const htmlBody = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-          <h2>📢 活動即將開始！您已成功報名【${EventData.title}】</h2>
+          <h2>📢 活動即將開始！您已成功報名【${EventDetail.title}】</h2>
 
           <p>親愛的${userData.name !== "" ? userData.name : userData.email}，您好：</p>
           <p>
-            感謝您報名參加 <strong>【${EventData.title}】</strong>，活動即將登場，以下是活動資訊提醒，敬請準時出席！
+            感謝您報名參加 <strong>【${EventDetail.title}】</strong>，活動即將登場，以下是活動資訊提醒，敬請準時出席！
           </p>
 
           <h3>📅 活動資訊</h3>
           <ul>
-            ${EventData.start || EventData.end ? `<li><strong>舉辦時間：</strong>${toDatetimeLocal(EventData.start)} - ${toDatetimeLocal(EventData.end)}</li>`:""}
-            ${EventData.venue_name? `<li><strong>舉辦地點：</strong>${EventData.venue_name}</li>` : ""}
-            ${EventData.venue_address? `<li><strong>舉辦地址：</strong>${EventData.venue_address}</li>` : ""}
+            ${EventDetail.start || EventDetail.end ? `<li><strong>舉辦時間：</strong>${toDatetimeLocal(EventDetail.start)} - ${toDatetimeLocal(EventDetail.end)}</li>`:""}
+            ${EventDetail.venue_name? `<li><strong>舉辦地點：</strong>${EventDetail.venue_name}</li>` : ""}
+            ${EventDetail.venue_address? `<li><strong>舉辦地址：</strong>${EventDetail.venue_address}</li>` : ""}
           </ul>
 
           <p>🎟️ <strong>請於活動當天提前 15 分鐘報到</strong>，現場將核對您的姓名或報名 Email。</p>
 
           <p style="margin-top: 20px;">
             👉 <a href="${baseUrl + "/event/" + eventId}" style="color: #007BFF;">查看活動詳情</a><br/>
-            📅 <a href="https://calendar.google.com/calendar/u/0/r/eventedit?text=${EventData.title}${EventData.start && EventData.end ? `&data=${EventData.start}/${EventData.end}`:""}&details=活動詳情請見官方網站${EventData.venue_name?`&location=${EventData.venue_name}`:""}&sf=true&output=xml" style="color: #007BFF;">加入 Google 行事曆</a>
+            📅 <a href="https://calendar.google.com/calendar/u/0/r/eventedit?text=${EventDetail.title}${EventDetail.start && EventDetail.end ? `&data=${EventDetail.start}/${EventDetail.end}`:""}&details=活動詳情請見官方網站${EventDetail.venue_name?`&location=${EventDetail.venue_name}`:""}&sf=true&output=xml" style="color: #007BFF;">加入 Google 行事曆</a>
           </p>
 
           <p>如有任何問題，歡迎聯繫我們。</p>
 
           <p>期待與您在現場相見！</p>
           <div style="display: flex; align-items: center; margin-top: 10px;">
-            ${EventData.users.avatar ? `<img src="${EventData.users.avatar}" alt="邀請人頭像" style="width: 48px; height: 48px; border-radius: 50%; margin-right: 10px;" />` : ""}
+            ${EventDetail.users.avatar ? `<img src="${EventDetail.users.avatar}" alt="主辦人頭像" style="width: 48px; height: 48px; border-radius: 50%; margin-right: 10px;" />` : ""}
             <div>
-              <div><strong>${EventData.users.name || '匿名邀請人'}</strong></div>
-              <div><a href="mailto:${EventData.users.email}" style="color: #007BFF;">${EventData.users.email}</a></div>
+              <div><strong>${EventDetail.users.name || '匿名主辦人'}</strong></div>
+              <div><a href="mailto:${EventDetail.users.email}" style="color: #007BFF;">${EventDetail.users.email}</a></div>
             </div>
           </div>
           <p style="margin-top: 20px; color: #888;">此郵件由系統自動發送，請勿直接回覆。</p>
         </div>`
 
-      const status = await sendEmail(userData.email, `活動 ${EventData.title} 通知`, htmlBody)
+      const status = await sendEmail(userData.email, `活動 ${EventDetail.title} 通知`, htmlBody)
       let attempt = status;
       if (status) {
         await supabase
@@ -386,7 +391,7 @@ export default function ViewRegistrationsPage() {
       } else
         console.error('發送通知失敗:', reg.user_id)
       if(userData.line_id){
-        const status = await sendLine(userData.line_id, "活動通知："+EventData.title, EventData.cover_url, { "開始時間": toDatetimeLocal(EventData.start)? toDatetimeLocal(EventData.start) : 'Coming Soon', "舉辦地點": EventData.venue_name? EventData.venue_name : 'TBD' }, baseUrl + "/event/" + eventId);
+        const status = await sendLine(userData.line_id, "活動通知："+EventDetail.title, EventDetail.cover_url, { "開始時間": toDatetimeLocal(EventDetail.start)? toDatetimeLocal(EventDetail.start) : 'Coming Soon', "舉辦地點": EventDetail.venue_name? EventDetail.venue_name : 'TBD' }, baseUrl + "/event/" + eventId);
         attempt = status || attempt; // 如果 Line 發送失敗，仍然保留 email 的狀態
         if (status) {
           await supabase

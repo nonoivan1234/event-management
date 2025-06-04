@@ -22,14 +22,14 @@ export default function HomePage() {
     const eventQuery = search.trim() === ""
       ? supabase
           .from("events")
-          .select(`*, users:organizer_id(name)`)
+          .select(`event_id, title, description, category, start, end, deadline, users:organizer_id(name)`)
           .eq("visible", true)
           .gte("deadline", new Date().toLocaleDateString("en-CA", { timeZone: 'Asia/Taipei' }))
           .or(`start.is.null, start.gte.${new Date().toLocaleDateString("en-CA", { timeZone: 'Asia/Taipei' })}`)
           .limit(100)
       : supabase
           .from("events")
-          .select(`*, users:organizer_id(name)`)
+          .select(`event_id, title, description, category, start, end, deadline, users:organizer_id(name)`)
           .eq("visible", true)
           .ilike("title", `%${search.trim()}%`)
           .limit(100);

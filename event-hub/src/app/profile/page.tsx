@@ -53,7 +53,7 @@ export default function ProfilePage() {
 
     const { data } = await supabase
       .from('users')
-      .select('*')
+      .select('name, student_id, phone, school, avatar, line_id')
       .eq('email', user.email)
       .single()
 

@@ -164,7 +164,7 @@ export default function DashboardPage() {
       await supabase
         .from("events")
         .insert({ ...event_data, organizer_id: user_id })
-        .select()
+        .select("event_id")
         .single();
     if (error_create_event) return alert(`❌ 複製失敗：${error_create_event}`);
     const { error: error_role } = await supabase

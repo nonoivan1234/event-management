@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, KeyboardEvent, ChangeEvent, useRef } from "react";
+import { useEffect, useState, KeyboardEvent, ChangeEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { v4 as uuidv4 } from "uuid";
@@ -318,7 +318,7 @@ export default function EventFormPage() {
       const { error, data } = await supabase
         .from("events")
         .insert({ ...payload, organizer_id: user.id })
-        .select()
+        .select("event_id")
         .single();
       if (error) {
         setMessage(`❌ 建立失敗：${error.message}`);

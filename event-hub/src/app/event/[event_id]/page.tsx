@@ -16,8 +16,6 @@ interface EventDetail {
   deadline: string;
   venue_name?: string;
   venue_address?: string;
-  capacity?: number;
-  price?: number;
   category?: string[];
   images?: string[];
   share_link?: Record<string, string>;
@@ -64,7 +62,7 @@ export default function EventDetailPage({ params }: { params: { event_id: string
 
       const { data, error } = await supabase
         .from("events")
-        .select(`*, users:organizer_id(name, email, avatar)`)
+        .select(`event_id, title, description, category, start, end, deadline, venue_name, venue_address, images, share_link, users:organizer_id(name, email, avatar)`)
         .eq("event_id", eventId)
         .eq("visible", true)
         .single();
@@ -170,7 +168,7 @@ export default function EventDetailPage({ params }: { params: { event_id: string
       .eq("event_id", event.event_id)
       .eq("user_id", User.user_id)
       .single();
-    console.log(Reg, RegError);
+    
     if(Reg) throw new Error("該使用者已報名");
     const { data:Inv, error:InvError } = await supabase
       .from("invitations")
@@ -181,42 +179,34 @@ export default function EventDetailPage({ params }: { params: { event_id: string
       .single();
     if(Inv && Inv.pending)
       throw new Error("已邀請過該使用者");
+
     const { data:userData, error:UserError } = await supabase
       .from("users")
       .select("line_id")
       .eq("user_id", User.user_id)
       .single();
+    
     const { data: userName, error: userNameError } = await supabase
       .from("users")
       .select("name")
       .eq("user_id", user.id)
       .single();
+    
     if (userData.line_id){
       const baseUrl = window.location.origin;
-      const { data:EventData, error:EventError } = await supabase
-        .from("events")
-        .select("title, cover_url, deadline, start, venue_name")
-        .eq("event_id", event.event_id)
-        .single();
-      if (EventError) throw new Error(EventError.message);
-      if (!EventData) throw new Error("活動資料不存在");
-      const status = await sendLine(userData.line_id, "活動邀請："+EventData.title, EventData.cover_url, 
+      if (!event) throw new Error("活動資料不存在");
+      const status = await sendLine(userData.line_id, "活動邀請："+event.title, event.cover_url, 
         { "邀請人": userName.name? userName.name : user.email,
-          "報名截止": EventData.deadline, 
-          "開始時間": toDatetimeLocal(EventData.start)? toDatetimeLocal(EventData.start) : 'Coming Soon', 
-          "舉辦地點": EventData.venue_name? EventData.venue_name : 'TBD' 
+          "報名截止": event.deadline, 
+          "開始時間": toDatetimeLocal(event.start)? toDatetimeLocal(event.start) : 'Coming Soon', 
+          "舉辦地點": event.venue_name? event.venue_name : 'TBD' 
         }, baseUrl + "/event/" + eventId);
         if (!status) console.error("Line通知失敗，請檢查Line ID是否正確或是否已授權");
     }
     if (Inv){
       const { data, error } = await supabase
         .from("invitations")
-        .update({
-          event_id: event.event_id,
-          inviter_id: user.id,
-          friend_id: User.user_id,
-          pending: true,
-        })
+        .update({pending: true})
         .eq("event_id", event.event_id)
         .eq("inviter_id", user.id)
         .eq("friend_id", User.user_id)
