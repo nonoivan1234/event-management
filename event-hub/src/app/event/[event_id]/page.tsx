@@ -19,6 +19,7 @@ interface EventDetail {
   category?: string[];
   images?: string[];
   share_link?: Record<string, string>;
+  cover_url?: string;
   organizer?: {
     name: string;
     email?: string;
@@ -62,7 +63,7 @@ export default function EventDetailPage({ params }: { params: { event_id: string
 
       const { data, error } = await supabase
         .from("events")
-        .select(`event_id, title, description, category, start, end, deadline, venue_name, venue_address, images, share_link, users:organizer_id(name, email, avatar)`)
+        .select(`event_id, title, description, category, start, end, deadline, venue_name, venue_address, images, share_link, cover_url, users:organizer_id(name, email, avatar)`)
         .eq("event_id", eventId)
         .eq("visible", true)
         .single();
