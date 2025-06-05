@@ -19,20 +19,14 @@ export default function LoginPage() {
     if (error && error.message === 'Invalid login credentials') {
       setErrorMsg('❌ 登入失敗：請檢查您的電子郵件和密碼')
       setAttempted(true)
-    } else if (error) {
+    } else if (error)
       setErrorMsg('❌ 登入失敗：' + error.message)
-    } else {
-      // ✅ 登入成功後刷新 App Router session
-      if (
-        document.referrer &&
-        (!document.referrer.includes(window.location.hostname) ||
-         document.referrer.includes(window.location.hostname + '/auth'))
-      ) {
+    else {
+      const { data: sessionData } = await supabase.auth.getSession()
+      if (sessionData.session)
         router.push('/')
-      } else {
-        router.back()
-      }
-      router.refresh() // ✅ 刷新 session
+      else
+        setErrorMsg('⚠️ 登入失敗：session 尚未建立，請稍後再試')
     }
   }
 
