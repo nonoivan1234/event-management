@@ -19,7 +19,15 @@ export default function BindLinePage() {
 
       const {data: { session }, error} = await supabase.auth.getSession()
 
-      if (error || !session) {
+      console.log('獲取到的授權碼:', code)
+      console.log('獲取到的 session:', session)
+      if (error) {
+        console.error('獲取 session 時發生錯誤:', error)
+        setStatus('錯誤：無法獲取 session')
+        return
+      }
+
+      if (!session) {
         setStatus('錯誤：尚未登入 Supabase')
         return
       }
