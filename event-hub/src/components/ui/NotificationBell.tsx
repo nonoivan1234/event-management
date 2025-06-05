@@ -134,7 +134,7 @@ export default function NotificationBell() {
                   }
                 >
                   <p className="text-gray-800 dark:text-white">
-                    <span className="font-medium">{inv.event.title}</span>的邀請
+                    邀請參加<span className="font-medium">{inv.event.title}</span>
                   </p>
                   <p className="text-gray-600 dark:text-gray-300 text-xs">
                     來自<u>{inv.inviter.name ? ` ${inv.inviter.name}` : '匿名邀請者'}</u>
