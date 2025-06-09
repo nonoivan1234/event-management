@@ -1,8 +1,3 @@
----
-title: Event Hub - 校園活動與盃賽管理系統
-
----
-
 # Event Hub - 校園活動與盃賽管理系統
 
 本系統為一套專為校園活動與學生盃賽設計的活動報名與管理平台，旨在解決資訊分散、流程繁瑣、無法複用等痛點，系統採用 Next.js 作為前端框架，Supabase 作為後端資料庫與帳號認證服務，致力於提升主辦與參與雙方的整體體驗與流程效率。
@@ -154,7 +149,7 @@ cd event-management/event-hub
 npm install
 
 # Setup environment variables
-cp .env.example .env.local
+cp .env
 # Fill in the required Supabase keys
 
 # Run the app
